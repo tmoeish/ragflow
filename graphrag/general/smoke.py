@@ -33,17 +33,38 @@ settings.init_settings()
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('-t', '--tenant_id', default=False, help="Tenant ID", action='store', required=True)
-    parser.add_argument('-d', '--doc_id', default=False, help="Document ID", action='store', required=True)
+    parser.add_argument(
+        "-t",
+        "--tenant_id",
+        default=False,
+        help="Tenant ID",
+        action="store",
+        required=True,
+    )
+    parser.add_argument(
+        "-d",
+        "--doc_id",
+        default=False,
+        help="Document ID",
+        action="store",
+        required=True,
+    )
     args = parser.parse_args()
     e, doc = DocumentService.get_by_id(args.doc_id)
     if not e:
         raise LookupError("Document not found.")
     kb_id = doc.kb_id
 
-    chunks = [d["content_with_weight"] for d in
-              settings.retrievaler.chunk_list(args.doc_id, args.tenant_id, [kb_id], max_count=6,
-                                              fields=["content_with_weight"])]
+    chunks = [
+        d["content_with_weight"]
+        for d in settings.retrievaler.chunk_list(
+            args.doc_id,
+            args.tenant_id,
+            [kb_id],
+            max_count=6,
+            fields=["content_with_weight"],
+        )
+    ]
     chunks = [("x", c) for c in chunks]
 
     RedisDistributedLock.clean_lock(kb_id)
@@ -53,11 +74,22 @@ if __name__ == "__main__":
     _, kb = KnowledgebaseService.get_by_id(kb_id)
     embed_bdl = LLMBundle(args.tenant_id, LLMType.EMBEDDING, kb.embd_id)
 
-    dealer = Dealer(GraphExtractor, args.tenant_id, kb_id, llm_bdl, chunks, "English", embed_bdl=embed_bdl)
+    dealer = Dealer(
+        GraphExtractor,
+        args.tenant_id,
+        kb_id,
+        llm_bdl,
+        chunks,
+        "English",
+        embed_bdl=embed_bdl,
+    )
     print(json.dumps(nx.node_link_data(dealer.graph), ensure_ascii=False, indent=2))
 
     dealer = WithResolution(args.tenant_id, kb_id, llm_bdl, embed_bdl)
     dealer = WithCommunity(args.tenant_id, kb_id, llm_bdl, embed_bdl)
 
-    print("------------------ COMMUNITY REPORT ----------------------\n", dealer.community_reports)
+    print(
+        "------------------ COMMUNITY REPORT ----------------------\n",
+        dealer.community_reports,
+    )
     print(json.dumps(dealer.community_structure, ensure_ascii=False, indent=2))

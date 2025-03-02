@@ -70,10 +70,10 @@ def stable_largest_connected_component(graph: nx.Graph) -> nx.Graph:
 
 
 def _compute_leiden_communities(
-        graph: nx.Graph | nx.DiGraph,
-        max_cluster_size: int,
-        use_lcc: bool,
-        seed=0xDEADBEEF,
+    graph: nx.Graph | nx.DiGraph,
+    max_cluster_size: int,
+    use_lcc: bool,
+    seed=0xDEADBEEF,
 ) -> dict[int, dict[str, int]]:
     """Return Leiden root communities."""
     results: dict[int, dict[str, int]] = {}
@@ -124,7 +124,9 @@ def run(graph: nx.Graph, args: dict[str, Any]) -> dict[int, dict[str, dict]]:
             if community_id not in result:
                 result[community_id] = {"weight": 0, "nodes": []}
             result[community_id]["nodes"].append(node_id)
-            result[community_id]["weight"] += graph.nodes[node_id].get("rank", 0) * graph.nodes[node_id].get("weight", 1)
+            result[community_id]["weight"] += graph.nodes[node_id].get(
+                "rank", 0
+            ) * graph.nodes[node_id].get("weight", 1)
         weights = [comm["weight"] for _, comm in result.items()]
         if not weights:
             continue

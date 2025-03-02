@@ -31,11 +31,11 @@ class Base(ABC):
 
     def transcription(self, audio, **kwargs):
         transcription = self.client.audio.transcriptions.create(
-            model=self.model_name,
-            file=audio,
-            response_format="text"
+            model=self.model_name, file=audio, response_format="text"
         )
-        return transcription.text.strip(), num_tokens_from_string(transcription.text.strip())
+        return transcription.text.strip(), num_tokens_from_string(
+            transcription.text.strip()
+        )
 
     def audio2base64(self, audio):
         if isinstance(audio, bytes):
@@ -46,7 +46,9 @@ class Base(ABC):
 
 
 class GPTSeq2txt(Base):
-    def __init__(self, key, model_name="whisper-1", base_url="https://api.openai.com/v1"):
+    def __init__(
+        self, key, model_name="whisper-1", base_url="https://api.openai.com/v1"
+    ):
         if not base_url:
             base_url = "https://api.openai.com/v1"
         self.client = OpenAI(api_key=key, base_url=base_url)
@@ -56,6 +58,7 @@ class GPTSeq2txt(Base):
 class QWenSeq2txt(Base):
     def __init__(self, key, model_name="paraformer-realtime-8k-v1", **kwargs):
         import dashscope
+
         dashscope.api_key = key
         self.model_name = model_name
 
@@ -63,16 +66,15 @@ class QWenSeq2txt(Base):
         from http import HTTPStatus
         from dashscope.audio.asr import Recognition
 
-        recognition = Recognition(model=self.model_name,
-                                  format=format,
-                                  sample_rate=16000,
-                                  callback=None)
+        recognition = Recognition(
+            model=self.model_name, format=format, sample_rate=16000, callback=None
+        )
         result = recognition.call(audio)
 
         ans = ""
         if result.status_code == HTTPStatus.OK:
             for sentence in result.get_sentence():
-                ans += sentence.text.decode('utf-8') + '\n'
+                ans += sentence.text.decode("utf-8") + "\n"
             return ans, num_tokens_from_string(ans)
 
         return "**ERROR**: " + result.message, 0
@@ -80,20 +82,24 @@ class QWenSeq2txt(Base):
 
 class AzureSeq2txt(Base):
     def __init__(self, key, model_name, lang="Chinese", **kwargs):
-        self.client = AzureOpenAI(api_key=key, azure_endpoint=kwargs["base_url"], api_version="2024-02-01")
+        self.client = AzureOpenAI(
+            api_key=key, azure_endpoint=kwargs["base_url"], api_version="2024-02-01"
+        )
         self.model_name = model_name
         self.lang = lang
 
 
 class XinferenceSeq2txt(Base):
     def __init__(self, key, model_name="whisper-small", **kwargs):
-        self.base_url = kwargs.get('base_url', None)
+        self.base_url = kwargs.get("base_url", None)
         self.model_name = model_name
         self.key = key
 
-    def transcription(self, audio, language="zh", prompt=None, response_format="json", temperature=0.7):
+    def transcription(
+        self, audio, language="zh", prompt=None, response_format="json", temperature=0.7
+    ):
         if isinstance(audio, str):
-            audio_file = open(audio, 'rb')
+            audio_file = open(audio, "rb")
             audio_data = audio_file.read()
             audio_file_name = audio.split("/")[-1]
         else:
@@ -105,24 +111,20 @@ class XinferenceSeq2txt(Base):
             "language": language,
             "prompt": prompt,
             "response_format": response_format,
-            "temperature": temperature
+            "temperature": temperature,
         }
 
-        files = {
-            "file": (audio_file_name, audio_data, 'audio/wav')
-        }
+        files = {"file": (audio_file_name, audio_data, "audio/wav")}
 
         try:
             response = requests.post(
-                f"{self.base_url}/v1/audio/transcriptions",
-                files=files,
-                data=payload
+                f"{self.base_url}/v1/audio/transcriptions", files=files, data=payload
             )
             response.raise_for_status()
             result = response.json()
 
-            if 'text' in result:
-                transcription_text = result['text'].strip()
+            if "text" in result:
+                transcription_text = result["text"].strip()
                 return transcription_text, num_tokens_from_string(transcription_text)
             else:
                 return "**ERROR**: Failed to retrieve transcription.", 0
@@ -133,7 +135,7 @@ class XinferenceSeq2txt(Base):
 
 class TencentCloudSeq2txt(Base):
     def __init__(
-            self, key, model_name="16k_zh", base_url="https://asr.tencentcloudapi.com"
+        self, key, model_name="16k_zh", base_url="https://asr.tencentcloudapi.com"
     ):
         from tencentcloud.common import credential
         from tencentcloud.asr.v20190614 import asr_client

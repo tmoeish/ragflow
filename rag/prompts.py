@@ -32,16 +32,19 @@ def chunks_format(reference):
     def get_value(d, k1, k2):
         return d.get(k1, d.get(k2))
 
-    return [{
-        "id": get_value(chunk, "chunk_id", "id"),
-        "content": get_value(chunk, "content", "content_with_weight"),
-        "document_id": get_value(chunk, "doc_id", "document_id"),
-        "document_name": get_value(chunk, "docnm_kwd", "document_name"),
-        "dataset_id": get_value(chunk, "kb_id", "dataset_id"),
-        "image_id": get_value(chunk, "image_id", "img_id"),
-        "positions": get_value(chunk, "positions", "position_int"),
-        "url": chunk.get("url")
-    } for chunk in reference.get("chunks", [])]
+    return [
+        {
+            "id": get_value(chunk, "chunk_id", "id"),
+            "content": get_value(chunk, "content", "content_with_weight"),
+            "document_id": get_value(chunk, "doc_id", "document_id"),
+            "document_name": get_value(chunk, "docnm_kwd", "document_name"),
+            "dataset_id": get_value(chunk, "kb_id", "dataset_id"),
+            "image_id": get_value(chunk, "image_id", "img_id"),
+            "positions": get_value(chunk, "positions", "position_int"),
+            "url": chunk.get("url"),
+        }
+        for chunk in reference.get("chunks", [])
+    ]
 
 
 def llm_id2llm_type(llm_id):
@@ -60,7 +63,8 @@ def message_fit_in(msg, max_length=4000):
         tks_cnts = []
         for m in msg:
             tks_cnts.append(
-                {"role": m["role"], "count": num_tokens_from_string(m["content"])})
+                {"role": m["role"], "count": num_tokens_from_string(m["content"])}
+            )
         total = 0
         for m in tks_cnts:
             total += m["count"]
@@ -82,12 +86,12 @@ def message_fit_in(msg, max_length=4000):
     ll2 = num_tokens_from_string(msg_[-1]["content"])
     if ll / (ll + ll2) > 0.8:
         m = msg_[0]["content"]
-        m = encoder.decode(encoder.encode(m)[:max_length - ll2])
+        m = encoder.decode(encoder.encode(m)[: max_length - ll2])
         msg[0]["content"] = m
         return max_length, msg
 
     m = msg_[1]["content"]
-    m = encoder.decode(encoder.encode(m)[:max_length - ll2])
+    m = encoder.decode(encoder.encode(m)[: max_length - ll2])
     msg[1]["content"] = m
     return max_length, msg
 
@@ -101,15 +105,21 @@ def kb_prompt(kbinfos, max_tokens):
         chunks_num += 1
         if max_tokens * 0.97 < used_token_count:
             knowledges = knowledges[:i]
-            logging.warning(f"Not all the retrieval into prompt: {i+1}/{len(knowledges)}")
+            logging.warning(
+                f"Not all the retrieval into prompt: {i+1}/{len(knowledges)}"
+            )
             break
 
-    docs = DocumentService.get_by_ids([ck["doc_id"] for ck in kbinfos["chunks"][:chunks_num]])
+    docs = DocumentService.get_by_ids(
+        [ck["doc_id"] for ck in kbinfos["chunks"][:chunks_num]]
+    )
     docs = {d.id: d.meta_fields for d in docs}
 
     doc2chunks = defaultdict(lambda: {"chunks": [], "meta": []})
     for ck in kbinfos["chunks"][:chunks_num]:
-        doc2chunks[ck["docnm_kwd"]]["chunks"].append((f"URL: {ck['url']}\n" if "url" in ck else "") + ck["content_with_weight"])
+        doc2chunks[ck["docnm_kwd"]]["chunks"].append(
+            (f"URL: {ck['url']}\n" if "url" in ck else "") + ck["content_with_weight"]
+        )
         doc2chunks[ck["docnm_kwd"]]["meta"] = docs.get(ck["doc_id"], {})
 
     knowledges = []
@@ -140,7 +150,7 @@ Requirements:
 """
     msg = [
         {"role": "system", "content": prompt},
-        {"role": "user", "content": "Output: "}
+        {"role": "user", "content": "Output: "},
     ]
     _, msg = message_fit_in(msg, chat_mdl.max_length)
     kwd = chat_mdl.chat(prompt, msg[1:], {"temperature": 0.2})
@@ -170,7 +180,7 @@ Requirements:
 """
     msg = [
         {"role": "system", "content": prompt},
-        {"role": "user", "content": "Output: "}
+        {"role": "user", "content": "Output: "},
     ]
     _, msg = message_fit_in(msg, chat_mdl.max_length)
     kwd = chat_mdl.chat(prompt, msg[1:], {"temperature": 0.2})
@@ -246,7 +256,9 @@ Output: What's the weather in Rochester on {tomorrow}?
 {conv}
 ###############
     """
-    ans = chat_mdl.chat(prompt, [{"role": "user", "content": "Output: "}], {"temperature": 0.2})
+    ans = chat_mdl.chat(
+        prompt, [{"role": "user", "content": "Output: "}], {"temperature": 0.2}
+    )
     ans = re.sub(r"<think>.*</think>", "", ans, flags=re.DOTALL)
     return ans if ans.find("**ERROR**") < 0 else messages[-1]["content"]
 
@@ -281,7 +293,9 @@ Requirements
 Output:
 {}
 
-        """.format(i, ex["content"], json.dumps(ex[TAG_FLD], indent=2, ensure_ascii=False))
+        """.format(
+            i, ex["content"], json.dumps(ex[TAG_FLD], indent=2, ensure_ascii=False)
+        )
 
     prompt += f"""
 # Real Data
@@ -291,7 +305,7 @@ Output:
 """
     msg = [
         {"role": "system", "content": prompt},
-        {"role": "user", "content": "Output: "}
+        {"role": "user", "content": "Output: "},
     ]
     _, msg = message_fit_in(msg, chat_mdl.max_length)
     kwd = chat_mdl.chat(prompt, msg[1:], {"temperature": 0.5})
@@ -305,8 +319,13 @@ Output:
         return json_repair.loads(kwd)
     except json_repair.JSONDecodeError:
         try:
-            result = kwd.replace(prompt[:-1], '').replace('user', '').replace('model', '').strip()
-            result = '{' + result.split('{')[1].split('}')[0] + '}'
+            result = (
+                kwd.replace(prompt[:-1], "")
+                .replace("user", "")
+                .replace("model", "")
+                .strip()
+            )
+            result = "{" + result.split("{")[1].split("}")[0] + "}"
             return json_repair.loads(result)
         except Exception as e:
             logging.exception(f"JSON parsing error: {result} -> {e}")

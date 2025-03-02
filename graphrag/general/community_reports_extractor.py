@@ -38,15 +38,21 @@ class CommunityReportsExtractor(Extractor):
     _max_report_length: int
 
     def __init__(
-            self,
-            llm_invoker: CompletionLLM,
-            get_entity: Callable | None = None,
-            set_entity: Callable | None = None,
-            get_relation: Callable | None = None,
-            set_relation: Callable | None = None,
-            max_report_length: int | None = None,
+        self,
+        llm_invoker: CompletionLLM,
+        get_entity: Callable | None = None,
+        set_entity: Callable | None = None,
+        get_relation: Callable | None = None,
+        set_relation: Callable | None = None,
+        max_report_length: int | None = None,
     ):
-        super().__init__(llm_invoker, get_entity=get_entity, set_entity=set_entity, get_relation=get_relation, set_relation=set_relation)
+        super().__init__(
+            llm_invoker,
+            get_entity=get_entity,
+            set_entity=set_entity,
+            get_relation=get_relation,
+            set_relation=set_relation,
+        )
         """Init method definition."""
         self._llm = llm_invoker
         self._extraction_prompt = COMMUNITY_REPORT_PROMPT
@@ -67,12 +73,18 @@ class CommunityReportsExtractor(Extractor):
             for cm_id, ents in comm.items():
                 weight = ents["weight"]
                 ents = ents["nodes"]
-                ent_df = pd.DataFrame(self._get_entity_(ents)).dropna()#[{"entity": n, **graph.nodes[n]} for n in ents])
+                ent_df = pd.DataFrame(
+                    self._get_entity_(ents)
+                ).dropna()  # [{"entity": n, **graph.nodes[n]} for n in ents])
                 if ent_df.empty or "entity_name" not in ent_df.columns:
                     continue
                 ent_df["entity"] = ent_df["entity_name"]
                 del ent_df["entity_name"]
-                rela_df = pd.DataFrame(self._get_relation_(list(ent_df["entity"]), list(ent_df["entity"]), 10000))
+                rela_df = pd.DataFrame(
+                    self._get_relation_(
+                        list(ent_df["entity"]), list(ent_df["entity"]), 10000
+                    )
+                )
                 if rela_df.empty:
                     continue
                 rela_df["source"] = rela_df["src_id"]
@@ -82,12 +94,16 @@ class CommunityReportsExtractor(Extractor):
 
                 prompt_variables = {
                     "entity_df": ent_df.to_csv(index_label="id"),
-                    "relation_df": rela_df.to_csv(index_label="id")
+                    "relation_df": rela_df.to_csv(index_label="id"),
                 }
-                text = perform_variable_replacements(self._extraction_prompt, variables=prompt_variables)
+                text = perform_variable_replacements(
+                    self._extraction_prompt, variables=prompt_variables
+                )
                 gen_conf = {"temperature": 0.3}
                 try:
-                    response = self._chat(text, [{"role": "user", "content": "Output:"}], gen_conf)
+                    response = self._chat(
+                        text, [{"role": "user", "content": "Output:"}], gen_conf
+                    )
                     token_count += num_tokens_from_string(text + response)
                     response = re.sub(r"^[^\{]*", "", response)
                     response = re.sub(r"[^\}]*$", "", response)
@@ -95,13 +111,16 @@ class CommunityReportsExtractor(Extractor):
                     response = re.sub(r"\}\}", "}", response)
                     logging.debug(response)
                     response = json.loads(response)
-                    if not dict_has_keys_with_types(response, [
-                                ("title", str),
-                                ("summary", str),
-                                ("findings", list),
-                                ("rating", float),
-                                ("rating_explanation", str),
-                            ]):
+                    if not dict_has_keys_with_types(
+                        response,
+                        [
+                            ("title", str),
+                            ("summary", str),
+                            ("findings", list),
+                            ("rating", float),
+                            ("rating_explanation", str),
+                        ],
+                    ):
                         continue
                     response["weight"] = weight
                     response["entities"] = ents
@@ -114,7 +133,9 @@ class CommunityReportsExtractor(Extractor):
                 res_dict.append(response)
                 over += 1
                 if callback:
-                    callback(msg=f"Communities: {over}/{total}, elapsed: {timer() - st}s, used tokens: {token_count}")
+                    callback(
+                        msg=f"Communities: {over}/{total}, elapsed: {timer() - st}s, used tokens: {token_count}"
+                    )
 
         return CommunityReportsResult(
             structured_output=res_dict,

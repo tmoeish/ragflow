@@ -68,7 +68,7 @@ def get_rag_python_directory(*args):
 
 
 def get_home_cache_dir():
-    dir = os.path.join(os.path.expanduser('~'), ".ragflow")
+    dir = os.path.join(os.path.expanduser("~"), ".ragflow")
     try:
         os.mkdir(dir)
     except OSError:
@@ -124,7 +124,7 @@ def load_yaml_conf(conf_path):
         conf_path = os.path.join(get_project_base_directory(), conf_path)
     try:
         with open(conf_path) as f:
-            yaml = YAML(typ='safe', pure=True)
+            yaml = YAML(typ="safe", pure=True)
             return yaml.load(f)
     except Exception as e:
         raise EnvironmentError(
@@ -146,7 +146,7 @@ def rewrite_yaml_conf(conf_path, config):
 
 
 def rewrite_json_file(filepath, json_data):
-    with open(filepath, "w", encoding='utf-8') as f:
+    with open(filepath, "w", encoding="utf-8") as f:
         json.dump(json_data, f, indent=4, separators=(",", ": "))
     f.close()
 
@@ -157,17 +157,24 @@ def filename_type(filename):
         return FileType.PDF.value
 
     if re.match(
-             r".*\.(eml|doc|docx|ppt|pptx|yml|xml|htm|json|csv|txt|ini|xls|xlsx|wps|rtf|hlp|pages|numbers|key|md|py|js|java|c|cpp|h|php|go|ts|sh|cs|kt|html|sql)$", filename):
+        r".*\.(eml|doc|docx|ppt|pptx|yml|xml|htm|json|csv|txt|ini|xls|xlsx|wps|rtf|hlp|pages|numbers|key|md|py|js|java|c|cpp|h|php|go|ts|sh|cs|kt|html|sql)$",
+        filename,
+    ):
         return FileType.DOC.value
 
     if re.match(
-            r".*\.(wav|flac|ape|alac|wavpack|wv|mp3|aac|ogg|vorbis|opus|mp3)$", filename):
+        r".*\.(wav|flac|ape|alac|wavpack|wv|mp3|aac|ogg|vorbis|opus|mp3)$", filename
+    ):
         return FileType.AURAL.value
 
-    if re.match(r".*\.(jpg|jpeg|png|tif|gif|pcx|tga|exif|fpx|svg|psd|cdr|pcd|dxf|ufo|eps|ai|raw|WMF|webp|avif|apng|icon|ico|mpg|mpeg|avi|rm|rmvb|mov|wmv|asf|dat|asx|wvx|mpe|mpa|mp4)$", filename):
+    if re.match(
+        r".*\.(jpg|jpeg|png|tif|gif|pcx|tga|exif|fpx|svg|psd|cdr|pcd|dxf|ufo|eps|ai|raw|WMF|webp|avif|apng|icon|ico|mpg|mpeg|avi|rm|rmvb|mov|wmv|asf|dat|asx|wvx|mpe|mpa|mp4)$",
+        filename,
+    ):
         return FileType.VISUAL.value
 
     return FileType.OTHER.value
+
 
 def thumbnail_img(filename, blob):
     """
@@ -181,7 +188,9 @@ def thumbnail_img(filename, blob):
         img = None
         for _ in range(10):
             # https://github.com/jsvine/pdfplumber?tab=readme-ov-file#creating-a-pageimage-with-to_image
-            pdf.pages[0].to_image(resolution=resolution).annotated.save(buffered, format="png")
+            pdf.pages[0].to_image(resolution=resolution).annotated.save(
+                buffered, format="png"
+            )
             img = buffered.getvalue()
             if len(img) >= 64000 and resolution >= 2:
                 resolution = resolution / 2
@@ -200,6 +209,7 @@ def thumbnail_img(filename, blob):
     elif re.match(r".*\.(ppt|pptx)$", filename):
         import aspose.slides as slides
         import aspose.pydrawing as drawing
+
         try:
             with slides.Presentation(BytesIO(blob)) as presentation:
                 buffered = BytesIO()
@@ -208,7 +218,8 @@ def thumbnail_img(filename, blob):
                 for _ in range(10):
                     # https://reference.aspose.com/slides/python-net/aspose.slides/slide/get_thumbnail/#float-float
                     presentation.slides[0].get_thumbnail(scale, scale).save(
-                        buffered, drawing.imaging.ImageFormat.png)
+                        buffered, drawing.imaging.ImageFormat.png
+                    )
                     img = buffered.getvalue()
                     if len(img) >= 64000:
                         scale = scale / 2.0
@@ -224,10 +235,9 @@ def thumbnail_img(filename, blob):
 def thumbnail(filename, blob):
     img = thumbnail_img(filename, blob)
     if img is not None:
-        return IMG_BASE64_PREFIX + \
-            base64.b64encode(img).decode("utf-8")
+        return IMG_BASE64_PREFIX + base64.b64encode(img).decode("utf-8")
     else:
-        return ''
+        return ""
 
 
 def traversal_files(base):

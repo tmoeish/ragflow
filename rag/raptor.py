@@ -22,12 +22,19 @@ import umap
 import numpy as np
 from sklearn.mixture import GaussianMixture
 
-from graphrag.utils import get_llm_cache, get_embed_cache, set_embed_cache, set_llm_cache
+from graphrag.utils import (
+    get_llm_cache,
+    get_embed_cache,
+    set_embed_cache,
+    set_llm_cache,
+)
 from rag.utils import truncate
 
 
 class RecursiveAbstractiveProcessing4TreeOrganizedRetrieval:
-    def __init__(self, max_cluster, llm_model, embd_model, prompt, max_token=512, threshold=0.1):
+    def __init__(
+        self, max_cluster, llm_model, embd_model, prompt, max_token=512, threshold=0.1
+    ):
         self._max_cluster = max_cluster
         self._llm_model = llm_model
         self._embd_model = embd_model
@@ -79,15 +86,29 @@ class RecursiveAbstractiveProcessing4TreeOrganizedRetrieval:
             nonlocal chunks
             try:
                 texts = [chunks[i][0] for i in ck_idx]
-                len_per_chunk = int((self._llm_model.max_length - self._max_token) / len(texts))
-                cluster_content = "\n".join([truncate(t, max(1, len_per_chunk)) for t in texts])
-                cnt = self._chat("You're a helpful assistant.",
-                                           [{"role": "user",
-                                             "content": self._prompt.format(cluster_content=cluster_content)}],
-                                           {"temperature": 0.3, "max_tokens": self._max_token}
-                                           )
-                cnt = re.sub("(······\n由于长度的原因，回答被截断了，要继续吗？|For the content length reason, it stopped, continue?)", "",
-                             cnt)
+                len_per_chunk = int(
+                    (self._llm_model.max_length - self._max_token) / len(texts)
+                )
+                cluster_content = "\n".join(
+                    [truncate(t, max(1, len_per_chunk)) for t in texts]
+                )
+                cnt = self._chat(
+                    "You're a helpful assistant.",
+                    [
+                        {
+                            "role": "user",
+                            "content": self._prompt.format(
+                                cluster_content=cluster_content
+                            ),
+                        }
+                    ],
+                    {"temperature": 0.3, "max_tokens": self._max_token},
+                )
+                cnt = re.sub(
+                    "(······\n由于长度的原因，回答被截断了，要继续吗？|For the content length reason, it stopped, continue?)",
+                    "",
+                    cnt,
+                )
                 logging.debug(f"SUM: {cnt}")
                 embds, _ = self._embd_model.encode([cnt])
                 with lock:
@@ -98,11 +119,15 @@ class RecursiveAbstractiveProcessing4TreeOrganizedRetrieval:
 
         labels = []
         while end - start > 1:
-            embeddings = [embd for _, embd in chunks[start: end]]
+            embeddings = [embd for _, embd in chunks[start:end]]
             if len(embeddings) == 2:
                 summarize([start, start + 1], Lock())
                 if callback:
-                    callback(msg="Cluster one layer: {} -> {}".format(end - start, len(chunks) - end))
+                    callback(
+                        msg="Cluster one layer: {} -> {}".format(
+                            end - start, len(chunks) - end
+                        )
+                    )
                 labels.extend([0, 0])
                 layers.append((end, len(chunks)))
                 start = end
@@ -111,7 +136,9 @@ class RecursiveAbstractiveProcessing4TreeOrganizedRetrieval:
 
             n_neighbors = int((len(embeddings) - 1) ** 0.8)
             reduced_embeddings = umap.UMAP(
-                n_neighbors=max(2, n_neighbors), n_components=min(12, len(embeddings) - 2), metric="cosine"
+                n_neighbors=max(2, n_neighbors),
+                n_components=min(12, len(embeddings) - 2),
+                metric="cosine",
             ).fit_transform(embeddings)
             n_clusters = self._get_optimal_clusters(reduced_embeddings, random_state)
             if n_clusters == 1:
@@ -123,7 +150,9 @@ class RecursiveAbstractiveProcessing4TreeOrganizedRetrieval:
                 lbls = [np.where(prob > self._threshold)[0] for prob in probs]
                 lbls = [lbl[0] if isinstance(lbl, np.ndarray) else lbl for lbl in lbls]
             lock = Lock()
-            with ThreadPoolExecutor(max_workers=int(os.environ.get('GRAPH_EXTRACTOR_MAX_WORKERS', 10))) as executor:
+            with ThreadPoolExecutor(
+                max_workers=int(os.environ.get("GRAPH_EXTRACTOR_MAX_WORKERS", 10))
+            ) as executor:
                 threads = []
                 for c in range(n_clusters):
                     ck_idx = [i + start for i in range(len(lbls)) if lbls[i] == c]
@@ -136,13 +165,18 @@ class RecursiveAbstractiveProcessing4TreeOrganizedRetrieval:
                         raise th.result()
                 logging.debug(str([t.result() for t in threads]))
 
-            assert len(chunks) - end == n_clusters, "{} vs. {}".format(len(chunks) - end, n_clusters)
+            assert len(chunks) - end == n_clusters, "{} vs. {}".format(
+                len(chunks) - end, n_clusters
+            )
             labels.extend(lbls)
             layers.append((end, len(chunks)))
             if callback:
-                callback(msg="Cluster one layer: {} -> {}".format(end - start, len(chunks) - end))
+                callback(
+                    msg="Cluster one layer: {} -> {}".format(
+                        end - start, len(chunks) - end
+                    )
+                )
             start = end
             end = len(chunks)
 
         return chunks
-

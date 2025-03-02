@@ -19,6 +19,7 @@
 # beartype_all(conf=BeartypeConf(violation_type=UserWarning))    # <-- emit warnings from all code
 
 from api.utils.log_utils import initRootLogger
+
 initRootLogger("ragflow_server")
 
 import logging
@@ -45,6 +46,7 @@ from rag.settings import print_rag_settings
 
 stop_event = threading.Event()
 
+
 def update_progress():
     while not stop_event.is_set():
         try:
@@ -53,27 +55,27 @@ def update_progress():
         except Exception:
             logging.exception("update_progress exception")
 
+
 def signal_handler(sig, frame):
     logging.info("Received interrupt signal, shutting down...")
     stop_event.set()
     time.sleep(1)
     sys.exit(0)
 
-if __name__ == '__main__':
-    logging.info(r"""
+
+if __name__ == "__main__":
+    logging.info(
+        r"""
         ____   ___    ______ ______ __               
        / __ \ /   |  / ____// ____// /____  _      __
       / /_/ // /| | / / __ / /_   / // __ \| | /| / /
      / _, _// ___ |/ /_/ // __/  / // /_/ /| |/ |/ / 
     /_/ |_|/_/  |_|\____//_/    /_/ \____/ |__/|__/                             
 
-    """)
-    logging.info(
-        f'RAGFlow version: {get_ragflow_version()}'
+    """
     )
-    logging.info(
-        f'project base: {utils.file_utils.get_project_base_directory()}'
-    )
+    logging.info(f"RAGFlow version: {get_ragflow_version()}")
+    logging.info(f"project base: {utils.file_utils.get_project_base_directory()}")
     show_configs()
     settings.init_settings()
     print_rag_settings()
@@ -101,7 +103,9 @@ if __name__ == '__main__':
         logging.info("run on debug mode")
 
     RuntimeConfig.init_env()
-    RuntimeConfig.init_config(JOB_SERVER_HOST=settings.HOST_IP, HTTP_PORT=settings.HOST_PORT)
+    RuntimeConfig.init_config(
+        JOB_SERVER_HOST=settings.HOST_IP, HTTP_PORT=settings.HOST_PORT
+    )
 
     signal.signal(signal.SIGINT, signal_handler)
     signal.signal(signal.SIGTERM, signal_handler)

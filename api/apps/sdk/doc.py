@@ -60,12 +60,13 @@ class Chunk(BaseModel):
     available: bool = True
     positions: list[list[int]] = Field(default_factory=list)
 
-    @validator('positions')
+    @validator("positions")
     def validate_positions(cls, value):
         for sublist in value:
             if len(sublist) != 5:
                 raise ValueError("Each sublist in positions must have a length of 5")
         return value
+
 
 @manager.route("/datasets/<dataset_id>/documents", methods=["POST"])  # noqa: F821
 @token_required
@@ -136,7 +137,7 @@ def upload(dataset_id, tenant_id):
             return get_result(
                 message="No file selected!", code=settings.RetCode.ARGUMENT_ERROR
             )
-    '''
+    """
     # total size
     total_size = 0
     for file_obj in file_objs:
@@ -149,7 +150,7 @@ def upload(dataset_id, tenant_id):
             message=f"Total file size exceeds 10MB limit! ({total_size / (1024 * 1024):.2f} MB)",
             code=settings.RetCode.ARGUMENT_ERROR,
         )
-    '''
+    """
     e, kb = KnowledgebaseService.get_by_id(dataset_id)
     if not e:
         raise LookupError(f"Can't find the dataset with ID {dataset_id}!")
@@ -175,7 +176,9 @@ def upload(dataset_id, tenant_id):
     return get_result(data=renamed_doc_list)
 
 
-@manager.route("/datasets/<dataset_id>/documents/<document_id>", methods=["PUT"])  # noqa: F821
+@manager.route(
+    "/datasets/<dataset_id>/documents/<document_id>", methods=["PUT"]
+)  # noqa: F821
 @token_required
 def update_doc(tenant_id, dataset_id, document_id):
     """
@@ -242,8 +245,8 @@ def update_doc(tenant_id, dataset_id, document_id):
 
     if "name" in req and req["name"] != doc.name:
         if (
-                pathlib.Path(req["name"].lower()).suffix
-                != pathlib.Path(doc.name.lower()).suffix
+            pathlib.Path(req["name"].lower()).suffix
+            != pathlib.Path(doc.name.lower()).suffix
         ):
             return get_result(
                 message="The extension of file can't be changed",
@@ -281,7 +284,7 @@ def update_doc(tenant_id, dataset_id, document_id):
             "one",
             "knowledge_graph",
             "email",
-            "tag"
+            "tag",
         }
         if req.get("chunk_method") not in valid_chunk_method:
             return get_error_data_result(
@@ -318,12 +321,16 @@ def update_doc(tenant_id, dataset_id, document_id):
             )
             if not e:
                 return get_error_data_result(message="Document not found!")
-            settings.docStoreConn.delete({"doc_id": doc.id}, search.index_name(tenant_id), dataset_id)
+            settings.docStoreConn.delete(
+                {"doc_id": doc.id}, search.index_name(tenant_id), dataset_id
+            )
 
     return get_result()
 
 
-@manager.route("/datasets/<dataset_id>/documents/<document_id>", methods=["GET"])  # noqa: F821
+@manager.route(
+    "/datasets/<dataset_id>/documents/<document_id>", methods=["GET"]
+)  # noqa: F821
 @token_required
 def download(tenant_id, dataset_id, document_id):
     """
@@ -362,7 +369,9 @@ def download(tenant_id, dataset_id, document_id):
           type: object
     """
     if not KnowledgebaseService.query(id=dataset_id, tenant_id=tenant_id):
-        return get_error_data_result(message=f"You do not own the dataset {dataset_id}.")
+        return get_error_data_result(
+            message=f"You do not own the dataset {dataset_id}."
+        )
     doc = DocumentService.query(kb_id=dataset_id, id=document_id)
     if not doc:
         return get_error_data_result(
@@ -474,7 +483,9 @@ def list_docs(dataset_id, tenant_id):
                     description: Processing status.
     """
     if not KnowledgebaseService.accessible(kb_id=dataset_id, user_id=tenant_id):
-        return get_error_data_result(message=f"You don't own the dataset {dataset_id}. ")
+        return get_error_data_result(
+            message=f"You don't own the dataset {dataset_id}. "
+        )
     id = request.args.get("id")
     name = request.args.get("name")
 
@@ -563,7 +574,9 @@ def delete(tenant_id, dataset_id):
           type: object
     """
     if not KnowledgebaseService.accessible(kb_id=dataset_id, user_id=tenant_id):
-        return get_error_data_result(message=f"You don't own the dataset {dataset_id}. ")
+        return get_error_data_result(
+            message=f"You don't own the dataset {dataset_id}. "
+        )
     req = request.json
     if not req:
         doc_ids = None
@@ -672,7 +685,9 @@ def parse(tenant_id, dataset_id):
         info["chunk_num"] = 0
         info["token_num"] = 0
         DocumentService.update_by_id(id, info)
-        settings.docStoreConn.delete({"doc_id": id}, search.index_name(tenant_id), dataset_id)
+        settings.docStoreConn.delete(
+            {"doc_id": id}, search.index_name(tenant_id), dataset_id
+        )
         TaskService.filter_delete([Task.doc_id == id])
         e, doc = DocumentService.get_by_id(id)
         doc = doc.to_dict()
@@ -736,11 +751,15 @@ def stop_parsing(tenant_id, dataset_id):
             )
         info = {"run": "2", "progress": 0, "chunk_num": 0}
         DocumentService.update_by_id(id, info)
-        settings.docStoreConn.delete({"doc_id": doc[0].id}, search.index_name(tenant_id), dataset_id)
+        settings.docStoreConn.delete(
+            {"doc_id": doc[0].id}, search.index_name(tenant_id), dataset_id
+        )
     return get_result()
 
 
-@manager.route("/datasets/<dataset_id>/documents/<document_id>/chunks", methods=["GET"])  # noqa: F821
+@manager.route(
+    "/datasets/<dataset_id>/documents/<document_id>/chunks", methods=["GET"]
+)  # noqa: F821
 @token_required
 def list_chunks(tenant_id, dataset_id, document_id):
     """
@@ -856,7 +875,9 @@ def list_chunks(tenant_id, dataset_id, document_id):
 
     res = {"total": 0, "chunks": [], "doc": renamed_doc}
     if req.get("id"):
-        chunk = settings.docStoreConn.get(req.get("id"), search.index_name(tenant_id), [dataset_id])
+        chunk = settings.docStoreConn.get(
+            req.get("id"), search.index_name(tenant_id), [dataset_id]
+        )
         k = []
         for n in chunk.keys():
             if re.search(r"(_vec$|_sm_|_tks|_ltks)", n):
@@ -865,25 +886,30 @@ def list_chunks(tenant_id, dataset_id, document_id):
             del chunk[n]
         if not chunk:
             return get_error_data_result(f"Chunk `{req.get('id')}` not found.")
-        res['total'] = 1
+        res["total"] = 1
         final_chunk = {
-            "id":chunk.get("id",chunk.get("chunk_id")),
-            "content":chunk["content_with_weight"],
-            "document_id":chunk.get("doc_id",chunk.get("document_id")),
-            "docnm_kwd":chunk["docnm_kwd"],
-            "important_keywords":chunk.get("important_kwd",[]),
-            "questions":chunk.get("question_kwd",[]),
-            "dataset_id":chunk.get("kb_id",chunk.get("dataset_id")),
-            "image_id":chunk["img_id"],
-            "available":bool(chunk.get("available_int",1)),
-            "positions":chunk.get("position_int",[]),
+            "id": chunk.get("id", chunk.get("chunk_id")),
+            "content": chunk["content_with_weight"],
+            "document_id": chunk.get("doc_id", chunk.get("document_id")),
+            "docnm_kwd": chunk["docnm_kwd"],
+            "important_keywords": chunk.get("important_kwd", []),
+            "questions": chunk.get("question_kwd", []),
+            "dataset_id": chunk.get("kb_id", chunk.get("dataset_id")),
+            "image_id": chunk["img_id"],
+            "available": bool(chunk.get("available_int", 1)),
+            "positions": chunk.get("position_int", []),
         }
         res["chunks"].append(final_chunk)
         _ = Chunk(**final_chunk)
 
     elif settings.docStoreConn.indexExist(search.index_name(tenant_id), dataset_id):
-        sres = settings.retrievaler.search(query, search.index_name(tenant_id), [dataset_id], emb_mdl=None,
-                                           highlight=True)
+        sres = settings.retrievaler.search(
+            query,
+            search.index_name(tenant_id),
+            [dataset_id],
+            emb_mdl=None,
+            highlight=True,
+        )
         res["total"] = sres.total
         for id in sres.ids:
             d = {
@@ -897,13 +923,15 @@ def list_chunks(tenant_id, dataset_id, document_id):
                 "docnm_kwd": sres.field[id]["docnm_kwd"],
                 "important_keywords": sres.field[id].get("important_kwd", []),
                 "questions": sres.field[id].get("question_kwd", []),
-                "dataset_id": sres.field[id].get("kb_id", sres.field[id].get("dataset_id")),
+                "dataset_id": sres.field[id].get(
+                    "kb_id", sres.field[id].get("dataset_id")
+                ),
                 "image_id": sres.field[id].get("img_id", ""),
                 "available": bool(sres.field[id].get("available_int", 1)),
-                "positions": sres.field[id].get("position_int",[]),
+                "positions": sres.field[id].get("position_int", []),
             }
             res["chunks"].append(d)
-            _ = Chunk(**d) # validate the chunk
+            _ = Chunk(**d)  # validate the chunk
     return get_result(data=res)
 
 
@@ -993,9 +1021,7 @@ def add_chunk(tenant_id, dataset_id, document_id):
             )
     if "questions" in req:
         if not isinstance(req["questions"], list):
-            return get_error_data_result(
-                "`questions` is required to be a list"
-            )
+            return get_error_data_result("`questions` is required to be a list")
     chunk_id = xxhash.xxh64((req["content"] + document_id).encode("utf-8")).hexdigest()
     d = {
         "id": chunk_id,
@@ -1008,9 +1034,7 @@ def add_chunk(tenant_id, dataset_id, document_id):
         " ".join(req.get("important_keywords", []))
     )
     d["question_kwd"] = req.get("questions", [])
-    d["question_tks"] = rag_tokenizer.tokenize(
-        "\n".join(req.get("questions", []))
-    )
+    d["question_tks"] = rag_tokenizer.tokenize("\n".join(req.get("questions", [])))
     d["create_time"] = str(datetime.datetime.now()).replace("T", " ")[:19]
     d["create_timestamp_flt"] = datetime.datetime.now().timestamp()
     d["kb_id"] = dataset_id
@@ -1020,7 +1044,12 @@ def add_chunk(tenant_id, dataset_id, document_id):
     embd_mdl = TenantLLMService.model_instance(
         tenant_id, LLMType.EMBEDDING.value, embd_id
     )
-    v, c = embd_mdl.encode([doc.name, req["content"] if not d["question_kwd"] else "\n".join(d["question_kwd"])])
+    v, c = embd_mdl.encode(
+        [
+            doc.name,
+            req["content"] if not d["question_kwd"] else "\n".join(d["question_kwd"]),
+        ]
+    )
     v = 0.1 * v[0] + 0.9 * v[1]
     d["q_%d_vec" % len(v)] = v.tolist()
     settings.docStoreConn.insert([d], search.index_name(tenant_id), dataset_id)
@@ -1100,11 +1129,15 @@ def rm_chunk(tenant_id, dataset_id, document_id):
     condition = {"doc_id": document_id}
     if "chunk_ids" in req:
         condition["id"] = req["chunk_ids"]
-    chunk_number = settings.docStoreConn.delete(condition, search.index_name(tenant_id), dataset_id)
+    chunk_number = settings.docStoreConn.delete(
+        condition, search.index_name(tenant_id), dataset_id
+    )
     if chunk_number != 0:
         DocumentService.decrement_chunk_num(document_id, dataset_id, 1, chunk_number, 0)
     if "chunk_ids" in req and chunk_number != len(req["chunk_ids"]):
-        return get_error_data_result(message=f"rm_chunk deleted chunks {chunk_number}, expect {len(req['chunk_ids'])}")
+        return get_error_data_result(
+            message=f"rm_chunk deleted chunks {chunk_number}, expect {len(req['chunk_ids'])}"
+        )
     return get_result(message=f"deleted {chunk_number} chunks")
 
 
@@ -1165,7 +1198,9 @@ def update_chunk(tenant_id, dataset_id, document_id, chunk_id):
         schema:
           type: object
     """
-    chunk = settings.docStoreConn.get(chunk_id, search.index_name(tenant_id), [dataset_id])
+    chunk = settings.docStoreConn.get(
+        chunk_id, search.index_name(tenant_id), [dataset_id]
+    )
     if chunk is None:
         return get_error_data_result(f"Can't find this chunk {chunk_id}")
     if not KnowledgebaseService.accessible(kb_id=dataset_id, user_id=tenant_id):
@@ -1211,10 +1246,21 @@ def update_chunk(tenant_id, dataset_id, document_id, chunk_id):
             d, arr[0], arr[1], not any([rag_tokenizer.is_chinese(t) for t in q + a])
         )
 
-    v, c = embd_mdl.encode([doc.name, d["content_with_weight"] if not d.get("question_kwd") else "\n".join(d["question_kwd"])])
+    v, c = embd_mdl.encode(
+        [
+            doc.name,
+            (
+                d["content_with_weight"]
+                if not d.get("question_kwd")
+                else "\n".join(d["question_kwd"])
+            ),
+        ]
+    )
     v = 0.1 * v[0] + 0.9 * v[1] if doc.parser_id != ParserType.QA else v[1]
     d["q_%d_vec" % len(v)] = v.tolist()
-    settings.docStoreConn.update({"id": chunk_id}, d, search.index_name(tenant_id), dataset_id)
+    settings.docStoreConn.update(
+        {"id": chunk_id}, d, search.index_name(tenant_id), dataset_id
+    )
     return get_result()
 
 
@@ -1308,7 +1354,11 @@ def retrieval_test(tenant_id):
         if not KnowledgebaseService.accessible(kb_id=id, user_id=tenant_id):
             return get_error_data_result(f"You don't own the dataset {id}.")
     kbs = KnowledgebaseService.get_by_ids(kb_ids)
-    embd_nms = list(set([TenantLLMService.split_model_name_and_factory(kb.embd_id)[0] for kb in kbs]))  # remove vendor suffix for comparison
+    embd_nms = list(
+        set(
+            [TenantLLMService.split_model_name_and_factory(kb.embd_id)[0] for kb in kbs]
+        )
+    )  # remove vendor suffix for comparison
     if len(embd_nms) != 1:
         return get_result(
             message='Datasets use different embedding models."',
@@ -1344,7 +1394,9 @@ def retrieval_test(tenant_id):
 
         rerank_mdl = None
         if req.get("rerank_id"):
-            rerank_mdl = LLMBundle(kb.tenant_id, LLMType.RERANK, llm_name=req["rerank_id"])
+            rerank_mdl = LLMBundle(
+                kb.tenant_id, LLMType.RERANK, llm_name=req["rerank_id"]
+            )
 
         if req.get("keyword", False):
             chat_mdl = LLMBundle(kb.tenant_id, LLMType.CHAT)
@@ -1363,14 +1415,16 @@ def retrieval_test(tenant_id):
             doc_ids,
             rerank_mdl=rerank_mdl,
             highlight=highlight,
-            rank_feature=label_question(question, kbs)
+            rank_feature=label_question(question, kbs),
         )
         if use_kg:
-            ck = settings.kg_retrievaler.retrieval(question,
-                                                   [k.tenant_id for k in kbs],
-                                                   kb_ids,
-                                                   embd_mdl,
-                                                   LLMBundle(kb.tenant_id, LLMType.CHAT))
+            ck = settings.kg_retrievaler.retrieval(
+                question,
+                [k.tenant_id for k in kbs],
+                kb_ids,
+                embd_mdl,
+                LLMBundle(kb.tenant_id, LLMType.CHAT),
+            )
             if ck["content_with_weight"]:
                 ranks["chunks"].insert(0, ck)
 
@@ -1387,7 +1441,7 @@ def retrieval_test(tenant_id):
                 "important_kwd": "important_keywords",
                 "question_kwd": "questions",
                 "docnm_kwd": "document_keyword",
-                "kb_id":"dataset_id"
+                "kb_id": "dataset_id",
             }
             rename_chunk = {}
             for key, value in chunk.items():

@@ -27,11 +27,13 @@ from azure.storage.filedatalake import FileSystemClient
 class RAGFlowAzureSpnBlob(object):
     def __init__(self):
         self.conn = None
-        self.account_url = os.getenv('ACCOUNT_URL', settings.AZURE["account_url"])
-        self.client_id = os.getenv('CLIENT_ID', settings.AZURE["client_id"])
-        self.secret = os.getenv('SECRET', settings.AZURE["secret"])
-        self.tenant_id = os.getenv('TENANT_ID', settings.AZURE["tenant_id"])
-        self.container_name = os.getenv('CONTAINER_NAME', settings.AZURE["container_name"])
+        self.account_url = os.getenv("ACCOUNT_URL", settings.AZURE["account_url"])
+        self.client_id = os.getenv("CLIENT_ID", settings.AZURE["client_id"])
+        self.secret = os.getenv("SECRET", settings.AZURE["secret"])
+        self.tenant_id = os.getenv("TENANT_ID", settings.AZURE["tenant_id"])
+        self.container_name = os.getenv(
+            "CONTAINER_NAME", settings.AZURE["container_name"]
+        )
         self.__open__()
 
     def __open__(self):
@@ -42,8 +44,17 @@ class RAGFlowAzureSpnBlob(object):
             pass
 
         try:
-            credentials = ClientSecretCredential(tenant_id=self.tenant_id, client_id=self.client_id, client_secret=self.secret, authority=AzureAuthorityHosts.AZURE_CHINA)
-            self.conn = FileSystemClient(account_url=self.account_url, file_system_name=self.container_name, credential=credentials)
+            credentials = ClientSecretCredential(
+                tenant_id=self.tenant_id,
+                client_id=self.client_id,
+                client_secret=self.secret,
+                authority=AzureAuthorityHosts.AZURE_CHINA,
+            )
+            self.conn = FileSystemClient(
+                account_url=self.account_url,
+                file_system_name=self.container_name,
+                credential=credentials,
+            )
         except Exception:
             logging.exception("Fail to connect %s" % self.account_url)
 

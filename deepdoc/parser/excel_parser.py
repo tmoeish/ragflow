@@ -37,7 +37,9 @@ class RAGFlowExcelParser:
         try:
             wb = load_workbook(s_fnm)
         except Exception as e:
-            print(f'****wxy: file parser error: {e}, s_fnm={s_fnm}, trying convert files')
+            print(
+                f"****wxy: file parser error: {e}, s_fnm={s_fnm}, trying convert files"
+            )
             df = pd.read_excel(s_fnm)
             wb = Workbook()
             # if len(wb.worksheets) > 0:
@@ -74,7 +76,7 @@ class RAGFlowExcelParser:
                 tb += f"<table><caption>{sheetname}</caption>"
                 tb += tb_rows_0
                 for r in list(
-                  rows[1 + chunk_i * chunk_rows: 1 + (chunk_i + 1) * chunk_rows]
+                    rows[1 + chunk_i * chunk_rows : 1 + (chunk_i + 1) * chunk_rows]
                 ):
                     tb += "<tr>"
                     for i, c in enumerate(r):
@@ -103,7 +105,9 @@ class RAGFlowExcelParser:
         try:
             wb = load_workbook(s_fnm)
         except Exception as e:
-            print(f'****wxy: file parser error: {e}, s_fnm={s_fnm}, trying convert files')
+            print(
+                f"****wxy: file parser error: {e}, s_fnm={s_fnm}, trying convert files"
+            )
             df = pd.read_excel(s_fnm)
             wb = Workbook()
             if len(wb.worksheets) > 0:
@@ -164,4 +168,3 @@ class RAGFlowExcelParser:
 if __name__ == "__main__":
     psr = RAGFlowExcelParser()
     psr(sys.argv[1])
-

@@ -21,10 +21,10 @@ from agent.component import GenerateParam, Generate
 
 
 class CategorizeParam(GenerateParam):
-
     """
     Define the Categorize component parameters.
     """
+
     def __init__(self):
         super().__init__()
         self.category_description = {}
@@ -50,7 +50,10 @@ class CategorizeParam(GenerateParam):
         for c, desc in self.category_description.items():
             if desc.get("description"):
                 descriptions.append(
-                    "--------------------\nCategory: {}\nDescription: {}\n".format(c, desc["description"]))
+                    "--------------------\nCategory: {}\nDescription: {}\n".format(
+                        c, desc["description"]
+                    )
+                )
 
         self.prompt = """
         You're a text classifier. You need to categorize the user’s questions into {} categories, 
@@ -70,7 +73,7 @@ class CategorizeParam(GenerateParam):
             "/".join(list(self.category_description.keys())),
             "\n".join(descriptions),
             "- ".join(cate_lines),
-            chat_hist
+            chat_hist,
         )
         return self.prompt
 
@@ -81,18 +84,24 @@ class Categorize(Generate, ABC):
     def _run(self, history, **kwargs):
         input = self.get_input()
         input = " - ".join(input["content"]) if "content" in input else ""
-        chat_mdl = LLMBundle(self._canvas.get_tenant_id(), LLMType.CHAT, self._param.llm_id)
-        ans = chat_mdl.chat(self._param.get_prompt(input), [{"role": "user", "content": "\nCategory: "}],
-                            self._param.gen_conf())
+        chat_mdl = LLMBundle(
+            self._canvas.get_tenant_id(), LLMType.CHAT, self._param.llm_id
+        )
+        ans = chat_mdl.chat(
+            self._param.get_prompt(input),
+            [{"role": "user", "content": "\nCategory: "}],
+            self._param.gen_conf(),
+        )
         logging.debug(f"input: {input}, answer: {str(ans)}")
         for c in self._param.category_description.keys():
             if ans.lower().find(c.lower()) >= 0:
                 return Categorize.be_output(self._param.category_description[c]["to"])
 
-        return Categorize.be_output(list(self._param.category_description.items())[-1][1]["to"])
+        return Categorize.be_output(
+            list(self._param.category_description.items())[-1][1]["to"]
+        )
 
     def debug(self, **kwargs):
         df = self._run([], **kwargs)
         cpn_id = df.iloc[0, 0]
         return Categorize.be_output(self._canvas.get_component_name(cpn_id))
-

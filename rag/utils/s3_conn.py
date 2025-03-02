@@ -22,14 +22,15 @@ from io import BytesIO
 from rag.utils import singleton
 from rag import settings
 
+
 @singleton
 class RAGFlowS3(object):
     def __init__(self):
         self.conn = None
         self.s3_config = settings.S3
-        self.access_key = self.s3_config.get('access_key', None)
-        self.secret_key = self.s3_config.get('secret_key', None)
-        self.region = self.s3_config.get('region', None)
+        self.access_key = self.s3_config.get("access_key", None)
+        self.secret_key = self.s3_config.get("secret_key", None)
+        self.region = self.s3_config.get("region", None)
         self.__open__()
 
     def __open__(self):
@@ -41,10 +42,10 @@ class RAGFlowS3(object):
 
         try:
             self.conn = boto3.client(
-                's3',
+                "s3",
                 region_name=self.region,
                 aws_access_key_id=self.access_key,
-                aws_secret_access_key=self.secret_key
+                aws_secret_access_key=self.secret_key,
             )
         except Exception:
             logging.exception(f"Fail to connect at region {self.region}")
@@ -104,7 +105,7 @@ class RAGFlowS3(object):
         for _ in range(1):
             try:
                 r = self.conn.get_object(Bucket=bucket, Key=fnm)
-                object_data = r['Body'].read()
+                object_data = r["Body"].read()
                 return object_data
             except Exception:
                 logging.exception(f"fail get {bucket}/{fnm}")
@@ -118,7 +119,7 @@ class RAGFlowS3(object):
             if self.conn.head_object(Bucket=bucket, Key=fnm):
                 return True
         except ClientError as e:
-            if e.response['Error']['Code'] == '404':
+            if e.response["Error"]["Code"] == "404":
 
                 return False
             else:
@@ -127,10 +128,11 @@ class RAGFlowS3(object):
     def get_presigned_url(self, bucket, fnm, expires):
         for _ in range(10):
             try:
-                r = self.conn.generate_presigned_url('get_object',
-                                                     Params={'Bucket': bucket,
-                                                             'Key': fnm},
-                                                     ExpiresIn=expires)
+                r = self.conn.generate_presigned_url(
+                    "get_object",
+                    Params={"Bucket": bucket, "Key": fnm},
+                    ExpiresIn=expires,
+                )
 
                 return r
             except Exception:

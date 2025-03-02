@@ -35,7 +35,7 @@ except Exception:
 DOC_MAXIMUM_SIZE = int(os.environ.get("MAX_CONTENT_LENGTH", 128 * 1024 * 1024))
 
 SVR_QUEUE_NAME = "rag_flow_svr_queue"
-SVR_QUEUE_RETENTION = 60*60
+SVR_QUEUE_RETENTION = 60 * 60
 SVR_QUEUE_MAX_LEN = 1024
 SVR_CONSUMER_NAME = "rag_flow_svr_consumer"
 SVR_CONSUMER_GROUP_NAME = "rag_flow_svr_consumer_group"
@@ -47,4 +47,6 @@ def print_rag_settings():
     logging.info(f"MAX_CONTENT_LENGTH: {DOC_MAXIMUM_SIZE}")
     logging.info(f"SERVER_QUEUE_MAX_LEN: {SVR_QUEUE_MAX_LEN}")
     logging.info(f"SERVER_QUEUE_RETENTION: {SVR_QUEUE_RETENTION}")
-    logging.info(f"MAX_FILE_COUNT_PER_USER: {int(os.environ.get('MAX_FILE_NUM_PER_USER', 0))}")
+    logging.info(
+        f"MAX_FILE_COUNT_PER_USER: {int(os.environ.get('MAX_FILE_NUM_PER_USER', 0))}"
+    )

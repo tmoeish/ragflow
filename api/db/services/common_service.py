@@ -27,8 +27,7 @@ class CommonService:
     @classmethod
     @DB.connection_context()
     def query(cls, cols=None, reverse=None, order_by=None, **kwargs):
-        return cls.model.query(cols=cols, reverse=reverse,
-                               order_by=order_by, **kwargs)
+        return cls.model.query(cols=cols, reverse=reverse, order_by=order_by, **kwargs)
 
     @classmethod
     @DB.connection_context()
@@ -42,10 +41,12 @@ class CommonService:
                 order_by = "create_time"
             if reverse is True:
                 query_records = query_records.order_by(
-                    cls.model.getter_by(order_by).desc())
+                    cls.model.getter_by(order_by).desc()
+                )
             elif reverse is False:
                 query_records = query_records.order_by(
-                    cls.model.getter_by(order_by).asc())
+                    cls.model.getter_by(order_by).asc()
+                )
         return query_records
 
     @classmethod
@@ -89,7 +90,7 @@ class CommonService:
                 d["create_time"] = current_timestamp()
                 d["create_date"] = datetime_format(datetime.now())
             for i in range(0, len(data_list), batch_size):
-                cls.model.insert_many(data_list[i:i + batch_size]).execute()
+                cls.model.insert_many(data_list[i : i + batch_size]).execute()
 
     @classmethod
     @DB.connection_context()
@@ -98,8 +99,7 @@ class CommonService:
             for data in data_list:
                 data["update_time"] = current_timestamp()
                 data["update_date"] = datetime_format(datetime.now())
-                cls.model.update(data).where(
-                    cls.model.id == data["id"]).execute()
+                cls.model.update(data).where(cls.model.id == data["id"]).execute()
 
     @classmethod
     @DB.connection_context()
@@ -149,35 +149,28 @@ class CommonService:
     def cut_list(tar_list, n):
         length = len(tar_list)
         arr = range(length)
-        result = [tuple(tar_list[x:(x + n)]) for x in arr[::n]]
+        result = [tuple(tar_list[x : (x + n)]) for x in arr[::n]]
         return result
 
     @classmethod
     @DB.connection_context()
-    def filter_scope_list(cls, in_key, in_filters_list,
-                          filters=None, cols=None):
+    def filter_scope_list(cls, in_key, in_filters_list, filters=None, cols=None):
         in_filters_tuple_list = cls.cut_list(in_filters_list, 20)
         if not filters:
             filters = []
         res_list = []
         if cols:
             for i in in_filters_tuple_list:
-                query_records = cls.model.select(
-                    *
-                    cols).where(
-                    getattr(
-                        cls.model,
-                        in_key).in_(i),
-                    *
-                    filters)
+                query_records = cls.model.select(*cols).where(
+                    getattr(cls.model, in_key).in_(i), *filters
+                )
                 if query_records:
-                    res_list.extend(
-                        [query_record for query_record in query_records])
+                    res_list.extend([query_record for query_record in query_records])
         else:
             for i in in_filters_tuple_list:
                 query_records = cls.model.select().where(
-                    getattr(cls.model, in_key).in_(i), *filters)
+                    getattr(cls.model, in_key).in_(i), *filters
+                )
                 if query_records:
-                    res_list.extend(
-                        [query_record for query_record in query_records])
+                    res_list.extend([query_record for query_record in query_records])
         return res_list

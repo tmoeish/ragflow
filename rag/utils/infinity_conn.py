@@ -41,7 +41,7 @@ from rag.utils.doc_store_conn import (
     OrderByExpr,
 )
 
-logger = logging.getLogger('ragflow.infinity_conn')
+logger = logging.getLogger("ragflow.infinity_conn")
 
 
 def equivalent_condition_to_str(condition: dict, table_instance=None) -> str | None:
@@ -90,7 +90,9 @@ def equivalent_condition_to_str(condition: dict, table_instance=None) -> str | N
     return " AND ".join(cond) if cond else "1=1"
 
 
-def concat_dataframes(df_list: list[pl.DataFrame], selectFields: list[str]) -> pl.DataFrame:
+def concat_dataframes(
+    df_list: list[pl.DataFrame], selectFields: list[str]
+) -> pl.DataFrame:
     """
     Concatenate multiple dataframes into one.
     """
@@ -99,8 +101,8 @@ def concat_dataframes(df_list: list[pl.DataFrame], selectFields: list[str]) -> p
         return pl.concat(df_list)
     schema = dict()
     for field_name in selectFields:
-        if field_name == 'score()':  # Workaround: fix schema is changed to score()
-            schema['SCORE'] = str
+        if field_name == "score()":  # Workaround: fix schema is changed to score()
+            schema["SCORE"] = str
         else:
             schema[field_name] = str
     return pl.DataFrame(schema=schema)
@@ -127,10 +129,14 @@ class InfinityConnection(DocStoreConnection):
                     connPool.release_conn(inf_conn)
                     break
                 connPool.release_conn(inf_conn)
-                logger.warn(f"Infinity status: {res.server_status}. Waiting Infinity {infinity_uri} to be healthy.")
+                logger.warn(
+                    f"Infinity status: {res.server_status}. Waiting Infinity {infinity_uri} to be healthy."
+                )
                 time.sleep(5)
             except Exception as e:
-                logger.warning(f"{str(e)}. Waiting Infinity {infinity_uri} to be healthy.")
+                logger.warning(
+                    f"{str(e)}. Waiting Infinity {infinity_uri} to be healthy."
+                )
                 time.sleep(5)
         if self.connPool is None:
             msg = f"Infinity {infinity_uri} is unhealthy in 120s."
@@ -168,7 +174,9 @@ class InfinityConnection(DocStoreConnection):
                 inf_table.create_index(
                     f"text_idx_{field_name}",
                     IndexInfo(
-                        field_name, IndexType.FullText, {"ANALYZER": field_info["analyzer"]}
+                        field_name,
+                        IndexType.FullText,
+                        {"ANALYZER": field_info["analyzer"]},
                     ),
                     ConflictType.Ignore,
                 )
@@ -189,7 +197,11 @@ class InfinityConnection(DocStoreConnection):
         self.connPool.release_conn(inf_conn)
         res2 = {
             "type": "infinity",
-            "status": "green" if res.error_code == 0 and res.server_status == "started" else "red",
+            "status": (
+                "green"
+                if res.error_code == 0 and res.server_status == "started"
+                else "red"
+            ),
             "error": res.error_msg,
         }
         return res2
@@ -241,9 +253,7 @@ class InfinityConnection(DocStoreConnection):
                 ConflictType.Ignore,
             )
         self.connPool.release_conn(inf_conn)
-        logger.info(
-            f"INFINITY created table {table_name}, vector size {vectorSize}"
-        )
+        logger.info(f"INFINITY created table {table_name}, vector size {vectorSize}")
 
     def deleteIdx(self, indexName: str, knowledgebaseId: str):
         table_name = f"{indexName}_{knowledgebaseId}"
@@ -270,17 +280,18 @@ class InfinityConnection(DocStoreConnection):
     """
 
     def search(
-            self, selectFields: list[str],
-            highlightFields: list[str],
-            condition: dict,
-            matchExprs: list[MatchExpr],
-            orderBy: OrderByExpr,
-            offset: int,
-            limit: int,
-            indexNames: str | list[str],
-            knowledgebaseIds: list[str],
-            aggFields: list[str] = [],
-            rank_feature: dict | None = None
+        self,
+        selectFields: list[str],
+        highlightFields: list[str],
+        condition: dict,
+        matchExprs: list[MatchExpr],
+        orderBy: OrderByExpr,
+        offset: int,
+        limit: int,
+        indexNames: str | list[str],
+        knowledgebaseIds: list[str],
+        aggFields: list[str] = [],
+        rank_feature: dict | None = None,
     ) -> list[dict] | pl.DataFrame:
         """
         TODO: Infinity doesn't provide highlight
@@ -319,7 +330,9 @@ class InfinityConnection(DocStoreConnection):
         if condition:
             for indexName in indexNames:
                 table_name = f"{indexName}_{knowledgebaseIds[0]}"
-                filter_cond = equivalent_condition_to_str(condition, db_instance.get_table(table_name))
+                filter_cond = equivalent_condition_to_str(
+                    condition, db_instance.get_table(table_name)
+                )
                 break
 
         for matchExpr in matchExprs:
@@ -327,19 +340,33 @@ class InfinityConnection(DocStoreConnection):
                 if filter_cond and "filter" not in matchExpr.extra_options:
                     matchExpr.extra_options.update({"filter": filter_cond})
                 fields = ",".join(matchExpr.fields)
-                filter_fulltext = f"filter_fulltext('{fields}', '{matchExpr.matching_text}')"
+                filter_fulltext = (
+                    f"filter_fulltext('{fields}', '{matchExpr.matching_text}')"
+                )
                 if filter_cond:
                     filter_fulltext = f"({filter_cond}) AND {filter_fulltext}"
-                minimum_should_match = matchExpr.extra_options.get("minimum_should_match", 0.0)
+                minimum_should_match = matchExpr.extra_options.get(
+                    "minimum_should_match", 0.0
+                )
                 if isinstance(minimum_should_match, float):
-                    str_minimum_should_match = str(int(minimum_should_match * 100)) + "%"
-                    matchExpr.extra_options["minimum_should_match"] = str_minimum_should_match
+                    str_minimum_should_match = (
+                        str(int(minimum_should_match * 100)) + "%"
+                    )
+                    matchExpr.extra_options["minimum_should_match"] = (
+                        str_minimum_should_match
+                    )
                 for k, v in matchExpr.extra_options.items():
                     if not isinstance(v, str):
                         matchExpr.extra_options[k] = str(v)
-                logger.debug(f"INFINITY search MatchTextExpr: {json.dumps(matchExpr.__dict__)}")
+                logger.debug(
+                    f"INFINITY search MatchTextExpr: {json.dumps(matchExpr.__dict__)}"
+                )
             elif isinstance(matchExpr, MatchDenseExpr):
-                if filter_fulltext and filter_cond and "filter" not in matchExpr.extra_options:
+                if (
+                    filter_fulltext
+                    and filter_cond
+                    and "filter" not in matchExpr.extra_options
+                ):
                     matchExpr.extra_options.update({"filter": filter_fulltext})
                 for k, v in matchExpr.extra_options.items():
                     if not isinstance(v, str):
@@ -348,9 +375,13 @@ class InfinityConnection(DocStoreConnection):
                 if similarity:
                     matchExpr.extra_options["threshold"] = similarity
                     del matchExpr.extra_options["similarity"]
-                logger.debug(f"INFINITY search MatchDenseExpr: {json.dumps(matchExpr.__dict__)}")
+                logger.debug(
+                    f"INFINITY search MatchDenseExpr: {json.dumps(matchExpr.__dict__)}"
+                )
             elif isinstance(matchExpr, FusionExpr):
-                logger.debug(f"INFINITY search FusionExpr: {json.dumps(matchExpr.__dict__)}")
+                logger.debug(
+                    f"INFINITY search FusionExpr: {json.dumps(matchExpr.__dict__)}"
+                )
 
         order_by_expr_list = list()
         if orderBy.fields:
@@ -392,7 +423,9 @@ class InfinityConnection(DocStoreConnection):
                             )
                         elif isinstance(matchExpr, FusionExpr):
                             builder = builder.fusion(
-                                matchExpr.method, matchExpr.topn, matchExpr.fusion_params
+                                matchExpr.method,
+                                matchExpr.topn,
+                                matchExpr.fusion_params,
                             )
                 else:
                     if len(filter_cond) > 0:
@@ -400,15 +433,23 @@ class InfinityConnection(DocStoreConnection):
                 if orderBy.fields:
                     builder.sort(order_by_expr_list)
                 builder.offset(offset).limit(limit)
-                kb_res, extra_result = builder.option({"total_hits_count": True}).to_pl()
+                kb_res, extra_result = builder.option(
+                    {"total_hits_count": True}
+                ).to_pl()
                 if extra_result:
                     total_hits_count += int(extra_result["total_hits_count"])
-                logger.debug(f"INFINITY search table: {str(table_name)}, result: {str(kb_res)}")
+                logger.debug(
+                    f"INFINITY search table: {str(table_name)}, result: {str(kb_res)}"
+                )
                 df_list.append(kb_res)
         self.connPool.release_conn(inf_conn)
         res = concat_dataframes(df_list, selectFields)
         if matchExprs:
-            res = res.sort(pl.col(score_column) + pl.col(PAGERANK_FLD), descending=True, maintain_order=True)
+            res = res.sort(
+                pl.col(score_column) + pl.col(PAGERANK_FLD),
+                descending=True,
+                maintain_order=True,
+            )
             if score_column and score_column != "SCORE":
                 res = res.rename({score_column: "_score"})
         res = res.limit(limit)
@@ -416,7 +457,7 @@ class InfinityConnection(DocStoreConnection):
         return res, total_hits_count
 
     def get(
-            self, chunkId: str, indexName: str, knowledgebaseIds: list[str]
+        self, chunkId: str, indexName: str, knowledgebaseIds: list[str]
     ) -> dict | None:
         inf_conn = self.connPool.get_conn()
         db_instance = inf_conn.get_database(self.dbName)
@@ -431,10 +472,13 @@ class InfinityConnection(DocStoreConnection):
                 table_instance = db_instance.get_table(table_name)
             except Exception:
                 logger.warning(
-                    f"Table not found: {table_name}, this knowledge base isn't created in Infinity. Maybe it is created in other document engine.")
+                    f"Table not found: {table_name}, this knowledge base isn't created in Infinity. Maybe it is created in other document engine."
+                )
                 continue
             kb_res, _ = table_instance.output(["*"]).filter(f"id = '{chunkId}'").to_pl()
-            logger.debug(f"INFINITY get table: {str(table_list)}, result: {str(kb_res)}")
+            logger.debug(
+                f"INFINITY get table: {str(table_list)}, result: {str(kb_res)}"
+            )
             df_list.append(kb_res)
         self.connPool.release_conn(inf_conn)
         res = concat_dataframes(df_list, ["id"])
@@ -442,7 +486,7 @@ class InfinityConnection(DocStoreConnection):
         return res_fields.get(chunkId, None)
 
     def insert(
-            self, documents: list[dict], indexName: str, knowledgebaseId: str = None
+        self, documents: list[dict], indexName: str, knowledgebaseId: str = None
     ) -> list[str]:
         inf_conn = self.connPool.get_conn()
         db_instance = inf_conn.get_database(self.dbName)
@@ -479,12 +523,18 @@ class InfinityConnection(DocStoreConnection):
             assert "_id" not in d
             assert "id" in d
             for k, v in d.items():
-                if k in ["important_kwd", "question_kwd", "entities_kwd", "tag_kwd", "source_id"]:
+                if k in [
+                    "important_kwd",
+                    "question_kwd",
+                    "entities_kwd",
+                    "tag_kwd",
+                    "source_id",
+                ]:
                     assert isinstance(v, list)
                     d[k] = "###".join(v)
                 elif re.search(r"_feas$", k):
                     d[k] = json.dumps(v)
-                elif k == 'kb_id':
+                elif k == "kb_id":
                     if isinstance(d[k], list):
                         d[k] = d[k][0]  # since d[k] is a list, but we need a str
                 elif k == "position_int":
@@ -512,7 +562,7 @@ class InfinityConnection(DocStoreConnection):
         return []
 
     def update(
-            self, condition: dict, newValue: dict, indexName: str, knowledgebaseId: str
+        self, condition: dict, newValue: dict, indexName: str, knowledgebaseId: str
     ) -> bool:
         # if 'position_int' in newValue:
         #     logger.info(f"update position_int: {newValue['position_int']}")
@@ -520,20 +570,28 @@ class InfinityConnection(DocStoreConnection):
         db_instance = inf_conn.get_database(self.dbName)
         table_name = f"{indexName}_{knowledgebaseId}"
         table_instance = db_instance.get_table(table_name)
-        #if "exists" in condition:
+        # if "exists" in condition:
         #    del condition["exists"]
         filter = equivalent_condition_to_str(condition, table_instance)
         for k, v in list(newValue.items()):
-            if k in ["important_kwd", "question_kwd", "entities_kwd", "tag_kwd", "source_id"]:
+            if k in [
+                "important_kwd",
+                "question_kwd",
+                "entities_kwd",
+                "tag_kwd",
+                "source_id",
+            ]:
                 assert isinstance(v, list)
                 newValue[k] = "###".join(v)
             elif re.search(r"_feas$", k):
                 newValue[k] = json.dumps(v)
             elif k.endswith("_kwd") and isinstance(v, list):
                 newValue[k] = " ".join(v)
-            elif k == 'kb_id':
+            elif k == "kb_id":
                 if isinstance(newValue[k], list):
-                    newValue[k] = newValue[k][0]  # since d[k] is a list, but we need a str
+                    newValue[k] = newValue[k][
+                        0
+                    ]  # since d[k] is a list, but we need a str
             elif k == "position_int":
                 assert isinstance(v, list)
                 arr = [num for row in v for num in row]
@@ -546,7 +604,9 @@ class InfinityConnection(DocStoreConnection):
                 if v in [PAGERANK_FLD]:
                     newValue[v] = 0
 
-        logger.debug(f"INFINITY update table {table_name}, filter {filter}, newValue {newValue}.")
+        logger.debug(
+            f"INFINITY update table {table_name}, filter {filter}, newValue {newValue}."
+        )
         table_instance.update(filter, newValue)
         self.connPool.release_conn(inf_conn)
         return True
@@ -582,7 +642,9 @@ class InfinityConnection(DocStoreConnection):
             res = res[0]
         return list(res["id"])
 
-    def getFields(self, res: tuple[pl.DataFrame, int] | pl.DataFrame, fields: list[str]) -> list[str, dict]:
+    def getFields(
+        self, res: tuple[pl.DataFrame, int] | pl.DataFrame, fields: list[str]
+    ) -> list[str, dict]:
         if isinstance(res, tuple):
             res = res[0]
         res_fields = {}
@@ -600,20 +662,26 @@ class InfinityConnection(DocStoreConnection):
                 v = res[fieldnm][i]
                 if isinstance(v, Series):
                     v = list(v)
-                elif fieldnm in ["important_kwd", "question_kwd", "entities_kwd", "tag_kwd", "source_id"]:
+                elif fieldnm in [
+                    "important_kwd",
+                    "question_kwd",
+                    "entities_kwd",
+                    "tag_kwd",
+                    "source_id",
+                ]:
                     assert isinstance(v, str)
                     v = [kwd for kwd in v.split("###") if kwd]
                 elif fieldnm == "position_int":
                     assert isinstance(v, str)
                     if v:
-                        arr = [int(hex_val, 16) for hex_val in v.split('_')]
-                        v = [arr[i:i + 5] for i in range(0, len(arr), 5)]
+                        arr = [int(hex_val, 16) for hex_val in v.split("_")]
+                        v = [arr[i : i + 5] for i in range(0, len(arr), 5)]
                     else:
                         v = []
                 elif fieldnm in ["page_num_int", "top_int"]:
                     assert isinstance(v, str)
                     if v:
-                        v = [int(hex_val, 16) for hex_val in v.split('_')]
+                        v = [int(hex_val, 16) for hex_val in v.split("_")]
                     else:
                         v = []
                 else:
@@ -625,7 +693,12 @@ class InfinityConnection(DocStoreConnection):
             res_fields[id] = m
         return res_fields
 
-    def getHighlight(self, res: tuple[pl.DataFrame, int] | pl.DataFrame, keywords: list[str], fieldnm: str):
+    def getHighlight(
+        self,
+        res: tuple[pl.DataFrame, int] | pl.DataFrame,
+        keywords: list[str],
+        fieldnm: str,
+    ):
         if isinstance(res, tuple):
             res = res[0]
         ans = {}
@@ -648,14 +721,16 @@ class InfinityConnection(DocStoreConnection):
                         flags=re.IGNORECASE | re.MULTILINE,
                     )
                 if not re.search(
-                        r"<em>[^<>]+</em>", t, flags=re.IGNORECASE | re.MULTILINE
+                    r"<em>[^<>]+</em>", t, flags=re.IGNORECASE | re.MULTILINE
                 ):
                     continue
                 txts.append(t)
             ans[id] = "...".join(txts)
         return ans
 
-    def getAggregation(self, res: tuple[pl.DataFrame, int] | pl.DataFrame, fieldnm: str):
+    def getAggregation(
+        self, res: tuple[pl.DataFrame, int] | pl.DataFrame, fieldnm: str
+    ):
         """
         TODO: Infinity doesn't provide aggregation
         """

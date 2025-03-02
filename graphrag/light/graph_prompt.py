@@ -15,7 +15,9 @@ PROMPTS["process_tickers"] = ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "
 
 PROMPTS["DEFAULT_ENTITY_TYPES"] = ["organization", "person", "geo", "event", "category"]
 
-PROMPTS["entity_extraction"] = """-Goal-
+PROMPTS[
+    "entity_extraction"
+] = """-Goal-
 Given a text document that is potentially relevant to this activity and a list of entity types, identify all entities of those types from the text and all relationships among the identified entities.
 Use {language} as output language.
 
@@ -140,7 +142,9 @@ PROMPTS[
 
 PROMPTS["fail_response"] = "Sorry, I'm not able to provide an answer to that question."
 
-PROMPTS["rag_response"] = """---Role---
+PROMPTS[
+    "rag_response"
+] = """---Role---
 
 You are a helpful assistant responding to questions about data in the tables provided.
 
@@ -167,7 +171,9 @@ When handling relationships with timestamps:
 
 Add sections and commentary to the response as appropriate for the length and format. Style the response in markdown."""
 
-PROMPTS["naive_rag_response"] = """---Role---
+PROMPTS[
+    "naive_rag_response"
+] = """---Role---
 
 You are a helpful assistant responding to questions about documents provided.
 
@@ -219,7 +225,9 @@ Similarity score criteria:
 Return only a number between 0-1, without any additional content.
 """
 
-PROMPTS["mix_rag_response"] = """---Role---
+PROMPTS[
+    "mix_rag_response"
+] = """---Role---
 
 You are a professional assistant responsible for answering questions based on knowledge graph and textual information. Please respond in the same language as the user's question.
 

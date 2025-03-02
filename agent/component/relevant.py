@@ -22,10 +22,10 @@ from rag.utils import num_tokens_from_string, encoder
 
 
 class RelevantParam(GenerateParam):
-
     """
     Define the Relevant component parameters.
     """
+
     def __init__(self):
         super().__init__()
         self.prompt = ""
@@ -63,13 +63,18 @@ class Relevant(Generate, ABC):
             return Relevant.be_output(self._param.no)
         ans = "Documents: \n" + ans
         ans = f"Question: {q}\n" + ans
-        chat_mdl = LLMBundle(self._canvas.get_tenant_id(), LLMType.CHAT, self._param.llm_id)
+        chat_mdl = LLMBundle(
+            self._canvas.get_tenant_id(), LLMType.CHAT, self._param.llm_id
+        )
 
         if num_tokens_from_string(ans) >= chat_mdl.max_length - 4:
-            ans = encoder.decode(encoder.encode(ans)[:chat_mdl.max_length - 4])
+            ans = encoder.decode(encoder.encode(ans)[: chat_mdl.max_length - 4])
 
-        ans = chat_mdl.chat(self._param.get_prompt(), [{"role": "user", "content": ans}],
-                            self._param.gen_conf())
+        ans = chat_mdl.chat(
+            self._param.get_prompt(),
+            [{"role": "user", "content": ans}],
+            self._param.gen_conf(),
+        )
 
         logging.debug(ans)
         if ans.lower().find("yes") >= 0:
@@ -80,4 +85,3 @@ class Relevant(Generate, ABC):
 
     def debug(self, **kwargs):
         return self._run([], **kwargs)
-

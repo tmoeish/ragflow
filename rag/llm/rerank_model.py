@@ -31,7 +31,6 @@ from rag.utils import num_tokens_from_string, truncate
 import json
 
 
-
 def sigmoid(x):
     return 1 / (1 + np.exp(-x))
 
@@ -74,26 +73,37 @@ class DefaultRerank(Base):
         if not settings.LIGHTEN and not DefaultRerank._model:
             import torch
             from FlagEmbedding import FlagReranker
+
             with DefaultRerank._model_lock:
                 if not DefaultRerank._model:
                     try:
                         DefaultRerank._model = FlagReranker(
-                            os.path.join(get_home_cache_dir(), re.sub(r"^[a-zA-Z0-9]+/", "", model_name)),
-                            use_fp16=torch.cuda.is_available())
+                            os.path.join(
+                                get_home_cache_dir(),
+                                re.sub(r"^[a-zA-Z0-9]+/", "", model_name),
+                            ),
+                            use_fp16=torch.cuda.is_available(),
+                        )
                     except Exception:
-                        model_dir = snapshot_download(repo_id=model_name,
-                                                      local_dir=os.path.join(get_home_cache_dir(),
-                                                                             re.sub(r"^[a-zA-Z0-9]+/", "", model_name)),
-                                                      local_dir_use_symlinks=False)
-                        DefaultRerank._model = FlagReranker(model_dir, use_fp16=torch.cuda.is_available())
+                        model_dir = snapshot_download(
+                            repo_id=model_name,
+                            local_dir=os.path.join(
+                                get_home_cache_dir(),
+                                re.sub(r"^[a-zA-Z0-9]+/", "", model_name),
+                            ),
+                            local_dir_use_symlinks=False,
+                        )
+                        DefaultRerank._model = FlagReranker(
+                            model_dir, use_fp16=torch.cuda.is_available()
+                        )
         self._model = DefaultRerank._model
-        self._dynamic_batch_size = 8 
+        self._dynamic_batch_size = 8
         self._min_batch_size = 1
 
-    
     def torch_empty_cache(self):
         try:
             import torch
+
             torch.cuda.empty_cache()
         except Exception as e:
             print(f"Error emptying cache: {e}")
@@ -112,20 +122,27 @@ class DefaultRerank(Base):
             while retry_count < max_retries:
                 try:
                     # call subclass implemented batch processing calculation
-                    batch_scores = self._compute_batch_scores(pairs[i:i+current_batch])
+                    batch_scores = self._compute_batch_scores(
+                        pairs[i : i + current_batch]
+                    )
                     res.extend(batch_scores)
                     i += current_batch
                     self._dynamic_batch_size = min(self._dynamic_batch_size * 2, 8)
                     break
                 except RuntimeError as e:
-                    if "CUDA out of memory" in str(e) and current_batch > self._min_batch_size:
+                    if (
+                        "CUDA out of memory" in str(e)
+                        and current_batch > self._min_batch_size
+                    ):
                         current_batch = max(current_batch // 2, self._min_batch_size)
                         self.torch_empty_cache()
                         retry_count += 1
                     else:
                         raise
             if retry_count >= max_retries:
-                raise RuntimeError("max retry times, still cannot process batch, please check your GPU memory")
+                raise RuntimeError(
+                    "max retry times, still cannot process batch, please check your GPU memory"
+                )
             self.torch_empty_cache()
 
         self._dynamic_batch_size = old_dynamic_batch_size
@@ -150,12 +167,16 @@ class DefaultRerank(Base):
 
 
 class JinaRerank(Base):
-    def __init__(self, key, model_name="jina-reranker-v2-base-multilingual",
-                 base_url="https://api.jina.ai/v1/rerank"):
+    def __init__(
+        self,
+        key,
+        model_name="jina-reranker-v2-base-multilingual",
+        base_url="https://api.jina.ai/v1/rerank",
+    ):
         self.base_url = "https://api.jina.ai/v1/rerank"
         self.headers = {
             "Content-Type": "application/json",
-            "Authorization": f"Bearer {key}"
+            "Authorization": f"Bearer {key}",
         }
         self.model_name = model_name
 
@@ -165,7 +186,7 @@ class JinaRerank(Base):
             "model": self.model_name,
             "query": query,
             "documents": texts,
-            "top_n": len(texts)
+            "top_n": len(texts),
         }
         res = requests.post(self.base_url, headers=self.headers, json=data).json()
         rank = np.zeros(len(texts), dtype=float)
@@ -178,19 +199,27 @@ class YoudaoRerank(DefaultRerank):
     _model = None
     _model_lock = threading.Lock()
 
-    def __init__(self, key=None, model_name="maidalun1020/bce-reranker-base_v1", **kwargs):
+    def __init__(
+        self, key=None, model_name="maidalun1020/bce-reranker-base_v1", **kwargs
+    ):
         if not settings.LIGHTEN and not YoudaoRerank._model:
             from BCEmbedding import RerankerModel
+
             with YoudaoRerank._model_lock:
                 if not YoudaoRerank._model:
                     try:
-                        YoudaoRerank._model = RerankerModel(model_name_or_path=os.path.join(
-                            get_home_cache_dir(),
-                            re.sub(r"^[a-zA-Z0-9]+/", "", model_name)))
+                        YoudaoRerank._model = RerankerModel(
+                            model_name_or_path=os.path.join(
+                                get_home_cache_dir(),
+                                re.sub(r"^[a-zA-Z0-9]+/", "", model_name),
+                            )
+                        )
                     except Exception:
                         YoudaoRerank._model = RerankerModel(
                             model_name_or_path=model_name.replace(
-                                "maidalun1020", "InfiniFlow"))
+                                "maidalun1020", "InfiniFlow"
+                            )
+                        )
 
         self._model = YoudaoRerank._model
 
@@ -215,7 +244,7 @@ class XInferenceRerank(Base):
         self.headers = {
             "Content-Type": "application/json",
             "accept": "application/json",
-            "Authorization": f"Bearer {key}"
+            "Authorization": f"Bearer {key}",
         }
 
     def similarity(self, query: str, texts: list):
@@ -230,7 +259,7 @@ class XInferenceRerank(Base):
             "query": query,
             "return_documents": "true",
             "return_len": "true",
-            "documents": texts
+            "documents": texts,
         }
         res = requests.post(self.base_url, headers=self.headers, json=data).json()
         rank = np.zeros(len(texts), dtype=float)
@@ -247,7 +276,7 @@ class LocalAIRerank(Base):
             self.base_url = base_url
         self.headers = {
             "Content-Type": "application/json",
-            "Authorization": f"Bearer {key}"
+            "Authorization": f"Bearer {key}",
         }
         self.model_name = model_name.split("___")[0]
 
@@ -265,7 +294,7 @@ class LocalAIRerank(Base):
             token_count += num_tokens_from_string(t)
         res = requests.post(self.base_url, headers=self.headers, json=data).json()
         rank = np.zeros(len(texts), dtype=float)
-        if 'results' not in res:
+        if "results" not in res:
             raise ValueError("response not contains results\n" + str(res))
         for d in res["results"]:
             rank[d["index"]] = d["relevance_score"]
@@ -282,9 +311,10 @@ class LocalAIRerank(Base):
 
         return rank, token_count
 
+
 class NvidiaRerank(Base):
     def __init__(
-            self, key, model_name, base_url="https://ai.api.nvidia.com/v1/retrieval/nvidia/"
+        self, key, model_name, base_url="https://ai.api.nvidia.com/v1/retrieval/nvidia/"
     ):
         if not base_url:
             base_url = "https://ai.api.nvidia.com/v1/retrieval/nvidia/"
@@ -339,7 +369,7 @@ class OpenAI_APIRerank(Base):
             self.base_url = base_url
         self.headers = {
             "Content-Type": "application/json",
-            "Authorization": f"Bearer {key}"
+            "Authorization": f"Bearer {key}",
         }
         self.model_name = model_name.split("___")[0]
 
@@ -357,7 +387,7 @@ class OpenAI_APIRerank(Base):
             token_count += num_tokens_from_string(t)
         res = requests.post(self.base_url, headers=self.headers, json=data).json()
         rank = np.zeros(len(texts), dtype=float)
-        if 'results' not in res:
+        if "results" not in res:
             raise ValueError("response not contains results\n" + str(res))
         for d in res["results"]:
             rank[d["index"]] = d["relevance_score"]
@@ -409,7 +439,7 @@ class TogetherAIRerank(Base):
 
 class SILICONFLOWRerank(Base):
     def __init__(
-            self, key, model_name, base_url="https://api.siliconflow.cn/v1/rerank"
+        self, key, model_name, base_url="https://api.siliconflow.cn/v1/rerank"
     ):
         if not base_url:
             base_url = "https://api.siliconflow.cn/v1/rerank"
@@ -442,7 +472,8 @@ class SILICONFLOWRerank(Base):
             rank[d["index"]] = d["relevance_score"]
         return (
             rank,
-            response["meta"]["tokens"]["input_tokens"] + response["meta"]["tokens"]["output_tokens"],
+            response["meta"]["tokens"]["input_tokens"]
+            + response["meta"]["tokens"]["output_tokens"],
         )
 
 
@@ -489,21 +520,25 @@ class VoyageRerank(Base):
 
 
 class QWenRerank(Base):
-    def __init__(self, key, model_name='gte-rerank', base_url=None, **kwargs):
+    def __init__(self, key, model_name="gte-rerank", base_url=None, **kwargs):
         import dashscope
+
         self.api_key = key
-        self.model_name = dashscope.TextReRank.Models.gte_rerank if model_name is None else model_name
+        self.model_name = (
+            dashscope.TextReRank.Models.gte_rerank if model_name is None else model_name
+        )
 
     def similarity(self, query: str, texts: list):
         import dashscope
         from http import HTTPStatus
+
         resp = dashscope.TextReRank.call(
             api_key=self.api_key,
             model=self.model_name,
             query=query,
             documents=texts,
             top_n=len(texts),
-            return_documents=False
+            return_documents=False,
         )
         rank = np.zeros(len(texts), dtype=float)
         if resp.status_code == HTTPStatus.OK:
@@ -511,17 +546,18 @@ class QWenRerank(Base):
                 rank[r.index] = r.relevance_score
             return rank, resp.usage.total_tokens
         else:
-            raise ValueError(f"Error calling QWenRerank model {self.model_name}: {resp.status_code} - {resp.text}")
+            raise ValueError(
+                f"Error calling QWenRerank model {self.model_name}: {resp.status_code} - {resp.text}"
+            )
+
 
 class GPUStackRerank(Base):
-    def __init__(
-            self, key, model_name, base_url
-    ):
+    def __init__(self, key, model_name, base_url):
         if not base_url:
             raise ValueError("url cannot be None")
 
         self.model_name = model_name
-        self.base_url = str(URL(base_url)/ "v1" / "rerank")
+        self.base_url = str(URL(base_url) / "v1" / "rerank")
         self.headers = {
             "accept": "application/json",
             "content-type": "application/json",
@@ -537,9 +573,7 @@ class GPUStackRerank(Base):
         }
 
         try:
-            response = requests.post(
-                self.base_url, json=payload, headers=self.headers
-            )
+            response = requests.post(self.base_url, json=payload, headers=self.headers)
             response.raise_for_status()
             response_json = response.json()
 
@@ -560,5 +594,6 @@ class GPUStackRerank(Base):
             )
 
         except httpx.HTTPStatusError as e:
-            raise ValueError(f"Error calling GPUStackRerank model {self.model_name}: {e.response.status_code} - {e.response.text}")
-
+            raise ValueError(
+                f"Error calling GPUStackRerank model {self.model_name}: {e.response.status_code} - {e.response.text}"
+            )

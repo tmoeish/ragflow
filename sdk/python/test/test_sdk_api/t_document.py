@@ -101,7 +101,9 @@ def test_upload_and_parse_docx_documents_with_general_parse_method(get_api_key_f
     ds.async_parse_documents([doc.id])
 
 
-def test_upload_and_parse_excel_documents_with_general_parse_method(get_api_key_fixture):
+def test_upload_and_parse_excel_documents_with_general_parse_method(
+    get_api_key_fixture,
+):
     API_KEY = get_api_key_fixture
     rag = RAGFlow(API_KEY, HOST_ADDRESS)
     ds = rag.create_dataset(name="test_excel_document")
@@ -125,7 +127,9 @@ def test_upload_and_parse_ppt_documents_with_general_parse_method(get_api_key_fi
     ds.async_parse_documents([doc.id])
 
 
-def test_upload_and_parse_image_documents_with_general_parse_method(get_api_key_fixture):
+def test_upload_and_parse_image_documents_with_general_parse_method(
+    get_api_key_fixture,
+):
     API_KEY = get_api_key_fixture
     rag = RAGFlow(API_KEY, HOST_ADDRESS)
     ds = rag.create_dataset(name="test_image_document")

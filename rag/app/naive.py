@@ -21,14 +21,34 @@ from docx import Document
 from timeit import default_timer as timer
 import re
 from deepdoc.parser.pdf_parser import PlainParser
-from rag.nlp import rag_tokenizer, naive_merge, tokenize_table, tokenize_chunks, find_codec, concat_img, \
-    naive_merge_docx, tokenize_chunks_docx
-from deepdoc.parser import PdfParser, ExcelParser, DocxParser, HtmlParser, JsonParser, MarkdownParser, TxtParser
+from rag.nlp import (
+    rag_tokenizer,
+    naive_merge,
+    tokenize_table,
+    tokenize_chunks,
+    find_codec,
+    concat_img,
+    naive_merge_docx,
+    tokenize_chunks_docx,
+)
+from deepdoc.parser import (
+    PdfParser,
+    ExcelParser,
+    DocxParser,
+    HtmlParser,
+    JsonParser,
+    MarkdownParser,
+    TxtParser,
+)
 from rag.utils import num_tokens_from_string
 from PIL import Image
 from functools import reduce
 from markdown import markdown
-from docx.image.exceptions import UnrecognizedImageError, UnexpectedEndOfFileError, InvalidImageStreamError
+from docx.image.exceptions import (
+    UnrecognizedImageError,
+    UnexpectedEndOfFileError,
+    InvalidImageStreamError,
+)
 
 
 class Docx(DocxParser):
@@ -36,11 +56,11 @@ class Docx(DocxParser):
         pass
 
     def get_picture(self, document, paragraph):
-        img = paragraph._element.xpath('.//pic:pic')
+        img = paragraph._element.xpath(".//pic:pic")
         if not img:
             return None
         img = img[0]
-        embed = img.xpath('.//a:blip/@r:embed')[0]
+        embed = img.xpath(".//a:blip/@r:embed")[0]
         related_part = document.part.related_parts[embed]
         try:
             image_blob = related_part.image.blob
@@ -48,13 +68,17 @@ class Docx(DocxParser):
             logging.info("Unrecognized image format. Skipping image.")
             return None
         except UnexpectedEndOfFileError:
-            logging.info("EOF was unexpectedly encountered while reading an image stream. Skipping image.")
+            logging.info(
+                "EOF was unexpectedly encountered while reading an image stream. Skipping image."
+            )
             return None
         except InvalidImageStreamError:
-            logging.info("The recognized image stream appears to be corrupted. Skipping image.")
+            logging.info(
+                "The recognized image stream appears to be corrupted. Skipping image."
+            )
             return None
         try:
-            image = Image.open(BytesIO(image_blob)).convert('RGB')
+            image = Image.open(BytesIO(image_blob)).convert("RGB")
             return image
         except Exception:
             return None
@@ -64,8 +88,7 @@ class Docx(DocxParser):
         return line
 
     def __call__(self, filename, binary=None, from_page=0, to_page=100000):
-        self.doc = Document(
-            filename) if not binary else Document(BytesIO(binary))
+        self.doc = Document(filename) if not binary else Document(BytesIO(binary))
         pn = 0
         lines = []
         last_image = None
@@ -74,21 +97,29 @@ class Docx(DocxParser):
                 break
             if from_page <= pn < to_page:
                 if p.text.strip():
-                    if p.style and p.style.name == 'Caption':
+                    if p.style and p.style.name == "Caption":
                         former_image = None
-                        if lines and lines[-1][1] and lines[-1][2] != 'Caption':
+                        if lines and lines[-1][1] and lines[-1][2] != "Caption":
                             former_image = lines[-1][1].pop()
                         elif last_image:
                             former_image = last_image
                             last_image = None
-                        lines.append((self.__clean(p.text), [former_image], p.style.name))
+                        lines.append(
+                            (self.__clean(p.text), [former_image], p.style.name)
+                        )
                     else:
                         current_image = self.get_picture(self.doc, p)
                         image_list = [current_image]
                         if last_image:
                             image_list.insert(0, last_image)
                             last_image = None
-                        lines.append((self.__clean(p.text), image_list, p.style.name if p.style else ""))
+                        lines.append(
+                            (
+                                self.__clean(p.text),
+                                image_list,
+                                p.style.name if p.style else "",
+                            )
+                        )
                 else:
                     if current_image := self.get_picture(self.doc, p):
                         if lines:
@@ -96,12 +127,15 @@ class Docx(DocxParser):
                         else:
                             last_image = current_image
             for run in p.runs:
-                if 'lastRenderedPageBreak' in run._element.xml:
+                if "lastRenderedPageBreak" in run._element.xml:
                     pn += 1
                     continue
-                if 'w:br' in run._element.xml and 'type="page"' in run._element.xml:
+                if "w:br" in run._element.xml and 'type="page"' in run._element.xml:
                     pn += 1
-        new_line = [(line[0], reduce(concat_img, line[1]) if line[1] else None) for line in lines]
+        new_line = [
+            (line[0], reduce(concat_img, line[1]) if line[1] else None)
+            for line in lines
+        ]
 
         tbls = []
         for tb in self.doc.tables:
@@ -119,7 +153,11 @@ class Docx(DocxParser):
                         else:
                             break
                     i += 1
-                    html += f"<td>{c.text}</td>" if span == 1 else f"<td colspan='{span}'>{c.text}</td>"
+                    html += (
+                        f"<td>{c.text}</td>"
+                        if span == 1
+                        else f"<td colspan='{span}'>{c.text}</td>"
+                    )
                 html += "</tr>"
             html += "</table>"
             tbls.append(((None, html), ""))
@@ -127,17 +165,20 @@ class Docx(DocxParser):
 
 
 class Pdf(PdfParser):
-    def __call__(self, filename, binary=None, from_page=0,
-                 to_page=100000, zoomin=3, callback=None):
+    def __call__(
+        self,
+        filename,
+        binary=None,
+        from_page=0,
+        to_page=100000,
+        zoomin=3,
+        callback=None,
+    ):
         start = timer()
         first_start = start
         callback(msg="OCR started")
         self.__images__(
-            filename if not binary else binary,
-            zoomin,
-            from_page,
-            to_page,
-            callback
+            filename if not binary else binary, zoomin, from_page, to_page, callback
         )
         callback(msg="OCR finished ({:.2f}s)".format(timer() - start))
         logging.info("OCR({}~{}): {:.2f}s".format(from_page, to_page, timer() - start))
@@ -159,8 +200,7 @@ class Pdf(PdfParser):
         # self._filter_forpages()
 
         logging.info("layouts cost: {}s".format(timer() - first_start))
-        return [(b["text"], self._line_tag(b, zoomin))
-                for b in self.boxes], tbls
+        return [(b["text"], self._line_tag(b, zoomin)) for b in self.boxes], tbls
 
 
 class Markdown(MarkdownParser):
@@ -171,13 +211,13 @@ class Markdown(MarkdownParser):
         else:
             with open(filename, "r") as f:
                 txt = f.read()
-        remainder, tables = self.extract_tables_and_remainder(f'{txt}\n')
+        remainder, tables = self.extract_tables_and_remainder(f"{txt}\n")
         sections = []
         tbls = []
         for sec in remainder.split("\n"):
             if num_tokens_from_string(sec) > 3 * self.chunk_token_num:
-                sections.append((sec[:int(len(sec) / 2)], ""))
-                sections.append((sec[int(len(sec) / 2):], ""))
+                sections.append((sec[: int(len(sec) / 2)], ""))
+                sections.append((sec[int(len(sec) / 2) :], ""))
             else:
                 if sec.strip().find("#") == 0:
                     sections.append((sec, ""))
@@ -188,26 +228,40 @@ class Markdown(MarkdownParser):
                     sections.append((sec, ""))
 
         for table in tables:
-            tbls.append(((None, markdown(table, extensions=['markdown.extensions.tables'])), ""))
+            tbls.append(
+                ((None, markdown(table, extensions=["markdown.extensions.tables"])), "")
+            )
         return sections, tbls
 
 
-def chunk(filename, binary=None, from_page=0, to_page=100000,
-          lang="Chinese", callback=None, **kwargs):
+def chunk(
+    filename,
+    binary=None,
+    from_page=0,
+    to_page=100000,
+    lang="Chinese",
+    callback=None,
+    **kwargs,
+):
     """
-        Supported file formats are docx, pdf, excel, txt.
-        This method apply the naive ways to chunk files.
-        Successive text will be sliced into pieces using 'delimiter'.
-        Next, these successive pieces are merge into chunks whose token number is no more than 'Max token number'.
+    Supported file formats are docx, pdf, excel, txt.
+    This method apply the naive ways to chunk files.
+    Successive text will be sliced into pieces using 'delimiter'.
+    Next, these successive pieces are merge into chunks whose token number is no more than 'Max token number'.
     """
 
     is_english = lang.lower() == "english"  # is_english(cks)
     parser_config = kwargs.get(
-        "parser_config", {
-            "chunk_token_num": 128, "delimiter": "\n!?。；！？", "layout_recognize": "DeepDOC"})
+        "parser_config",
+        {
+            "chunk_token_num": 128,
+            "delimiter": "\n!?。；！？",
+            "layout_recognize": "DeepDOC",
+        },
+    )
     doc = {
         "docnm_kwd": filename,
-        "title_tks": rag_tokenizer.tokenize(re.sub(r"\.[a-zA-Z]+$", "", filename))
+        "title_tks": rag_tokenizer.tokenize(re.sub(r"\.[a-zA-Z]+$", "", filename)),
     }
     doc["title_sm_tks"] = rag_tokenizer.fine_grained_tokenize(doc["title_tks"])
     res = []
@@ -221,9 +275,10 @@ def chunk(filename, binary=None, from_page=0, to_page=100000,
         st = timer()
 
         chunks, images = naive_merge_docx(
-            sections, int(parser_config.get(
-                "chunk_token_num", 128)), parser_config.get(
-                "delimiter", "\n!?。；！？"))
+            sections,
+            int(parser_config.get("chunk_token_num", 128)),
+            parser_config.get("delimiter", "\n!?。；！？"),
+        )
 
         if kwargs.get("section_only", False):
             return chunks
@@ -236,8 +291,12 @@ def chunk(filename, binary=None, from_page=0, to_page=100000,
         pdf_parser = Pdf()
         if parser_config.get("layout_recognize", "DeepDOC") == "Plain Text":
             pdf_parser = PlainParser()
-        sections, tables = pdf_parser(filename if not binary else binary, from_page=from_page, to_page=to_page,
-                                      callback=callback)
+        sections, tables = pdf_parser(
+            filename if not binary else binary,
+            from_page=from_page,
+            to_page=to_page,
+            callback=callback,
+        )
         res = tokenize_table(tables, doc, is_english)
 
     elif re.search(r"\.xlsx?$", filename, re.IGNORECASE):
@@ -248,16 +307,23 @@ def chunk(filename, binary=None, from_page=0, to_page=100000,
         else:
             sections = [(_, "") for _ in excel_parser(binary) if _]
 
-    elif re.search(r"\.(txt|py|js|java|c|cpp|h|php|go|ts|sh|cs|kt|sql)$", filename, re.IGNORECASE):
+    elif re.search(
+        r"\.(txt|py|js|java|c|cpp|h|php|go|ts|sh|cs|kt|sql)$", filename, re.IGNORECASE
+    ):
         callback(0.1, "Start to parse.")
-        sections = TxtParser()(filename, binary,
-                               parser_config.get("chunk_token_num", 128),
-                               parser_config.get("delimiter", "\n!?;。；！？"))
+        sections = TxtParser()(
+            filename,
+            binary,
+            parser_config.get("chunk_token_num", 128),
+            parser_config.get("delimiter", "\n!?;。；！？"),
+        )
         callback(0.8, "Finish parsing.")
 
     elif re.search(r"\.(md|markdown)$", filename, re.IGNORECASE):
         callback(0.1, "Start to parse.")
-        sections, tables = Markdown(int(parser_config.get("chunk_token_num", 128)))(filename, binary)
+        sections, tables = Markdown(int(parser_config.get("chunk_token_num", 128)))(
+            filename, binary
+        )
         res = tokenize_table(tables, doc, is_english)
         callback(0.8, "Finish parsing.")
 
@@ -278,8 +344,8 @@ def chunk(filename, binary=None, from_page=0, to_page=100000,
         callback(0.1, "Start to parse.")
         binary = BytesIO(binary)
         doc_parsed = parser.from_buffer(binary)
-        if doc_parsed.get('content', None) is not None:
-            sections = doc_parsed['content'].split('\n')
+        if doc_parsed.get("content", None) is not None:
+            sections = doc_parsed["content"].split("\n")
             sections = [(_, "") for _ in sections if _]
             callback(0.8, "Finish parsing.")
         else:
@@ -289,13 +355,15 @@ def chunk(filename, binary=None, from_page=0, to_page=100000,
 
     else:
         raise NotImplementedError(
-            "file type not supported yet(pdf, xlsx, doc, docx, txt supported)")
+            "file type not supported yet(pdf, xlsx, doc, docx, txt supported)"
+        )
 
     st = timer()
     chunks = naive_merge(
-        sections, int(parser_config.get(
-            "chunk_token_num", 128)), parser_config.get(
-            "delimiter", "\n!?。；！？"))
+        sections,
+        int(parser_config.get("chunk_token_num", 128)),
+        parser_config.get("delimiter", "\n!?。；！？"),
+    )
     if kwargs.get("section_only", False):
         return chunks
 
@@ -307,9 +375,7 @@ def chunk(filename, binary=None, from_page=0, to_page=100000,
 if __name__ == "__main__":
     import sys
 
-
     def dummy(prog=None, msg=""):
         pass
-
 
     chunk(sys.argv[1], from_page=0, to_page=10, callback=dummy)

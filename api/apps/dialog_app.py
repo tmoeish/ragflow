@@ -22,12 +22,16 @@ from api.db.services.llm_service import TenantLLMService
 from api.db.services.knowledgebase_service import KnowledgebaseService
 from api.db.services.user_service import TenantService, UserTenantService
 from api import settings
-from api.utils.api_utils import server_error_response, get_data_error_result, validate_request
+from api.utils.api_utils import (
+    server_error_response,
+    get_data_error_result,
+    validate_request,
+)
 from api.utils import get_uuid
 from api.utils.api_utils import get_json_result
 
 
-@manager.route('/set', methods=['POST'])  # noqa: F821
+@manager.route("/set", methods=["POST"])  # noqa: F821
 @login_required
 def set_dialog():
     req = request.json
@@ -49,10 +53,8 @@ def set_dialog():
 {knowledge}
 以上是知识库。""",
         "prologue": "您好，我是您的助手小樱，长得可爱又善良，can I help you?",
-        "parameters": [
-            {"key": "knowledge", "optional": False}
-        ],
-        "empty_response": "Sorry! 知识库中未找到相关内容！"
+        "parameters": [{"key": "knowledge", "optional": False}],
+        "empty_response": "Sorry! 知识库中未找到相关内容！",
     }
     prompt_config = req.get("prompt_config", default_prompt)
 
@@ -64,17 +66,22 @@ def set_dialog():
             continue
         if prompt_config["system"].find("{%s}" % p["key"]) < 0:
             return get_data_error_result(
-                message="Parameter '{}' is not used".format(p["key"]))
+                message="Parameter '{}' is not used".format(p["key"])
+            )
 
     try:
         e, tenant = TenantService.get_by_id(current_user.id)
         if not e:
             return get_data_error_result(message="Tenant not found!")
         kbs = KnowledgebaseService.get_by_ids(req.get("kb_ids", []))
-        embd_ids = [TenantLLMService.split_model_name_and_factory(kb.embd_id)[0] for kb in kbs]  # remove vendor suffix for comparison
+        embd_ids = [
+            TenantLLMService.split_model_name_and_factory(kb.embd_id)[0] for kb in kbs
+        ]  # remove vendor suffix for comparison
         embd_count = len(set(embd_ids))
         if embd_count > 1:
-            return get_data_error_result(message=f'Datasets use different embedding models: {[kb.embd_id for kb in kbs]}"')
+            return get_data_error_result(
+                message=f'Datasets use different embedding models: {[kb.embd_id for kb in kbs]}"'
+            )
 
         llm_id = req.get("llm_id", tenant.llm_id)
         if not dialog_id:
@@ -92,7 +99,7 @@ def set_dialog():
                 "rerank_id": rerank_id,
                 "similarity_threshold": similarity_threshold,
                 "vector_similarity_weight": vector_similarity_weight,
-                "icon": icon
+                "icon": icon,
             }
             if not DialogService.save(**dia):
                 return get_data_error_result(message="Fail to new a dialog!")
@@ -114,7 +121,7 @@ def set_dialog():
         return server_error_response(e)
 
 
-@manager.route('/get', methods=['GET'])  # noqa: F821
+@manager.route("/get", methods=["GET"])  # noqa: F821
 @login_required
 def get():
     dialog_id = request.args["dialog_id"]
@@ -140,7 +147,7 @@ def get_kb_names(kb_ids):
     return ids, nms
 
 
-@manager.route('/list', methods=['GET'])  # noqa: F821
+@manager.route("/list", methods=["GET"])  # noqa: F821
 @login_required
 def list_dialogs():
     try:
@@ -148,7 +155,8 @@ def list_dialogs():
             tenant_id=current_user.id,
             status=StatusEnum.VALID.value,
             reverse=True,
-            order_by=DialogService.model.create_time)
+            order_by=DialogService.model.create_time,
+        )
         diags = [d.to_dict() for d in diags]
         for d in diags:
             d["kb_ids"], d["kb_names"] = get_kb_names(d["kb_ids"])
@@ -157,12 +165,12 @@ def list_dialogs():
         return server_error_response(e)
 
 
-@manager.route('/rm', methods=['POST'])  # noqa: F821
+@manager.route("/rm", methods=["POST"])  # noqa: F821
 @login_required
 @validate_request("dialog_ids")
 def rm():
     req = request.json
-    dialog_list=[]
+    dialog_list = []
     tenants = UserTenantService.query(user_id=current_user.id)
     try:
         for id in req["dialog_ids"]:
@@ -171,9 +179,11 @@ def rm():
                     break
             else:
                 return get_json_result(
-                    data=False, message='Only owner of dialog authorized for this operation.',
-                    code=settings.RetCode.OPERATING_ERROR)
-            dialog_list.append({"id": id,"status":StatusEnum.INVALID.value})
+                    data=False,
+                    message="Only owner of dialog authorized for this operation.",
+                    code=settings.RetCode.OPERATING_ERROR,
+                )
+            dialog_list.append({"id": id, "status": StatusEnum.INVALID.value})
         DialogService.update_many_by_id(dialog_list)
         return get_json_result(data=True)
     except Exception as e:

@@ -109,7 +109,7 @@ def create(tenant_id):
         "one",
         "knowledge_graph",
         "email",
-        "tag"
+        "tag",
     ]
     check_validation = valid(
         permission,
@@ -162,10 +162,22 @@ def create(tenant_id):
             llm_name=req["embedding_model"], model_type="embedding"
         )
         if embd_model:
-            if req["embedding_model"] not in valid_embedding_models and not TenantLLMService.query(tenant_id=tenant_id,model_type="embedding",llm_name=req.get("embedding_model"),):
-                return get_error_data_result(f"`embedding_model` {req.get('embedding_model')} doesn't exist")
+            if req[
+                "embedding_model"
+            ] not in valid_embedding_models and not TenantLLMService.query(
+                tenant_id=tenant_id,
+                model_type="embedding",
+                llm_name=req.get("embedding_model"),
+            ):
+                return get_error_data_result(
+                    f"`embedding_model` {req.get('embedding_model')} doesn't exist"
+                )
         if not embd_model:
-            embd_model=TenantLLMService.query(tenant_id=tenant_id,model_type="embedding", llm_name=req.get("embedding_model"))
+            embd_model = TenantLLMService.query(
+                tenant_id=tenant_id,
+                model_type="embedding",
+                llm_name=req.get("embedding_model"),
+            )
         if not embd_model:
             return get_error_data_result(
                 f"`embedding_model` {req.get('embedding_model')} doesn't exist"
@@ -256,9 +268,16 @@ def delete(tenant_id):
             )
             File2DocumentService.delete_by_document_id(doc.id)
         FileService.filter_delete(
-            [File.source_type == FileSource.KNOWLEDGEBASE, File.type == "folder", File.name == kbs[0].name])
+            [
+                File.source_type == FileSource.KNOWLEDGEBASE,
+                File.type == "folder",
+                File.name == kbs[0].name,
+            ]
+        )
         if not KnowledgebaseService.delete_by_id(id):
-            return get_error_data_result(message="Delete dataset error.(Database error)")
+            return get_error_data_result(
+                message="Delete dataset error.(Database error)"
+            )
     return get_result(code=settings.RetCode.SUCCESS)
 
 
@@ -342,7 +361,7 @@ def update(tenant_id, dataset_id):
         "one",
         "knowledge_graph",
         "email",
-        "tag"
+        "tag",
     ]
     check_validation = valid(
         permission,
@@ -404,10 +423,22 @@ def update(tenant_id, dataset_id):
             llm_name=req["embedding_model"], model_type="embedding"
         )
         if embd_model:
-            if req["embedding_model"] not in valid_embedding_models and not TenantLLMService.query(tenant_id=tenant_id,model_type="embedding",llm_name=req.get("embedding_model"),):
-                return get_error_data_result(f"`embedding_model` {req.get('embedding_model')} doesn't exist")
+            if req[
+                "embedding_model"
+            ] not in valid_embedding_models and not TenantLLMService.query(
+                tenant_id=tenant_id,
+                model_type="embedding",
+                llm_name=req.get("embedding_model"),
+            ):
+                return get_error_data_result(
+                    f"`embedding_model` {req.get('embedding_model')} doesn't exist"
+                )
         if not embd_model:
-            embd_model=TenantLLMService.query(tenant_id=tenant_id,model_type="embedding", llm_name=req.get("embedding_model"))
+            embd_model = TenantLLMService.query(
+                tenant_id=tenant_id,
+                model_type="embedding",
+                llm_name=req.get("embedding_model"),
+            )
 
         if not embd_model:
             return get_error_data_result(
@@ -494,11 +525,11 @@ def list(tenant_id):
     id = request.args.get("id")
     name = request.args.get("name")
     if id:
-        kbs = KnowledgebaseService.get_kb_by_id(id,tenant_id)
+        kbs = KnowledgebaseService.get_kb_by_id(id, tenant_id)
         if not kbs:
             return get_error_data_result(f"You don't own the dataset {id}")
     if name:
-        kbs = KnowledgebaseService.get_kb_by_name(name,tenant_id)
+        kbs = KnowledgebaseService.get_kb_by_name(name, tenant_id)
         if not kbs:
             return get_error_data_result(f"You don't own the dataset {name}")
     page_number = int(request.args.get("page", 1))

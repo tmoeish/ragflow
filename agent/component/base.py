@@ -89,7 +89,12 @@ class ComponentParamBase(ABC):
         def _recursive_convert_obj_to_dict(obj):
             ret_dict = {}
             for attr_name in list(obj.__dict__):
-                if attr_name in [_FEEDED_DEPRECATED_PARAMS, _DEPRECATED_PARAMS, _USER_FEEDED_PARAMS, _IS_RAW_CONF]:
+                if attr_name in [
+                    _FEEDED_DEPRECATED_PARAMS,
+                    _DEPRECATED_PARAMS,
+                    _USER_FEEDED_PARAMS,
+                    _IS_RAW_CONF,
+                ]:
                     continue
                 # get attr
                 attr = getattr(obj, attr_name)
@@ -246,9 +251,7 @@ class ComponentParamBase(ABC):
     @staticmethod
     def check_empty(param, descr):
         if not param:
-            raise ValueError(
-                descr + " does not support empty value."
-            )
+            raise ValueError(descr + " does not support empty value.")
 
     @staticmethod
     def check_positive_integer(param, descr):
@@ -341,9 +344,9 @@ class ComponentParamBase(ABC):
         in_range = False
         for left_limit, right_limit in ranges:
             if (
-                    left_limit - settings.FLOAT_ZERO
-                    <= value
-                    <= right_limit + settings.FLOAT_ZERO
+                left_limit - settings.FLOAT_ZERO
+                <= value
+                <= right_limit + settings.FLOAT_ZERO
             ):
                 in_range = True
                 break
@@ -389,10 +392,15 @@ class ComponentBase(ABC):
             "params": {},
             "output": {},
             "inputs": {}
-        }}""".format(self.component_name,
-                     self._param,
-                     json.dumps(json.loads(str(self._param)).get("output", {}), ensure_ascii=False),
-                     json.dumps(json.loads(str(self._param)).get("inputs", []), ensure_ascii=False)
+        }}""".format(
+            self.component_name,
+            self._param,
+            json.dumps(
+                json.loads(str(self._param)).get("output", {}), ensure_ascii=False
+            ),
+            json.dumps(
+                json.loads(str(self._param)).get("inputs", []), ensure_ascii=False
+            ),
         )
 
     def __init__(self, canvas, id, param: ComponentParamBase):
@@ -402,15 +410,25 @@ class ComponentBase(ABC):
         self._param.check()
 
     def get_dependent_components(self):
-        cpnts = set([para["component_id"].split("@")[0] for para in self._param.query \
-                     if para.get("component_id") \
-                     and para["component_id"].lower().find("answer") < 0 \
-                     and para["component_id"].lower().find("begin") < 0])
+        cpnts = set(
+            [
+                para["component_id"].split("@")[0]
+                for para in self._param.query
+                if para.get("component_id")
+                and para["component_id"].lower().find("answer") < 0
+                and para["component_id"].lower().find("begin") < 0
+            ]
+        )
         return list(cpnts)
 
     def run(self, history, **kwargs):
-        logging.debug("{}, history: {}, kwargs: {}".format(self, json.dumps(history, ensure_ascii=False),
-                                                              json.dumps(kwargs, ensure_ascii=False)))
+        logging.debug(
+            "{}, history: {}, kwargs: {}".format(
+                self,
+                json.dumps(history, ensure_ascii=False),
+                json.dumps(kwargs, ensure_ascii=False),
+            )
+        )
         self._param.debug_inputs = []
         try:
             res = self._run(history, **kwargs)
@@ -457,7 +475,13 @@ class ComponentBase(ABC):
 
     def get_input(self):
         if self._param.debug_inputs:
-            return pd.DataFrame([{"content": v["value"]} for v in self._param.debug_inputs if v.get("value")])
+            return pd.DataFrame(
+                [
+                    {"content": v["value"]}
+                    for v in self._param.debug_inputs
+                    if v.get("value")
+                ]
+            )
 
         reversed_cpnts = []
         if len(self._canvas.path) > 1:
@@ -473,9 +497,15 @@ class ComponentBase(ABC):
                         cpn_id, key = q["component_id"].split("@")
                         for p in self._canvas.get_component(cpn_id)["obj"]._param.query:
                             if p["key"] == key:
-                                outs.append(pd.DataFrame([{"content": p.get("value", "")}]))
-                                self._param.inputs.append({"component_id": q["component_id"],
-                                                           "content": p.get("value", "")})
+                                outs.append(
+                                    pd.DataFrame([{"content": p.get("value", "")}])
+                                )
+                                self._param.inputs.append(
+                                    {
+                                        "component_id": q["component_id"],
+                                        "content": p.get("value", ""),
+                                    }
+                                )
                                 break
                         else:
                             assert False, f"Can't find parameter '{key}' for {cpn_id}"
@@ -483,24 +513,39 @@ class ComponentBase(ABC):
 
                     if q["component_id"].lower().find("answer") == 0:
                         txt = []
-                        for r, c in self._canvas.history[::-1][:self._param.message_history_window_size][::-1]:
+                        for r, c in self._canvas.history[::-1][
+                            : self._param.message_history_window_size
+                        ][::-1]:
                             txt.append(f"{r.upper()}: {c}")
                         txt = "\n".join(txt)
-                        self._param.inputs.append({"content": txt, "component_id": q["component_id"]})
+                        self._param.inputs.append(
+                            {"content": txt, "component_id": q["component_id"]}
+                        )
                         outs.append(pd.DataFrame([{"content": txt}]))
                         continue
 
-                    outs.append(self._canvas.get_component(q["component_id"])["obj"].output(allow_partial=False)[1])
-                    self._param.inputs.append({"component_id": q["component_id"],
-                                               "content": "\n".join(
-                                                   [str(d["content"]) for d in outs[-1].to_dict('records')])})
+                    outs.append(
+                        self._canvas.get_component(q["component_id"])["obj"].output(
+                            allow_partial=False
+                        )[1]
+                    )
+                    self._param.inputs.append(
+                        {
+                            "component_id": q["component_id"],
+                            "content": "\n".join(
+                                [str(d["content"]) for d in outs[-1].to_dict("records")]
+                            ),
+                        }
+                    )
                 elif q.get("value"):
-                    self._param.inputs.append({"component_id": None, "content": q["value"]})
+                    self._param.inputs.append(
+                        {"component_id": None, "content": q["value"]}
+                    )
                     outs.append(pd.DataFrame([{"content": q["value"]}]))
             if outs:
                 df = pd.concat(outs, ignore_index=True)
                 if "content" in df:
-                    df = df.drop_duplicates(subset=['content']).reset_index(drop=True)
+                    df = df.drop_duplicates(subset=["content"]).reset_index(drop=True)
                 return df
 
         upstream_outs = []
@@ -508,23 +553,31 @@ class ComponentBase(ABC):
         for u in reversed_cpnts[::-1]:
             if self.get_component_name(u) in ["switch", "concentrator"]:
                 continue
-            if self.component_name.lower() == "generate" and self.get_component_name(u) == "retrieval":
+            if (
+                self.component_name.lower() == "generate"
+                and self.get_component_name(u) == "retrieval"
+            ):
                 o = self._canvas.get_component(u)["obj"].output(allow_partial=False)[1]
                 if o is not None:
                     o["component_id"] = u
                     upstream_outs.append(o)
                     continue
-            #if self.component_name.lower()!="answer" and u not in self._canvas.get_component(self._id)["upstream"]: continue
-            if self.component_name.lower().find("switch") < 0 \
-                    and self.get_component_name(u) in ["relevant", "categorize"]:
+            # if self.component_name.lower()!="answer" and u not in self._canvas.get_component(self._id)["upstream"]: continue
+            if self.component_name.lower().find(
+                "switch"
+            ) < 0 and self.get_component_name(u) in ["relevant", "categorize"]:
                 continue
             if u.lower().find("answer") >= 0:
                 for r, c in self._canvas.history[::-1]:
                     if r == "user":
-                        upstream_outs.append(pd.DataFrame([{"content": c, "component_id": u}]))
+                        upstream_outs.append(
+                            pd.DataFrame([{"content": c, "component_id": u}])
+                        )
                         break
                 break
-            if self.component_name.lower().find("answer") >= 0 and self.get_component_name(u) in ["relevant"]:
+            if self.component_name.lower().find(
+                "answer"
+            ) >= 0 and self.get_component_name(u) in ["relevant"]:
                 continue
             o = self._canvas.get_component(u)["obj"].output(allow_partial=False)[1]
             if o is not None:
@@ -532,15 +585,19 @@ class ComponentBase(ABC):
                 upstream_outs.append(o)
             break
 
-        assert upstream_outs, "Can't inference the where the component input is. Please identify whose output is this component's input."
+        assert (
+            upstream_outs
+        ), "Can't inference the where the component input is. Please identify whose output is this component's input."
 
         df = pd.concat(upstream_outs, ignore_index=True)
         if "content" in df:
-            df = df.drop_duplicates(subset=['content']).reset_index(drop=True)
+            df = df.drop_duplicates(subset=["content"]).reset_index(drop=True)
 
         self._param.inputs = []
         for _, r in df.iterrows():
-            self._param.inputs.append({"component_id": r["component_id"], "content": r["content"]})
+            self._param.inputs.append(
+                {"component_id": r["component_id"], "content": r["content"]}
+            )
 
         return df
 
@@ -555,9 +612,13 @@ class ComponentBase(ABC):
                     eles.extend(self._canvas.get_component(cpn_id)["obj"]._param.query)
                     continue
 
-                eles.append({"name": self._canvas.get_component_name(cpn_id), "key": cpn_id})
+                eles.append(
+                    {"name": self._canvas.get_component_name(cpn_id), "key": cpn_id}
+                )
             else:
-                eles.append({"key": q["value"], "name": q["value"], "value": q["value"]})
+                eles.append(
+                    {"key": q["value"], "name": q["value"], "value": q["value"]}
+                )
         return eles
 
     def get_stream_input(self):

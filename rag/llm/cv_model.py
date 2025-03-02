@@ -37,10 +37,15 @@ class Base(ABC):
 
     def describe(self, image, max_tokens=300):
         raise NotImplementedError("Please implement encode method!")
-        
+
     def chat(self, system, history, gen_conf, image=""):
         if system:
-            history[-1]["content"] = system + history[-1]["content"] + "user query: " + history[-1]["content"]
+            history[-1]["content"] = (
+                system
+                + history[-1]["content"]
+                + "user query: "
+                + history[-1]["content"]
+            )
         try:
             for his in history:
                 if his["role"] == "user":
@@ -51,15 +56,23 @@ class Base(ABC):
                 messages=history,
                 max_tokens=gen_conf.get("max_tokens", 1000),
                 temperature=gen_conf.get("temperature", 0.3),
-                top_p=gen_conf.get("top_p", 0.7)
+                top_p=gen_conf.get("top_p", 0.7),
             )
-            return response.choices[0].message.content.strip(), response.usage.total_tokens
+            return (
+                response.choices[0].message.content.strip(),
+                response.usage.total_tokens,
+            )
         except Exception as e:
             return "**ERROR**: " + str(e), 0
 
     def chat_streamly(self, system, history, gen_conf, image=""):
         if system:
-            history[-1]["content"] = system + history[-1]["content"] + "user query: " + history[-1]["content"]
+            history[-1]["content"] = (
+                system
+                + history[-1]["content"]
+                + "user query: "
+                + history[-1]["content"]
+            )
 
         ans = ""
         tk_count = 0
@@ -74,7 +87,7 @@ class Base(ABC):
                 max_tokens=gen_conf.get("max_tokens", 1000),
                 temperature=gen_conf.get("temperature", 0.3),
                 top_p=gen_conf.get("top_p", 0.7),
-                stream=True
+                stream=True,
             )
             for resp in response:
                 if not resp.choices[0].delta.content:
@@ -82,8 +95,11 @@ class Base(ABC):
                 delta = resp.choices[0].delta.content
                 ans += delta
                 if resp.choices[0].finish_reason == "length":
-                    ans += "...\nFor the content length reason, it stopped, continue?" if is_english(
-                        [ans]) else "······\n由于长度的原因，回答被截断了，要继续吗？"
+                    ans += (
+                        "...\nFor the content length reason, it stopped, continue?"
+                        if is_english([ans])
+                        else "······\n由于长度的原因，回答被截断了，要继续吗？"
+                    )
                     tk_count = resp.usage.total_tokens
                 if resp.choices[0].finish_reason == "stop":
                     tk_count = resp.usage.total_tokens
@@ -92,7 +108,7 @@ class Base(ABC):
             yield ans + "\n**ERROR**: " + str(e)
 
         yield tk_count
-        
+
     def image2base64(self, image):
         if isinstance(image, bytes):
             return base64.b64encode(image).decode("utf-8")
@@ -112,13 +128,14 @@ class Base(ABC):
                 "content": [
                     {
                         "type": "image_url",
-                        "image_url": {
-                            "url": f"data:image/jpeg;base64,{b64}"
-                        },
+                        "image_url": {"url": f"data:image/jpeg;base64,{b64}"},
                     },
                     {
-                        "text": "请用中文详细描述一下图中的内容，比如时间，地点，人物，事情，人物心情等，如果有数据请提取出数据。" if self.lang.lower() == "chinese" else
-                        "Please describe the content of this picture, like where, when, who, what happen. If it has number data, please extract them out.",
+                        "text": (
+                            "请用中文详细描述一下图中的内容，比如时间，地点，人物，事情，人物心情等，如果有数据请提取出数据。"
+                            if self.lang.lower() == "chinese"
+                            else "Please describe the content of this picture, like where, when, who, what happen. If it has number data, please extract them out."
+                        ),
                     },
                 ],
             }
@@ -132,17 +149,20 @@ class Base(ABC):
                     "url": f"data:image/jpeg;base64,{b64}",
                 },
             },
-            {
-                "type": "text",
-                "text": text
-            },
+            {"type": "text", "text": text},
         ]
 
 
 class GptV4(Base):
-    def __init__(self, key, model_name="gpt-4-vision-preview", lang="Chinese", base_url="https://api.openai.com/v1"):
+    def __init__(
+        self,
+        key,
+        model_name="gpt-4-vision-preview",
+        lang="Chinese",
+        base_url="https://api.openai.com/v1",
+    ):
         if not base_url:
-            base_url="https://api.openai.com/v1"
+            base_url = "https://api.openai.com/v1"
         self.client = OpenAI(api_key=key, base_url=base_url)
         self.model_name = model_name
         self.lang = lang
@@ -165,9 +185,11 @@ class GptV4(Base):
 
 class AzureGptV4(Base):
     def __init__(self, key, model_name, lang="Chinese", **kwargs):
-        api_key = json.loads(key).get('api_key', '')
-        api_version = json.loads(key).get('api_version', '2024-02-01')
-        self.client = AzureOpenAI(api_key=api_key, azure_endpoint=kwargs["base_url"], api_version=api_version)
+        api_key = json.loads(key).get("api_key", "")
+        api_version = json.loads(key).get("api_version", "2024-02-01")
+        self.client = AzureOpenAI(
+            api_key=api_key, azure_endpoint=kwargs["base_url"], api_version=api_version
+        )
         self.model_name = model_name
         self.lang = lang
 
@@ -190,6 +212,7 @@ class AzureGptV4(Base):
 class QWenCV(Base):
     def __init__(self, key, model_name="qwen-vl-chat-v1", lang="Chinese", **kwargs):
         import dashscope
+
         dashscope.api_key = key
         self.model_name = model_name
         self.lang = lang
@@ -205,12 +228,13 @@ class QWenCV(Base):
             {
                 "role": "user",
                 "content": [
+                    {"image": f"file://{path}"},
                     {
-                        "image": f"file://{path}"
-                    },
-                    {
-                        "text": "请用中文详细描述一下图中的内容，比如时间，地点，人物，事情，人物心情等，如果有数据请提取出数据。" if self.lang.lower() == "chinese" else
-                        "Please describe the content of this picture, like where, when, who, what happen. If it has number data, please extract them out.",
+                        "text": (
+                            "请用中文详细描述一下图中的内容，比如时间，地点，人物，事情，人物心情等，如果有数据请提取出数据。"
+                            if self.lang.lower() == "chinese"
+                            else "Please describe the content of this picture, like where, when, who, what happen. If it has number data, please extract them out."
+                        ),
                     },
                 ],
             }
@@ -221,38 +245,55 @@ class QWenCV(Base):
             {"image": f"{b64}"},
             {"text": text},
         ]
-    
+
     def describe(self, image, max_tokens=300):
         from http import HTTPStatus
         from dashscope import MultiModalConversation
-        response = MultiModalConversation.call(model=self.model_name,
-                                               messages=self.prompt(image))
+
+        response = MultiModalConversation.call(
+            model=self.model_name, messages=self.prompt(image)
+        )
         if response.status_code == HTTPStatus.OK:
-            return response.output.choices[0]['message']['content'][0]["text"], response.usage.output_tokens
+            return (
+                response.output.choices[0]["message"]["content"][0]["text"],
+                response.usage.output_tokens,
+            )
         return response.message, 0
 
     def chat(self, system, history, gen_conf, image=""):
         from http import HTTPStatus
         from dashscope import MultiModalConversation
+
         if system:
-            history[-1]["content"] = system + history[-1]["content"] + "user query: " + history[-1]["content"]
+            history[-1]["content"] = (
+                system
+                + history[-1]["content"]
+                + "user query: "
+                + history[-1]["content"]
+            )
 
         for his in history:
             if his["role"] == "user":
                 his["content"] = self.chat_prompt(his["content"], image)
-        response = MultiModalConversation.call(model=self.model_name, messages=history,
-                                               max_tokens=gen_conf.get("max_tokens", 1000),
-                                               temperature=gen_conf.get("temperature", 0.3),
-                                               top_p=gen_conf.get("top_p", 0.7))
+        response = MultiModalConversation.call(
+            model=self.model_name,
+            messages=history,
+            max_tokens=gen_conf.get("max_tokens", 1000),
+            temperature=gen_conf.get("temperature", 0.3),
+            top_p=gen_conf.get("top_p", 0.7),
+        )
 
         ans = ""
         tk_count = 0
         if response.status_code == HTTPStatus.OK:
-            ans += response.output.choices[0]['message']['content']
+            ans += response.output.choices[0]["message"]["content"]
             tk_count += response.usage.total_tokens
             if response.output.choices[0].get("finish_reason", "") == "length":
-                ans += "...\nFor the content length reason, it stopped, continue?" if is_english(
-                    [ans]) else "······\n由于长度的原因，回答被截断了，要继续吗？"
+                ans += (
+                    "...\nFor the content length reason, it stopped, continue?"
+                    if is_english([ans])
+                    else "······\n由于长度的原因，回答被截断了，要继续吗？"
+                )
             return ans, tk_count
 
         return "**ERROR**: " + response.message, tk_count
@@ -260,8 +301,14 @@ class QWenCV(Base):
     def chat_streamly(self, system, history, gen_conf, image=""):
         from http import HTTPStatus
         from dashscope import MultiModalConversation
+
         if system:
-            history[-1]["content"] = system + history[-1]["content"] + "user query: " + history[-1]["content"]
+            history[-1]["content"] = (
+                system
+                + history[-1]["content"]
+                + "user query: "
+                + history[-1]["content"]
+            )
 
         for his in history:
             if his["role"] == "user":
@@ -270,22 +317,31 @@ class QWenCV(Base):
         ans = ""
         tk_count = 0
         try:
-            response = MultiModalConversation.call(model=self.model_name, messages=history,
-                                                   max_tokens=gen_conf.get("max_tokens", 1000),
-                                                   temperature=gen_conf.get("temperature", 0.3),
-                                                   top_p=gen_conf.get("top_p", 0.7),
-                                                   stream=True)
+            response = MultiModalConversation.call(
+                model=self.model_name,
+                messages=history,
+                max_tokens=gen_conf.get("max_tokens", 1000),
+                temperature=gen_conf.get("temperature", 0.3),
+                top_p=gen_conf.get("top_p", 0.7),
+                stream=True,
+            )
             for resp in response:
                 if resp.status_code == HTTPStatus.OK:
-                    ans = resp.output.choices[0]['message']['content']
+                    ans = resp.output.choices[0]["message"]["content"]
                     tk_count = resp.usage.total_tokens
                     if resp.output.choices[0].get("finish_reason", "") == "length":
-                        ans += "...\nFor the content length reason, it stopped, continue?" if is_english(
-                            [ans]) else "······\n由于长度的原因，回答被截断了，要继续吗？"
+                        ans += (
+                            "...\nFor the content length reason, it stopped, continue?"
+                            if is_english([ans])
+                            else "······\n由于长度的原因，回答被截断了，要继续吗？"
+                        )
                     yield ans
                 else:
-                    yield ans + "\n**ERROR**: " + resp.message if str(resp.message).find(
-                        "Access") < 0 else "Out of credit. Please set the API key in **settings > Model providers.**"
+                    yield (
+                        ans + "\n**ERROR**: " + resp.message
+                        if str(resp.message).find("Access") < 0
+                        else "Out of credit. Please set the API key in **settings > Model providers.**"
+                    )
         except Exception as e:
             yield ans + "\n**ERROR**: " + str(e)
 
@@ -303,7 +359,7 @@ class Zhipu4V(Base):
 
         prompt = self.prompt(b64)
         prompt[0]["content"][1]["type"] = "text"
-        
+
         res = self.client.chat.completions.create(
             model=self.model_name,
             messages=prompt,
@@ -313,7 +369,12 @@ class Zhipu4V(Base):
 
     def chat(self, system, history, gen_conf, image=""):
         if system:
-            history[-1]["content"] = system + history[-1]["content"] + "user query: " + history[-1]["content"]
+            history[-1]["content"] = (
+                system
+                + history[-1]["content"]
+                + "user query: "
+                + history[-1]["content"]
+            )
         try:
             for his in history:
                 if his["role"] == "user":
@@ -324,15 +385,23 @@ class Zhipu4V(Base):
                 messages=history,
                 max_tokens=gen_conf.get("max_tokens", 1000),
                 temperature=gen_conf.get("temperature", 0.3),
-                top_p=gen_conf.get("top_p", 0.7)
+                top_p=gen_conf.get("top_p", 0.7),
             )
-            return response.choices[0].message.content.strip(), response.usage.total_tokens
+            return (
+                response.choices[0].message.content.strip(),
+                response.usage.total_tokens,
+            )
         except Exception as e:
             return "**ERROR**: " + str(e), 0
 
     def chat_streamly(self, system, history, gen_conf, image=""):
         if system:
-            history[-1]["content"] = system + history[-1]["content"] + "user query: " + history[-1]["content"]
+            history[-1]["content"] = (
+                system
+                + history[-1]["content"]
+                + "user query: "
+                + history[-1]["content"]
+            )
 
         ans = ""
         tk_count = 0
@@ -342,12 +411,12 @@ class Zhipu4V(Base):
                     his["content"] = self.chat_prompt(his["content"], image)
 
             response = self.client.chat.completions.create(
-                model=self.model_name, 
+                model=self.model_name,
                 messages=history,
                 max_tokens=gen_conf.get("max_tokens", 1000),
                 temperature=gen_conf.get("temperature", 0.3),
                 top_p=gen_conf.get("top_p", 0.7),
-                stream=True
+                stream=True,
             )
             for resp in response:
                 if not resp.choices[0].delta.content:
@@ -355,8 +424,11 @@ class Zhipu4V(Base):
                 delta = resp.choices[0].delta.content
                 ans += delta
                 if resp.choices[0].finish_reason == "length":
-                    ans += "...\nFor the content length reason, it stopped, continue?" if is_english(
-                        [ans]) else "······\n由于长度的原因，回答被截断了，要继续吗？"
+                    ans += (
+                        "...\nFor the content length reason, it stopped, continue?"
+                        if is_english([ans])
+                        else "······\n由于长度的原因，回答被截断了，要继续吗？"
+                    )
                     tk_count = resp.usage.total_tokens
                 if resp.choices[0].finish_reason == "stop":
                     tk_count = resp.usage.total_tokens
@@ -381,7 +453,7 @@ class OllamaCV(Base):
                 model=self.model_name,
                 prompt=prompt[0]["content"][1]["text"],
                 images=[image],
-                options=options
+                options=options,
             )
             ans = response["response"].strip()
             return ans, 128
@@ -390,7 +462,12 @@ class OllamaCV(Base):
 
     def chat(self, system, history, gen_conf, image=""):
         if system:
-            history[-1]["content"] = system + history[-1]["content"] + "user query: " + history[-1]["content"]
+            history[-1]["content"] = (
+                system
+                + history[-1]["content"]
+                + "user query: "
+                + history[-1]["content"]
+            )
 
         try:
             for his in history:
@@ -408,10 +485,7 @@ class OllamaCV(Base):
             if "frequency_penalty" in gen_conf:
                 options["frequency_penalty"] = gen_conf["frequency_penalty"]
             response = self.client.chat(
-                model=self.model_name,
-                messages=history,
-                options=options,
-                keep_alive=-1
+                model=self.model_name, messages=history, options=options, keep_alive=-1
             )
 
             ans = response["message"]["content"].strip()
@@ -421,7 +495,12 @@ class OllamaCV(Base):
 
     def chat_streamly(self, system, history, gen_conf, image=""):
         if system:
-            history[-1]["content"] = system + history[-1]["content"] + "user query: " + history[-1]["content"]
+            history[-1]["content"] = (
+                system
+                + history[-1]["content"]
+                + "user query: "
+                + history[-1]["content"]
+            )
 
         for his in history:
             if his["role"] == "user":
@@ -444,7 +523,7 @@ class OllamaCV(Base):
                 messages=history,
                 stream=True,
                 options=options,
-                keep_alive=-1
+                keep_alive=-1,
             )
             for resp in response:
                 if resp["done"]:
@@ -485,34 +564,48 @@ class XinferenceCV(Base):
         )
         return res.choices[0].message.content.strip(), res.usage.total_tokens
 
+
 class GeminiCV(Base):
-    def __init__(self, key, model_name="gemini-1.0-pro-vision-latest", lang="Chinese", **kwargs):
+    def __init__(
+        self, key, model_name="gemini-1.0-pro-vision-latest", lang="Chinese", **kwargs
+    ):
         from google.generativeai import client, GenerativeModel
+
         client.configure(api_key=key)
         _client = client.get_default_generative_client()
         self.model_name = model_name
         self.model = GenerativeModel(model_name=self.model_name)
         self.model._client = _client
-        self.lang = lang 
+        self.lang = lang
 
     def describe(self, image, max_tokens=2048):
         from PIL.Image import open
-        gen_config = {'max_output_tokens':max_tokens}
-        prompt = "请用中文详细描述一下图中的内容，比如时间，地点，人物，事情，人物心情等，如果有数据请提取出数据。" if self.lang.lower() == "chinese" else \
-            "Please describe the content of this picture, like where, when, who, what happen. If it has number data, please extract them out."
-        b64 = self.image2base64(image) 
-        img = open(BytesIO(base64.b64decode(b64))) 
-        input = [prompt,img]
+
+        gen_config = {"max_output_tokens": max_tokens}
+        prompt = (
+            "请用中文详细描述一下图中的内容，比如时间，地点，人物，事情，人物心情等，如果有数据请提取出数据。"
+            if self.lang.lower() == "chinese"
+            else "Please describe the content of this picture, like where, when, who, what happen. If it has number data, please extract them out."
+        )
+        b64 = self.image2base64(image)
+        img = open(BytesIO(base64.b64decode(b64)))
+        input = [prompt, img]
         res = self.model.generate_content(
             input,
             generation_config=gen_config,
         )
-        return res.text,res.usage_metadata.total_token_count
+        return res.text, res.usage_metadata.total_token_count
 
     def chat(self, system, history, gen_conf, image=""):
         from transformers import GenerationConfig
+
         if system:
-            history[-1]["content"] = system + history[-1]["content"] + "user query: " + history[-1]["content"]
+            history[-1]["content"] = (
+                system
+                + history[-1]["content"]
+                + "user query: "
+                + history[-1]["content"]
+            )
         try:
             for his in history:
                 if his["role"] == "assistant":
@@ -524,9 +617,14 @@ class GeminiCV(Base):
                     his.pop("content")
             history[-1]["parts"].append("data:image/jpeg;base64," + image)
 
-            response = self.model.generate_content(history, generation_config=GenerationConfig(
-                max_output_tokens=gen_conf.get("max_tokens", 1000), temperature=gen_conf.get("temperature", 0.3),
-                top_p=gen_conf.get("top_p", 0.7)))
+            response = self.model.generate_content(
+                history,
+                generation_config=GenerationConfig(
+                    max_output_tokens=gen_conf.get("max_tokens", 1000),
+                    temperature=gen_conf.get("temperature", 0.3),
+                    top_p=gen_conf.get("top_p", 0.7),
+                ),
+            )
 
             ans = response.text
             return ans, response.usage_metadata.total_token_count
@@ -535,8 +633,14 @@ class GeminiCV(Base):
 
     def chat_streamly(self, system, history, gen_conf, image=""):
         from transformers import GenerationConfig
+
         if system:
-            history[-1]["content"] = system + history[-1]["content"] + "user query: " + history[-1]["content"]
+            history[-1]["content"] = (
+                system
+                + history[-1]["content"]
+                + "user query: "
+                + history[-1]["content"]
+            )
 
         ans = ""
         try:
@@ -550,9 +654,15 @@ class GeminiCV(Base):
                     his.pop("content")
             history[-1]["parts"].append("data:image/jpeg;base64," + image)
 
-            response = self.model.generate_content(history, generation_config=GenerationConfig(
-                max_output_tokens=gen_conf.get("max_tokens", 1000), temperature=gen_conf.get("temperature", 0.3),
-                top_p=gen_conf.get("top_p", 0.7)), stream=True)
+            response = self.model.generate_content(
+                history,
+                generation_config=GenerationConfig(
+                    max_output_tokens=gen_conf.get("max_tokens", 1000),
+                    temperature=gen_conf.get("temperature", 0.3),
+                    top_p=gen_conf.get("top_p", 0.7),
+                ),
+                stream=True,
+            )
 
             for resp in response:
                 if not resp.text:
@@ -651,9 +761,15 @@ class NvidiaCV(Base):
 
 
 class StepFunCV(GptV4):
-    def __init__(self, key, model_name="step-1v-8k", lang="Chinese", base_url="https://api.stepfun.com/v1"):
+    def __init__(
+        self,
+        key,
+        model_name="step-1v-8k",
+        lang="Chinese",
+        base_url="https://api.stepfun.com/v1",
+    ):
         if not base_url:
-            base_url="https://api.stepfun.com/v1"
+            base_url = "https://api.stepfun.com/v1"
         self.client = OpenAI(api_key=key, base_url=base_url)
         self.model_name = model_name
         self.lang = lang
@@ -682,21 +798,29 @@ class OpenAI_APICV(GptV4):
 
 
 class TogetherAICV(GptV4):
-    def __init__(self, key, model_name, lang="Chinese", base_url="https://api.together.xyz/v1"):
+    def __init__(
+        self, key, model_name, lang="Chinese", base_url="https://api.together.xyz/v1"
+    ):
         if not base_url:
             base_url = "https://api.together.xyz/v1"
-        super().__init__(key, model_name,lang,base_url)
+        super().__init__(key, model_name, lang, base_url)
 
 
 class YiCV(GptV4):
-    def __init__(self, key, model_name, lang="Chinese",base_url="https://api.lingyiwanwu.com/v1",):
+    def __init__(
+        self,
+        key,
+        model_name,
+        lang="Chinese",
+        base_url="https://api.lingyiwanwu.com/v1",
+    ):
         if not base_url:
             base_url = "https://api.lingyiwanwu.com/v1"
-        super().__init__(key, model_name,lang,base_url)
+        super().__init__(key, model_name, lang, base_url)
 
 
 class HunyuanCV(Base):
-    def __init__(self, key, model_name, lang="Chinese",base_url=None):
+    def __init__(self, key, model_name, lang="Chinese", base_url=None):
         from tencentcloud.common import credential
         from tencentcloud.hunyuan.v20230901 import hunyuan_client
 
@@ -713,7 +837,7 @@ class HunyuanCV(Base):
         from tencentcloud.common.exception.tencent_cloud_sdk_exception import (
             TencentCloudSDKException,
         )
-        
+
         b64 = self.image2base64(image)
         req = models.ChatCompletionsRequest()
         params = {"Model": self.model_name, "Messages": self.prompt(b64)}
@@ -725,7 +849,7 @@ class HunyuanCV(Base):
             return ans, response.Usage.TotalTokens
         except TencentCloudSDKException as e:
             return ans + "\n**ERROR**: " + str(e), 0
-        
+
     def prompt(self, b64):
         return [
             {
@@ -733,14 +857,15 @@ class HunyuanCV(Base):
                 "Contents": [
                     {
                         "Type": "image_url",
-                        "ImageUrl": {
-                            "Url": f"data:image/jpeg;base64,{b64}"
-                        },
+                        "ImageUrl": {"Url": f"data:image/jpeg;base64,{b64}"},
                     },
                     {
                         "Type": "text",
-                        "Text": "请用中文详细描述一下图中的内容，比如时间，地点，人物，事情，人物心情等，如果有数据请提取出数据。" if self.lang.lower() == "chinese" else
-                        "Please describe the content of this picture, like where, when, who, what happen. If it has number data, please extract them out.",
+                        "Text": (
+                            "请用中文详细描述一下图中的内容，比如时间，地点，人物，事情，人物心情等，如果有数据请提取出数据。"
+                            if self.lang.lower() == "chinese"
+                            else "Please describe the content of this picture, like where, when, who, what happen. If it has number data, please extract them out."
+                        ),
                     },
                 ],
             }

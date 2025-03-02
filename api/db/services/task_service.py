@@ -40,8 +40,8 @@ def trim_header_by_lines(text: str, max_length) -> str:
     if len_text <= max_length:
         return text
     for i in range(len_text):
-        if text[i] == '\n' and len_text - i <= max_length:
-            return text[i + 1:]
+        if text[i] == "\n" and len_text - i <= max_length:
+            return text[i + 1 :]
     return text
 
 
@@ -76,10 +76,10 @@ class TaskService(CommonService):
         ]
         docs = (
             cls.model.select(*fields)
-                .join(Document, on=(cls.model.doc_id == Document.id))
-                .join(Knowledgebase, on=(Document.kb_id == Knowledgebase.id))
-                .join(Tenant, on=(Knowledgebase.tenant_id == Tenant.id))
-                .where(cls.model.id == task_id)
+            .join(Document, on=(cls.model.doc_id == Document.id))
+            .join(Knowledgebase, on=(Document.kb_id == Knowledgebase.id))
+            .join(Tenant, on=(Knowledgebase.tenant_id == Tenant.id))
+            .where(cls.model.id == task_id)
         )
         docs = list(docs.dicts())
         if not docs:
@@ -113,8 +113,9 @@ class TaskService(CommonService):
             cls.model.chunk_ids,
         ]
         tasks = (
-            cls.model.select(*fields).order_by(cls.model.from_page.asc(), cls.model.create_time.desc())
-                .where(cls.model.doc_id == doc_id)
+            cls.model.select(*fields)
+            .order_by(cls.model.from_page.asc(), cls.model.create_time.desc())
+            .where(cls.model.doc_id == doc_id)
         )
         tasks = list(tasks.dicts())
         if not tasks:
@@ -134,18 +135,18 @@ class TaskService(CommonService):
                 cls.model.select(
                     *[Document.id, Document.kb_id, Document.location, File.parent_id]
                 )
-                    .join(Document, on=(cls.model.doc_id == Document.id))
-                    .join(
+                .join(Document, on=(cls.model.doc_id == Document.id))
+                .join(
                     File2Document,
                     on=(File2Document.document_id == Document.id),
                     join_type=JOIN.LEFT_OUTER,
                 )
-                    .join(
+                .join(
                     File,
                     on=(File2Document.file_id == File.id),
                     join_type=JOIN.LEFT_OUTER,
                 )
-                    .where(
+                .where(
                     Document.status == StatusEnum.VALID.value,
                     Document.run == TaskStatus.RUNNING.value,
                     ~(Document.type == FileType.VIRTUAL.value),
@@ -182,8 +183,12 @@ class TaskService(CommonService):
         if os.environ.get("MACOS"):
             if info["progress_msg"]:
                 task = cls.model.get_by_id(id)
-                progress_msg = trim_header_by_lines(task.progress_msg + "\n" + info["progress_msg"], 3000)
-                cls.model.update(progress_msg=progress_msg).where(cls.model.id == id).execute()
+                progress_msg = trim_header_by_lines(
+                    task.progress_msg + "\n" + info["progress_msg"], 3000
+                )
+                cls.model.update(progress_msg=progress_msg).where(
+                    cls.model.id == id
+                ).execute()
             if "progress" in info:
                 cls.model.update(progress=info["progress"]).where(
                     cls.model.id == id
@@ -193,8 +198,12 @@ class TaskService(CommonService):
         with DB.lock("update_progress", -1):
             if info["progress_msg"]:
                 task = cls.model.get_by_id(id)
-                progress_msg = trim_header_by_lines(task.progress_msg + "\n" + info["progress_msg"], 3000)
-                cls.model.update(progress_msg=progress_msg).where(cls.model.id == id).execute()
+                progress_msg = trim_header_by_lines(
+                    task.progress_msg + "\n" + info["progress_msg"], 3000
+                )
+                cls.model.update(progress_msg=progress_msg).where(
+                    cls.model.id == id
+                ).execute()
             if "progress" in info:
                 cls.model.update(progress=info["progress"]).where(
                     cls.model.id == id
@@ -203,7 +212,13 @@ class TaskService(CommonService):
 
 def queue_tasks(doc: dict, bucket: str, name: str):
     def new_task():
-        return {"id": get_uuid(), "doc_id": doc["id"], "progress": 0.0, "from_page": 0, "to_page": 100000000}
+        return {
+            "id": get_uuid(),
+            "doc_id": doc["id"],
+            "progress": 0.0,
+            "from_page": 0,
+            "to_page": 100000000,
+        }
 
     parse_task_array = []
 
@@ -215,8 +230,8 @@ def queue_tasks(doc: dict, bucket: str, name: str):
         if doc["parser_id"] == "paper":
             page_size = doc["parser_config"].get("task_page_size", 22)
         if doc["parser_id"] in ["one", "knowledge_graph"] or do_layout != "DeepDOC":
-            page_size = 10 ** 9
-        page_ranges = doc["parser_config"].get("pages") or [(1, 10 ** 5)]
+            page_size = 10**9
+        page_ranges = doc["parser_config"].get("pages") or [(1, 10**5)]
         for s, e in page_ranges:
             s -= 1
             s = max(0, s)
@@ -264,14 +279,19 @@ def queue_tasks(doc: dict, bucket: str, name: str):
             if task["chunk_ids"]:
                 chunk_ids.extend(task["chunk_ids"].split())
         if chunk_ids:
-            settings.docStoreConn.delete({"id": chunk_ids}, search.index_name(chunking_config["tenant_id"]),
-                                         chunking_config["kb_id"])
+            settings.docStoreConn.delete(
+                {"id": chunk_ids},
+                search.index_name(chunking_config["tenant_id"]),
+                chunking_config["kb_id"],
+            )
     DocumentService.update_by_id(doc["id"], {"chunk_num": ck_num})
 
     bulk_insert_into_db(Task, parse_task_array, True)
     DocumentService.begin2parse(doc["id"])
 
-    unfinished_task_array = [task for task in parse_task_array if task["progress"] < 1.0]
+    unfinished_task_array = [
+        task for task in parse_task_array if task["progress"] < 1.0
+    ]
     for unfinished_task in unfinished_task_array:
         assert REDIS_CONN.queue_product(
             SVR_QUEUE_NAME, message=unfinished_task
@@ -282,8 +302,9 @@ def reuse_prev_task_chunks(task: dict, prev_tasks: list[dict], chunking_config: 
     idx = 0
     while idx < len(prev_tasks):
         prev_task = prev_tasks[idx]
-        if prev_task.get("from_page", 0) == task.get("from_page", 0) \
-                and prev_task.get("digest", 0) == task.get("digest", ""):
+        if prev_task.get("from_page", 0) == task.get("from_page", 0) and prev_task.get(
+            "digest", 0
+        ) == task.get("digest", ""):
             break
         idx += 1
 
@@ -294,12 +315,21 @@ def reuse_prev_task_chunks(task: dict, prev_tasks: list[dict], chunking_config: 
         return 0
     task["chunk_ids"] = prev_task["chunk_ids"]
     task["progress"] = 1.0
-    if "from_page" in task and "to_page" in task and int(task['to_page']) - int(task['from_page']) >= 10 ** 6:
+    if (
+        "from_page" in task
+        and "to_page" in task
+        and int(task["to_page"]) - int(task["from_page"]) >= 10**6
+    ):
         task["progress_msg"] = f"Page({task['from_page']}~{task['to_page']}): "
     else:
         task["progress_msg"] = ""
     task["progress_msg"] = " ".join(
-        [datetime.now().strftime("%H:%M:%S"), task["progress_msg"], "Reused previous task's chunks."])
+        [
+            datetime.now().strftime("%H:%M:%S"),
+            task["progress_msg"],
+            "Reused previous task's chunks.",
+        ]
+    )
     prev_task["chunk_ids"] = ""
 
     return len(task["chunk_ids"].split())

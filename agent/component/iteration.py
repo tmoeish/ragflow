@@ -35,11 +35,13 @@ class Iteration(ComponentBase, ABC):
 
     def get_start(self):
         for cid in self._canvas.components.keys():
-            if self._canvas.get_component(cid)["obj"].component_name.lower() != "iterationitem":
+            if (
+                self._canvas.get_component(cid)["obj"].component_name.lower()
+                != "iterationitem"
+            ):
                 continue
             if self._canvas.get_component(cid)["parent_id"] == self._id:
                 return self._canvas.get_component(cid)
 
     def _run(self, history, **kwargs):
         return self.output(allow_partial=False)[1]
-

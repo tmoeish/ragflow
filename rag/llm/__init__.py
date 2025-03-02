@@ -235,7 +235,7 @@ ChatModel = {
     "Google Cloud": GoogleChat,
     "HuggingFace": HuggingFaceChat,
     "GPUStack": GPUStackChat,
-    "ModelScope":ModelScopeChat,
+    "ModelScope": ModelScopeChat,
 }
 
 RerankModel = {

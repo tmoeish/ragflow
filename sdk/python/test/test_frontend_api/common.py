@@ -17,7 +17,7 @@
 import os
 import requests
 
-HOST_ADDRESS = os.getenv('HOST_ADDRESS', 'http://127.0.0.1:9380')
+HOST_ADDRESS = os.getenv("HOST_ADDRESS", "http://127.0.0.1:9380")
 
 DATASET_NAME_LIMIT = 128
 
@@ -59,12 +59,11 @@ def upload_file(auth, dataset_id, path):
         "kb_id": dataset_id,
     }
 
-    file = {
-        'file': open(f'{path}', 'rb')
-    }
+    file = {"file": open(f"{path}", "rb")}
 
     res = requests.post(url=url, headers=authorization, files=file, data=json_req)
     return res.json()
+
 
 def list_document(auth, dataset_id):
     authorization = {"Authorization": auth}
@@ -72,24 +71,22 @@ def list_document(auth, dataset_id):
     res = requests.get(url=url, headers=authorization)
     return res.json()
 
+
 def get_docs_info(auth, doc_ids):
     authorization = {"Authorization": auth}
-    json_req = {
-        "doc_ids": doc_ids
-    }
+    json_req = {"doc_ids": doc_ids}
     url = f"{HOST_ADDRESS}/v1/document/infos"
     res = requests.post(url=url, headers=authorization, json=json_req)
     return res.json()
 
+
 def parse_docs(auth, doc_ids):
     authorization = {"Authorization": auth}
-    json_req = {
-        "doc_ids": doc_ids,
-        "run": 1
-    }
+    json_req = {"doc_ids": doc_ids, "run": 1}
     url = f"{HOST_ADDRESS}/v1/document/run"
     res = requests.post(url=url, headers=authorization, json=json_req)
     return res.json()
+
 
 def parse_file(auth, document_id):
     pass

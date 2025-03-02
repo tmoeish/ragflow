@@ -33,16 +33,18 @@ class Ppt(PptParser):
         callback(0.5, "Text extraction finished.")
         import aspose.slides as slides
         import aspose.pydrawing as drawing
+
         imgs = []
         with slides.Presentation(BytesIO(fnm)) as presentation:
-            for i, slide in enumerate(presentation.slides[from_page: to_page]):
+            for i, slide in enumerate(presentation.slides[from_page:to_page]):
                 buffered = BytesIO()
-                slide.get_thumbnail(
-                    0.5, 0.5).save(
-                    buffered, drawing.imaging.ImageFormat.jpeg)
+                slide.get_thumbnail(0.5, 0.5).save(
+                    buffered, drawing.imaging.ImageFormat.jpeg
+                )
                 imgs.append(Image.open(buffered))
         assert len(imgs) == len(
-            txts), "Slides text and image do not match: {} vs. {}".format(len(imgs), len(txts))
+            txts
+        ), "Slides text and image do not match: {} vs. {}".format(len(imgs), len(txts))
         callback(0.9, "Image extraction finished")
         self.is_english = is_english(txts)
         return [(txts[i], imgs[i]) for i in range(len(txts))]
@@ -60,39 +62,72 @@ class Pdf(PdfParser):
             return True
         return False
 
-    def __call__(self, filename, binary=None, from_page=0,
-                 to_page=100000, zoomin=3, callback=None):
+    def __call__(
+        self,
+        filename,
+        binary=None,
+        from_page=0,
+        to_page=100000,
+        zoomin=3,
+        callback=None,
+    ):
         from timeit import default_timer as timer
+
         start = timer()
         callback(msg="OCR started")
-        self.__images__(filename if not binary else binary,
-                        zoomin, from_page, to_page, callback)
-        callback(msg="Page {}~{}: OCR finished ({:.2f}s)".format(from_page, min(to_page, self.total_page), timer() - start))
+        self.__images__(
+            filename if not binary else binary, zoomin, from_page, to_page, callback
+        )
+        callback(
+            msg="Page {}~{}: OCR finished ({:.2f}s)".format(
+                from_page, min(to_page, self.total_page), timer() - start
+            )
+        )
         assert len(self.boxes) == len(self.page_images), "{} vs. {}".format(
-            len(self.boxes), len(self.page_images))
+            len(self.boxes), len(self.page_images)
+        )
         res = []
         for i in range(len(self.boxes)):
-            lines = "\n".join([b["text"] for b in self.boxes[i]
-                              if not self.__garbage(b["text"])])
+            lines = "\n".join(
+                [b["text"] for b in self.boxes[i] if not self.__garbage(b["text"])]
+            )
             res.append((lines, self.page_images[i]))
-        callback(0.9, "Page {}~{}: Parsing finished".format(
-            from_page, min(to_page, self.total_page)))
+        callback(
+            0.9,
+            "Page {}~{}: Parsing finished".format(
+                from_page, min(to_page, self.total_page)
+            ),
+        )
         return res
 
 
 class PlainPdf(PlainParser):
-    def __call__(self, filename, binary=None, from_page=0,
-                 to_page=100000, callback=None, **kwargs):
+    def __call__(
+        self,
+        filename,
+        binary=None,
+        from_page=0,
+        to_page=100000,
+        callback=None,
+        **kwargs,
+    ):
         self.pdf = pdf2_read(filename if not binary else BytesIO(binary))
         page_txt = []
-        for page in self.pdf.pages[from_page: to_page]:
+        for page in self.pdf.pages[from_page:to_page]:
             page_txt.append(page.extract_text())
         callback(0.9, "Parsing finished")
         return [(txt, None) for txt in page_txt]
 
 
-def chunk(filename, binary=None, from_page=0, to_page=100000,
-          lang="Chinese", callback=None, **kwargs):
+def chunk(
+    filename,
+    binary=None,
+    from_page=0,
+    to_page=100000,
+    lang="Chinese",
+    callback=None,
+    **kwargs,
+):
     """
     The supported file formats are pdf, pptx.
     Every page will be treated as a chunk. And the thumbnail of every page will be stored.
@@ -101,14 +136,15 @@ def chunk(filename, binary=None, from_page=0, to_page=100000,
     eng = lang.lower() == "english"
     doc = {
         "docnm_kwd": filename,
-        "title_tks": rag_tokenizer.tokenize(re.sub(r"\.[a-zA-Z]+$", "", filename))
+        "title_tks": rag_tokenizer.tokenize(re.sub(r"\.[a-zA-Z]+$", "", filename)),
     }
     doc["title_sm_tks"] = rag_tokenizer.fine_grained_tokenize(doc["title_tks"])
     res = []
     if re.search(r"\.pptx?$", filename, re.IGNORECASE):
         ppt_parser = Ppt()
-        for pn, (txt, img) in enumerate(ppt_parser(
-                filename if not binary else binary, from_page, 1000000, callback)):
+        for pn, (txt, img) in enumerate(
+            ppt_parser(filename if not binary else binary, from_page, 1000000, callback)
+        ):
             d = copy.deepcopy(doc)
             pn += from_page
             d["image"] = img
@@ -122,21 +158,29 @@ def chunk(filename, binary=None, from_page=0, to_page=100000,
         pdf_parser = Pdf()
         if kwargs.get("layout_recognize", "DeepDOC") == "Plain Text":
             pdf_parser = PlainParser()
-        for pn, (txt, img) in enumerate(pdf_parser(filename, binary,
-                                                   from_page=from_page, to_page=to_page, callback=callback)):
+        for pn, (txt, img) in enumerate(
+            pdf_parser(
+                filename,
+                binary,
+                from_page=from_page,
+                to_page=to_page,
+                callback=callback,
+            )
+        ):
             d = copy.deepcopy(doc)
             pn += from_page
             if img:
                 d["image"] = img
             d["page_num_int"] = [pn + 1]
             d["top_int"] = [0]
-            d["position_int"] = [(pn + 1, 0, img.size[0] if img else 0, 0, img.size[1] if img else 0)]
+            d["position_int"] = [
+                (pn + 1, 0, img.size[0] if img else 0, 0, img.size[1] if img else 0)
+            ]
             tokenize(d, txt, eng)
             res.append(d)
         return res
 
-    raise NotImplementedError(
-        "file type not supported yet(pptx, pdf supported)")
+    raise NotImplementedError("file type not supported yet(pptx, pdf supported)")
 
 
 if __name__ == "__main__":
@@ -144,4 +188,5 @@ if __name__ == "__main__":
 
     def dummy(a, b):
         pass
+
     chunk(sys.argv[1], callback=dummy)

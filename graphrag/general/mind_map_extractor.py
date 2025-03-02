@@ -35,6 +35,7 @@ from rag.utils import num_tokens_from_string
 @dataclass
 class MindMapResult:
     """Unipartite Mind Graph result class definition."""
+
     output: dict
 
 
@@ -44,11 +45,11 @@ class MindMapExtractor(Extractor):
     _on_error: ErrorHandlerFn
 
     def __init__(
-            self,
-            llm_invoker: CompletionLLM,
-            prompt: str | None = None,
-            input_text_key: str | None = None,
-            on_error: ErrorHandlerFn | None = None,
+        self,
+        llm_invoker: CompletionLLM,
+        prompt: str | None = None,
+        input_text_key: str | None = None,
+        on_error: ErrorHandlerFn | None = None,
     ):
         """Init method definition."""
         # TODO: streamline construction
@@ -72,16 +73,11 @@ class MindMapExtractor(Extractor):
             k = self._key(k)
             if k and k not in keyset:
                 keyset.add(k)
-                arr.append(
-                    {
-                        "id": k,
-                        "children": self._be_children(v, keyset)
-                    }
-                )
+                arr.append({"id": k, "children": self._be_children(v, keyset)})
         return arr
 
     def __call__(
-            self, sections: list[str], prompt_variables: dict[str, Any] | None = None
+        self, sections: list[str], prompt_variables: dict[str, Any] | None = None
     ) -> MindMapResult:
         """Call method definition."""
         if prompt_variables is None:
@@ -89,22 +85,32 @@ class MindMapExtractor(Extractor):
 
         try:
             res = []
-            max_workers = int(os.environ.get('MINDMAP_EXTRACTOR_MAX_WORKERS', 12))
+            max_workers = int(os.environ.get("MINDMAP_EXTRACTOR_MAX_WORKERS", 12))
             with ThreadPoolExecutor(max_workers=max_workers) as exe:
                 threads = []
-                token_count = max(self._llm.max_length * 0.8, self._llm.max_length - 512)
+                token_count = max(
+                    self._llm.max_length * 0.8, self._llm.max_length - 512
+                )
                 texts = []
                 cnt = 0
                 for i in range(len(sections)):
                     section_cnt = num_tokens_from_string(sections[i])
                     if cnt + section_cnt >= token_count and texts:
-                        threads.append(exe.submit(self._process_document, "".join(texts), prompt_variables))
+                        threads.append(
+                            exe.submit(
+                                self._process_document, "".join(texts), prompt_variables
+                            )
+                        )
                         texts = []
                         cnt = 0
                     texts.append(sections[i])
                     cnt += section_cnt
                 if texts:
-                    threads.append(exe.submit(self._process_document, "".join(texts), prompt_variables))
+                    threads.append(
+                        exe.submit(
+                            self._process_document, "".join(texts), prompt_variables
+                        )
+                    )
 
                 for i, _ in enumerate(threads):
                     res.append(_.result())
@@ -114,28 +120,30 @@ class MindMapExtractor(Extractor):
 
             merge_json = reduce(self._merge, res)
             if len(merge_json) > 1:
-                keys = [re.sub(r"\*+", "", k) for k, v in merge_json.items() if isinstance(v, dict)]
+                keys = [
+                    re.sub(r"\*+", "", k)
+                    for k, v in merge_json.items()
+                    if isinstance(v, dict)
+                ]
                 keyset = set(i for i in keys if i)
                 merge_json = {
                     "id": "root",
                     "children": [
-                        {
-                            "id": self._key(k),
-                            "children": self._be_children(v, keyset)
-                        }
-                        for k, v in merge_json.items() if isinstance(v, dict) and self._key(k)
-                    ]
+                        {"id": self._key(k), "children": self._be_children(v, keyset)}
+                        for k, v in merge_json.items()
+                        if isinstance(v, dict) and self._key(k)
+                    ],
                 }
             else:
                 k = self._key(list(merge_json.keys())[0])
-                merge_json = {"id": k, "children": self._be_children(list(merge_json.items())[0][1], {k})}
+                merge_json = {
+                    "id": k,
+                    "children": self._be_children(list(merge_json.items())[0][1], {k}),
+                }
 
         except Exception as e:
             logging.exception("error mind graph")
-            self._on_error(
-                e,
-                traceback.format_exc(), None
-            )
+            self._on_error(e, traceback.format_exc(), None)
             merge_json = {"error": str(e)}
 
         return MindMapResult(output=merge_json)
@@ -181,9 +189,7 @@ class MindMapExtractor(Extractor):
 
         return self._list_to_kv(to_ret)
 
-    def _process_document(
-            self, text: str, prompt_variables: dict[str, str]
-    ) -> str:
+    def _process_document(self, text: str, prompt_variables: dict[str, str]) -> str:
         variables = {
             **prompt_variables,
             self._input_text_key: text,

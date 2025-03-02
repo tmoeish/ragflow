@@ -36,14 +36,18 @@ python_version_validation()
 # Download nltk data
 def download_nltk_data():
     import nltk
-    nltk.download('wordnet', halt_on_error=False, quiet=True)
-    nltk.download('punkt_tab', halt_on_error=False, quiet=True)
+
+    nltk.download("wordnet", halt_on_error=False, quiet=True)
+    nltk.download("punkt_tab", halt_on_error=False, quiet=True)
 
 
 try:
     from multiprocessing import Pool
+
     pool = Pool(processes=1)
     thread = pool.apply_async(download_nltk_data)
     binary = thread.get(timeout=60)
 except Exception:
-    print('\x1b[6;37;41m WARNING \x1b[0m' + "Downloading NLTK data failure.", flush=True)
+    print(
+        "\x1b[6;37;41m WARNING \x1b[0m" + "Downloading NLTK data failure.", flush=True
+    )

@@ -34,10 +34,13 @@ repos = [
     "maidalun1020/bce-reranker-base_v1",
 ]
 
+
 def download_model(repo_id):
     local_dir = os.path.abspath(os.path.join("huggingface.co", repo_id))
     os.makedirs(local_dir, exist_ok=True)
-    snapshot_download(repo_id=repo_id, local_dir=local_dir, local_dir_use_symlinks=False)
+    snapshot_download(
+        repo_id=repo_id, local_dir=local_dir, local_dir_use_symlinks=False
+    )
 
 
 if __name__ == "__main__":
@@ -47,8 +50,8 @@ if __name__ == "__main__":
         if not os.path.exists(filename):
             urllib.request.urlretrieve(url, filename)
 
-    local_dir = os.path.abspath('nltk_data')
-    for data in ['wordnet', 'punkt', 'punkt_tab']:
+    local_dir = os.path.abspath("nltk_data")
+    for data in ["wordnet", "punkt", "punkt_tab"]:
         print(f"Downloading nltk {data}...")
         nltk.download(data, download_dir=local_dir)
 

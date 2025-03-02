@@ -35,14 +35,17 @@ class KeywordExtractParam(GenerateParam):
         self.check_positive_integer(self.top_n, "Top N")
 
     def get_prompt(self):
-        self.prompt = """
+        self.prompt = (
+            """
 - Role: You're a question analyzer. 
 - Requirements: 
   - Summarize user's question, and give top %s important keyword/phrase.
   - Use comma as a delimiter to separate keywords/phrases.
 - Answer format: (in language of user's question)
   - keyword: 
-""" % self.top_n
+"""
+            % self.top_n
+        )
         return self.prompt
 
 
@@ -53,9 +56,14 @@ class KeywordExtract(Generate, ABC):
         query = self.get_input()
         query = str(query["content"][0]) if "content" in query else ""
 
-        chat_mdl = LLMBundle(self._canvas.get_tenant_id(), LLMType.CHAT, self._param.llm_id)
-        ans = chat_mdl.chat(self._param.get_prompt(), [{"role": "user", "content": query}],
-                            self._param.gen_conf())
+        chat_mdl = LLMBundle(
+            self._canvas.get_tenant_id(), LLMType.CHAT, self._param.llm_id
+        )
+        ans = chat_mdl.chat(
+            self._param.get_prompt(),
+            [{"role": "user", "content": query}],
+            self._param.gen_conf(),
+        )
 
         ans = re.sub(r".*keyword:", "", ans).strip()
         logging.debug(f"ans: {ans}")

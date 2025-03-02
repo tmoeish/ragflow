@@ -22,10 +22,10 @@ import json
 from typing import Any
 
 from rag.nlp import find_codec
+
+
 class RAGFlowJsonParser:
-    def __init__(
-        self, max_chunk_size: int = 2000, min_chunk_size: int | None = None
-    ):
+    def __init__(self, max_chunk_size: int = 2000, min_chunk_size: int | None = None):
         super().__init__()
         self.max_chunk_size = max_chunk_size * 2
         self.min_chunk_size = (
@@ -38,7 +38,7 @@ class RAGFlowJsonParser:
         encoding = find_codec(binary)
         txt = binary.decode(encoding, errors="ignore")
         json_data = json.loads(txt)
-        chunks = self.split_json(json_data, True)   
+        chunks = self.split_json(json_data, True)
         sections = [json.dumps(line, ensure_ascii=False) for line in chunks if line]
         return sections
 
@@ -67,7 +67,7 @@ class RAGFlowJsonParser:
         else:
             # Base case: the item is neither a dict nor a list, so return it unchanged
             return data
-        
+
     def _json_split(
         self,
         data,

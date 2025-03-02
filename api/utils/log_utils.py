@@ -18,6 +18,7 @@ import os.path
 import logging
 from logging.handlers import RotatingFileHandler
 
+
 def get_project_base_directory():
     PROJECT_BASE = os.path.abspath(
         os.path.join(
@@ -28,17 +29,23 @@ def get_project_base_directory():
     )
     return PROJECT_BASE
 
-def initRootLogger(logfile_basename: str, log_format: str = "%(asctime)-15s %(levelname)-8s %(process)d %(message)s"):
+
+def initRootLogger(
+    logfile_basename: str,
+    log_format: str = "%(asctime)-15s %(levelname)-8s %(process)d %(message)s",
+):
     logger = logging.getLogger()
     if logger.hasHandlers():
         return
 
-    log_path = os.path.abspath(os.path.join(get_project_base_directory(), "logs", f"{logfile_basename}.log"))
+    log_path = os.path.abspath(
+        os.path.join(get_project_base_directory(), "logs", f"{logfile_basename}.log")
+    )
 
     os.makedirs(os.path.dirname(log_path), exist_ok=True)
     formatter = logging.Formatter(log_format)
 
-    handler1 = RotatingFileHandler(log_path, maxBytes=10*1024*1024, backupCount=5)
+    handler1 = RotatingFileHandler(log_path, maxBytes=10 * 1024 * 1024, backupCount=5)
     handler1.setFormatter(formatter)
     logger.addHandler(handler1)
 
@@ -52,7 +59,7 @@ def initRootLogger(logfile_basename: str, log_format: str = "%(asctime)-15s %(le
     pkg_levels = {}
     for pkg_name_level in LOG_LEVELS.split(","):
         terms = pkg_name_level.split("=")
-        if len(terms)!= 2:
+        if len(terms) != 2:
             continue
         pkg_name, pkg_level = terms[0], terms[1]
         pkg_name = pkg_name.strip()
@@ -61,11 +68,11 @@ def initRootLogger(logfile_basename: str, log_format: str = "%(asctime)-15s %(le
             pkg_level = logging.INFO
         pkg_levels[pkg_name] = logging.getLevelName(pkg_level)
 
-    for pkg_name in ['peewee', 'pdfminer']:
+    for pkg_name in ["peewee", "pdfminer"]:
         if pkg_name not in pkg_levels:
             pkg_levels[pkg_name] = logging.getLevelName(logging.WARNING)
-    if 'root' not in pkg_levels:
-        pkg_levels['root'] = logging.getLevelName(logging.INFO)
+    if "root" not in pkg_levels:
+        pkg_levels["root"] = logging.getLevelName(logging.INFO)
 
     for pkg_name, pkg_level in pkg_levels.items():
         pkg_logger = logging.getLogger(pkg_name)

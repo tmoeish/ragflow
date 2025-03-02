@@ -11,8 +11,16 @@ from typing import Any, Callable
 from dataclasses import dataclass
 import tiktoken
 
-from graphrag.general.extractor import Extractor, ENTITY_EXTRACTION_MAX_GLEANINGS, DEFAULT_ENTITY_TYPES
-from graphrag.general.graph_prompt import GRAPH_EXTRACTION_PROMPT, CONTINUE_PROMPT, LOOP_PROMPT
+from graphrag.general.extractor import (
+    Extractor,
+    ENTITY_EXTRACTION_MAX_GLEANINGS,
+    DEFAULT_ENTITY_TYPES,
+)
+from graphrag.general.graph_prompt import (
+    GRAPH_EXTRACTION_PROMPT,
+    CONTINUE_PROMPT,
+    LOOP_PROMPT,
+)
 from graphrag.utils import ErrorHandlerFn, perform_variable_replacements
 from rag.llm.chat_model import Base as CompletionLLM
 import networkx as nx
@@ -66,7 +74,15 @@ class GraphExtractor(Extractor):
         max_gleanings: int | None = None,
         on_error: ErrorHandlerFn | None = None,
     ):
-        super().__init__(llm_invoker, language, entity_types, get_entity, set_entity, get_relation, set_relation)
+        super().__init__(
+            llm_invoker,
+            language,
+            entity_types,
+            get_entity,
+            set_entity,
+            get_relation,
+            set_relation,
+        )
         """Init method definition."""
         # TODO: streamline construction
         self._llm = llm_invoker
@@ -102,9 +118,7 @@ class GraphExtractor(Extractor):
             self._entity_types_key: ",".join(DEFAULT_ENTITY_TYPES),
         }
 
-    def _process_single_content(self,
-                                chunk_key_dp: tuple[str, str]
-                                ):
+    def _process_single_content(self, chunk_key_dp: tuple[str, str]):
         token_count = 0
 
         chunk_key = chunk_key_dp[0]
@@ -115,19 +129,30 @@ class GraphExtractor(Extractor):
         }
         try:
             gen_conf = {"temperature": 0.3}
-            hint_prompt = perform_variable_replacements(self._extraction_prompt, variables=variables)
-            response = self._chat(hint_prompt, [{"role": "user", "content": "Output:"}], gen_conf)
+            hint_prompt = perform_variable_replacements(
+                self._extraction_prompt, variables=variables
+            )
+            response = self._chat(
+                hint_prompt, [{"role": "user", "content": "Output:"}], gen_conf
+            )
             token_count += num_tokens_from_string(hint_prompt + response)
 
             results = response or ""
-            history = [{"role": "system", "content": hint_prompt}, {"role": "user", "content": response}]
+            history = [
+                {"role": "system", "content": hint_prompt},
+                {"role": "user", "content": response},
+            ]
 
             # Repeat to ensure we maximize entity count
             for i in range(self._max_gleanings):
-                text = perform_variable_replacements(CONTINUE_PROMPT, history=history, variables=variables)
+                text = perform_variable_replacements(
+                    CONTINUE_PROMPT, history=history, variables=variables
+                )
                 history.append({"role": "user", "content": text})
                 response = self._chat("", history, gen_conf)
-                token_count += num_tokens_from_string("\n".join([m["content"] for m in history]) + response)
+                token_count += num_tokens_from_string(
+                    "\n".join([m["content"] for m in history]) + response
+                )
                 results += response or ""
 
                 # if this is the final glean, don't bother updating the continuation flag
@@ -136,19 +161,27 @@ class GraphExtractor(Extractor):
                 history.append({"role": "assistant", "content": response})
                 history.append({"role": "user", "content": LOOP_PROMPT})
                 continuation = self._chat("", history, {"temperature": 0.8})
-                token_count += num_tokens_from_string("\n".join([m["content"] for m in history]) + response)
+                token_count += num_tokens_from_string(
+                    "\n".join([m["content"] for m in history]) + response
+                )
                 if continuation != "YES":
                     break
 
-            record_delimiter = variables.get(self._record_delimiter_key, DEFAULT_RECORD_DELIMITER)
-            tuple_delimiter = variables.get(self._tuple_delimiter_key, DEFAULT_TUPLE_DELIMITER)
-            records = [re.sub(r"^\(|\)$", "", r.strip()) for r in results.split(record_delimiter)]
+            record_delimiter = variables.get(
+                self._record_delimiter_key, DEFAULT_RECORD_DELIMITER
+            )
+            tuple_delimiter = variables.get(
+                self._tuple_delimiter_key, DEFAULT_TUPLE_DELIMITER
+            )
+            records = [
+                re.sub(r"^\(|\)$", "", r.strip())
+                for r in results.split(record_delimiter)
+            ]
             records = [r for r in records if r.strip()]
-            maybe_nodes, maybe_edges = self._entities_and_relations(chunk_key, records, tuple_delimiter)
+            maybe_nodes, maybe_edges = self._entities_and_relations(
+                chunk_key, records, tuple_delimiter
+            )
             return maybe_nodes, maybe_edges, token_count
         except Exception as e:
             logging.exception("error extracting graph")
             return e, None, None
-
-
-

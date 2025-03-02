@@ -27,8 +27,8 @@ from azure.storage.blob import ContainerClient
 class RAGFlowAzureSasBlob(object):
     def __init__(self):
         self.conn = None
-        self.container_url = os.getenv('CONTAINER_URL', settings.AZURE["container_url"])
-        self.sas_token = os.getenv('SAS_TOKEN', settings.AZURE["sas_token"])
+        self.container_url = os.getenv("CONTAINER_URL", settings.AZURE["container_url"])
+        self.sas_token = os.getenv("SAS_TOKEN", settings.AZURE["sas_token"])
         self.__open__()
 
     def __open__(self):
@@ -39,7 +39,9 @@ class RAGFlowAzureSasBlob(object):
             pass
 
         try:
-            self.conn = ContainerClient.from_container_url(self.container_url + "?" + self.sas_token)
+            self.conn = ContainerClient.from_container_url(
+                self.container_url + "?" + self.sas_token
+            )
         except Exception:
             logging.exception("Fail to connect %s " % self.container_url)
 
@@ -54,7 +56,9 @@ class RAGFlowAzureSasBlob(object):
     def put(self, bucket, fnm, binary):
         for _ in range(3):
             try:
-                return self.conn.upload_blob(name=fnm, data=BytesIO(binary), length=len(binary))
+                return self.conn.upload_blob(
+                    name=fnm, data=BytesIO(binary), length=len(binary)
+                )
             except Exception:
                 logging.exception(f"Fail put {bucket}/{fnm}")
                 self.__open__()

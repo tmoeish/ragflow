@@ -20,7 +20,11 @@ from api.db.services.file_service import FileService
 from flask import request
 from flask_login import login_required, current_user
 from api.db.services.knowledgebase_service import KnowledgebaseService
-from api.utils.api_utils import server_error_response, get_data_error_result, validate_request
+from api.utils.api_utils import (
+    server_error_response,
+    get_data_error_result,
+    validate_request,
+)
 from api.utils import get_uuid
 from api.db import FileType
 from api.db.services.document_service import DocumentService
@@ -28,7 +32,7 @@ from api import settings
 from api.utils.api_utils import get_json_result
 
 
-@manager.route('/convert', methods=['POST'])  # noqa: F821
+@manager.route("/convert", methods=["POST"])  # noqa: F821
 @login_required
 @validate_request("file_ids", "kb_ids")
 def convert():
@@ -56,7 +60,8 @@ def convert():
                         return get_data_error_result(message="Tenant not found!")
                     if not DocumentService.remove_document(doc, tenant_id):
                         return get_data_error_result(
-                            message="Database error (Document removal)!")
+                            message="Database error (Document removal)!"
+                        )
                 File2DocumentService.delete_by_file_id(id)
 
                 # insert
@@ -64,35 +69,41 @@ def convert():
                     e, kb = KnowledgebaseService.get_by_id(kb_id)
                     if not e:
                         return get_data_error_result(
-                            message="Can't find this knowledgebase!")
+                            message="Can't find this knowledgebase!"
+                        )
                     e, file = FileService.get_by_id(id)
                     if not e:
-                        return get_data_error_result(
-                            message="Can't find this file!")
+                        return get_data_error_result(message="Can't find this file!")
 
-                    doc = DocumentService.insert({
-                        "id": get_uuid(),
-                        "kb_id": kb.id,
-                        "parser_id": FileService.get_parser(file.type, file.name, kb.parser_id),
-                        "parser_config": kb.parser_config,
-                        "created_by": current_user.id,
-                        "type": file.type,
-                        "name": file.name,
-                        "location": file.location,
-                        "size": file.size
-                    })
-                    file2document = File2DocumentService.insert({
-                        "id": get_uuid(),
-                        "file_id": id,
-                        "document_id": doc.id,
-                    })
+                    doc = DocumentService.insert(
+                        {
+                            "id": get_uuid(),
+                            "kb_id": kb.id,
+                            "parser_id": FileService.get_parser(
+                                file.type, file.name, kb.parser_id
+                            ),
+                            "parser_config": kb.parser_config,
+                            "created_by": current_user.id,
+                            "type": file.type,
+                            "name": file.name,
+                            "location": file.location,
+                            "size": file.size,
+                        }
+                    )
+                    file2document = File2DocumentService.insert(
+                        {
+                            "id": get_uuid(),
+                            "file_id": id,
+                            "document_id": doc.id,
+                        }
+                    )
                     file2documents.append(file2document.to_json())
         return get_json_result(data=file2documents)
     except Exception as e:
         return server_error_response(e)
 
 
-@manager.route('/rm', methods=['POST'])  # noqa: F821
+@manager.route("/rm", methods=["POST"])  # noqa: F821
 @login_required
 @validate_request("file_ids")
 def rm():
@@ -100,7 +111,10 @@ def rm():
     file_ids = req["file_ids"]
     if not file_ids:
         return get_json_result(
-            data=False, message='Lack of "Files ID"', code=settings.RetCode.ARGUMENT_ERROR)
+            data=False,
+            message='Lack of "Files ID"',
+            code=settings.RetCode.ARGUMENT_ERROR,
+        )
     try:
         for file_id in file_ids:
             informs = File2DocumentService.get_by_file_id(file_id)
@@ -119,7 +133,8 @@ def rm():
                     return get_data_error_result(message="Tenant not found!")
                 if not DocumentService.remove_document(doc, tenant_id):
                     return get_data_error_result(
-                        message="Database error (Document removal)!")
+                        message="Database error (Document removal)!"
+                    )
         return get_json_result(data=True)
     except Exception as e:
         return server_error_response(e)

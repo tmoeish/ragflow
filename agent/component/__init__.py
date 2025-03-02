@@ -129,5 +129,5 @@ __all__ = [
     "TemplateParam",
     "Email",
     "EmailParam",
-    "component_class"
+    "component_class",
 ]

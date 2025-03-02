@@ -77,7 +77,9 @@ def login():
     """
     if not request.json:
         return get_json_result(
-            data=False, code=settings.RetCode.AUTHENTICATION_ERROR, message="Unauthorized!"
+            data=False,
+            code=settings.RetCode.AUTHENTICATION_ERROR,
+            message="Unauthorized!",
         )
 
     email = request.json.get("email", "")
@@ -94,7 +96,9 @@ def login():
         password = decrypt(password)
     except BaseException:
         return get_json_result(
-            data=False, code=settings.RetCode.SERVER_ERROR, message="Fail to crypt password"
+            data=False,
+            code=settings.RetCode.SERVER_ERROR,
+            message="Fail to crypt password",
         )
 
     user = UserService.query_user(email, password)
@@ -392,7 +396,7 @@ def setting_user():
     if request_data.get("password"):
         new_password = request_data.get("new_password")
         if not check_password_hash(
-                current_user.password, decrypt(request_data["password"])
+            current_user.password, decrypt(request_data["password"])
         ):
             return get_json_result(
                 data=False,
@@ -518,7 +522,7 @@ def user_register(user_id, user):
                 "model_type": llm.model_type,
                 "api_key": settings.API_KEY,
                 "api_base": settings.LLM_BASE_URL,
-                "max_tokens": llm.max_tokens if llm.max_tokens else 8192
+                "max_tokens": llm.max_tokens if llm.max_tokens else 8192,
             }
         )
 

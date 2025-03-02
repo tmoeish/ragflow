@@ -31,7 +31,17 @@ class ConversationService(CommonService):
 
     @classmethod
     @DB.connection_context()
-    def get_list(cls, dialog_id, page_number, items_per_page, orderby, desc, id, name, user_id=None):
+    def get_list(
+        cls,
+        dialog_id,
+        page_number,
+        items_per_page,
+        orderby,
+        desc,
+        id,
+        name,
+        user_id=None,
+    ):
         sessions = cls.model.select().where(cls.model.dialog_id == dialog_id)
         if id:
             sessions = sessions.where(cls.model.id == id)
@@ -67,17 +77,39 @@ def structure_answer(conv, ans, message_id, session_id):
     if not conv.message:
         conv.message = []
     if not conv.message or conv.message[-1].get("role", "") != "assistant":
-        conv.message.append({"role": "assistant", "content": ans["answer"], "created_at": time.time(), "id": message_id})
+        conv.message.append(
+            {
+                "role": "assistant",
+                "content": ans["answer"],
+                "created_at": time.time(),
+                "id": message_id,
+            }
+        )
     else:
-        conv.message[-1] = {"role": "assistant", "content": ans["answer"], "created_at": time.time(), "id": message_id}
+        conv.message[-1] = {
+            "role": "assistant",
+            "content": ans["answer"],
+            "created_at": time.time(),
+            "id": message_id,
+        }
     if conv.reference:
         conv.reference[-1] = reference
     return ans
 
 
-def completion(tenant_id, chat_id, question, name="New session", session_id=None, stream=True, **kwargs):
+def completion(
+    tenant_id,
+    chat_id,
+    question,
+    name="New session",
+    session_id=None,
+    stream=True,
+    **kwargs,
+):
     assert name, "`name` can not be empty."
-    dia = DialogService.query(id=chat_id, tenant_id=tenant_id, status=StatusEnum.VALID.value)
+    dia = DialogService.query(
+        id=chat_id, tenant_id=tenant_id, status=StatusEnum.VALID.value
+    )
     assert dia, "You do not own the chat."
 
     if not session_id:
@@ -86,20 +118,33 @@ def completion(tenant_id, chat_id, question, name="New session", session_id=None
             "id": session_id,
             "dialog_id": chat_id,
             "name": name,
-            "message": [{"role": "assistant", "content": dia[0].prompt_config.get("prologue"), "created_at": time.time()}],
-            "user_id": kwargs.get("user_id", "")
+            "message": [
+                {
+                    "role": "assistant",
+                    "content": dia[0].prompt_config.get("prologue"),
+                    "created_at": time.time(),
+                }
+            ],
+            "user_id": kwargs.get("user_id", ""),
         }
         ConversationService.save(**conv)
-        yield "data:" + json.dumps({"code": 0, "message": "",
-                                    "data": {
-                                        "answer": conv["message"][0]["content"],
-                                        "reference": {},
-                                        "audio_binary": None,
-                                        "id": None,
-                                        "session_id": session_id
-                                    }},
-                                   ensure_ascii=False) + "\n\n"
-        yield "data:" + json.dumps({"code": 0, "message": "", "data": True}, ensure_ascii=False) + "\n\n"
+        yield "data:" + json.dumps(
+            {
+                "code": 0,
+                "message": "",
+                "data": {
+                    "answer": conv["message"][0]["content"],
+                    "reference": {},
+                    "audio_binary": None,
+                    "id": None,
+                    "session_id": session_id,
+                },
+            },
+            ensure_ascii=False,
+        ) + "\n\n"
+        yield "data:" + json.dumps(
+            {"code": 0, "message": "", "data": True}, ensure_ascii=False
+        ) + "\n\n"
         return
 
     conv = ConversationService.query(id=session_id, dialog_id=chat_id)
@@ -108,11 +153,7 @@ def completion(tenant_id, chat_id, question, name="New session", session_id=None
 
     conv = conv[0]
     msg = []
-    question = {
-        "content": question,
-        "role": "user",
-        "id": str(uuid4())
-    }
+    question = {"content": question, "role": "user", "id": str(uuid4())}
     conv.message.append(question)
     for m in conv.message:
         if m["role"] == "system":
@@ -132,13 +173,22 @@ def completion(tenant_id, chat_id, question, name="New session", session_id=None
         try:
             for ans in chat(dia, msg, True, **kwargs):
                 ans = structure_answer(conv, ans, message_id, session_id)
-                yield "data:" + json.dumps({"code": 0, "data": ans}, ensure_ascii=False) + "\n\n"
+                yield "data:" + json.dumps(
+                    {"code": 0, "data": ans}, ensure_ascii=False
+                ) + "\n\n"
             ConversationService.update_by_id(conv.id, conv.to_dict())
         except Exception as e:
-            yield "data:" + json.dumps({"code": 500, "message": str(e),
-                                        "data": {"answer": "**ERROR**: " + str(e), "reference": []}},
-                                       ensure_ascii=False) + "\n\n"
-        yield "data:" + json.dumps({"code": 0, "data": True}, ensure_ascii=False) + "\n\n"
+            yield "data:" + json.dumps(
+                {
+                    "code": 500,
+                    "message": str(e),
+                    "data": {"answer": "**ERROR**: " + str(e), "reference": []},
+                },
+                ensure_ascii=False,
+            ) + "\n\n"
+        yield "data:" + json.dumps(
+            {"code": 0, "data": True}, ensure_ascii=False
+        ) + "\n\n"
 
     else:
         answer = None
@@ -158,19 +208,32 @@ def iframe_completion(dialog_id, question, session_id=None, stream=True, **kwarg
             "id": session_id,
             "dialog_id": dialog_id,
             "user_id": kwargs.get("user_id", ""),
-            "message": [{"role": "assistant", "content": dia.prompt_config["prologue"], "created_at": time.time()}]
+            "message": [
+                {
+                    "role": "assistant",
+                    "content": dia.prompt_config["prologue"],
+                    "created_at": time.time(),
+                }
+            ],
         }
         API4ConversationService.save(**conv)
-        yield "data:" + json.dumps({"code": 0, "message": "",
-                                    "data": {
-                                        "answer": conv["message"][0]["content"],
-                                        "reference": {},
-                                        "audio_binary": None,
-                                        "id": None,
-                                        "session_id": session_id
-                                    }},
-                                   ensure_ascii=False) + "\n\n"
-        yield "data:" + json.dumps({"code": 0, "message": "", "data": True}, ensure_ascii=False) + "\n\n"
+        yield "data:" + json.dumps(
+            {
+                "code": 0,
+                "message": "",
+                "data": {
+                    "answer": conv["message"][0]["content"],
+                    "reference": {},
+                    "audio_binary": None,
+                    "id": None,
+                    "session_id": session_id,
+                },
+            },
+            ensure_ascii=False,
+        ) + "\n\n"
+        yield "data:" + json.dumps(
+            {"code": 0, "message": "", "data": True}, ensure_ascii=False
+        ) + "\n\n"
         return
     else:
         session_id = session_id
@@ -180,11 +243,7 @@ def iframe_completion(dialog_id, question, session_id=None, stream=True, **kwarg
     if not conv.message:
         conv.message = []
     messages = conv.message
-    question = {
-        "role": "user",
-        "content": question,
-        "id": str(uuid4())
-    }
+    question = {"role": "user", "content": question, "id": str(uuid4())}
     messages.append(question)
 
     msg = []
@@ -206,14 +265,22 @@ def iframe_completion(dialog_id, question, session_id=None, stream=True, **kwarg
         try:
             for ans in chat(dia, msg, True, **kwargs):
                 ans = structure_answer(conv, ans, message_id, session_id)
-                yield "data:" + json.dumps({"code": 0, "message": "", "data": ans},
-                                           ensure_ascii=False) + "\n\n"
+                yield "data:" + json.dumps(
+                    {"code": 0, "message": "", "data": ans}, ensure_ascii=False
+                ) + "\n\n"
             API4ConversationService.append_message(conv.id, conv.to_dict())
         except Exception as e:
-            yield "data:" + json.dumps({"code": 500, "message": str(e),
-                                        "data": {"answer": "**ERROR**: " + str(e), "reference": []}},
-                                       ensure_ascii=False) + "\n\n"
-        yield "data:" + json.dumps({"code": 0, "message": "", "data": True}, ensure_ascii=False) + "\n\n"
+            yield "data:" + json.dumps(
+                {
+                    "code": 500,
+                    "message": str(e),
+                    "data": {"answer": "**ERROR**: " + str(e), "reference": []},
+                },
+                ensure_ascii=False,
+            ) + "\n\n"
+        yield "data:" + json.dumps(
+            {"code": 0, "message": "", "data": True}, ensure_ascii=False
+        ) + "\n\n"
 
     else:
         answer = None

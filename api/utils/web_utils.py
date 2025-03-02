@@ -32,10 +32,10 @@ from selenium.webdriver.common.by import By
 
 
 def html2pdf(
-        source: str,
-        timeout: int = 2,
-        install_driver: bool = True,
-        print_options: dict = {},
+    source: str,
+    timeout: int = 2,
+    install_driver: bool = True,
+    print_options: dict = {},
 ):
     result = __get_pdf_from_html(source, timeout, install_driver, print_options)
     return result
@@ -54,10 +54,7 @@ def __send_devtools(driver, cmd, params={}):
 
 
 def __get_pdf_from_html(
-        path: str,
-        timeout: int,
-        install_driver: bool,
-        print_options: dict
+    path: str, timeout: int, install_driver: bool, print_options: dict
 ):
     webdriver_options = Options()
     webdriver_prefs = {}
@@ -89,8 +86,7 @@ def __get_pdf_from_html(
             "preferCSSPageSize": True,
         }
         calculated_print_options.update(print_options)
-        result = __send_devtools(
-            driver, "Page.printToPDF", calculated_print_options)
+        result = __send_devtools(driver, "Page.printToPDF", calculated_print_options)
         driver.quit()
         return base64.b64decode(result["data"])
 
@@ -102,8 +98,11 @@ def is_private_ip(ip: str) -> bool:
     except ValueError:
         return False
 
+
 def is_valid_url(url: str) -> bool:
-    if not re.match(r"(https?)://[-A-Za-z0-9+&@#/%?=~_|!:,.;]+[-A-Za-z0-9+&@#/%=~_|]", url):
+    if not re.match(
+        r"(https?)://[-A-Za-z0-9+&@#/%?=~_|!:,.;]+[-A-Za-z0-9+&@#/%=~_|]", url
+    ):
         return False
     parsed_url = urlparse(url)
     hostname = parsed_url.hostname

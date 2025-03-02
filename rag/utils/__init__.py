@@ -19,6 +19,7 @@ import re
 import tiktoken
 from api.utils.file_utils import get_project_base_directory
 
+
 def singleton(cls, *args, **kw):
     instances = {}
 
@@ -45,7 +46,7 @@ def findMaxDt(fnm):
                 if not line:
                     break
                 line = line.strip("\n")
-                if line == 'nan':
+                if line == "nan":
                     continue
                 if line > m:
                     m = line
@@ -53,7 +54,7 @@ def findMaxDt(fnm):
         pass
     return m
 
-  
+
 def findMaxTm(fnm):
     m = 0
     try:
@@ -63,7 +64,7 @@ def findMaxTm(fnm):
                 if not line:
                     break
                 line = line.strip("\n")
-                if line == 'nan':
+                if line == "nan":
                     continue
                 if int(line) > m:
                     m = int(line)

@@ -75,26 +75,28 @@ class Canvas:
         self.messages = []
         self.answer = []
         self.components = {}
-        self.dsl = json.loads(dsl) if dsl else {
-            "components": {
-                "begin": {
-                    "obj": {
-                        "component_name": "Begin",
-                        "params": {
-                            "prologue": "Hi there!"
-                        }
-                    },
-                    "downstream": [],
-                    "upstream": [],
-                    "parent_id": ""
-                }
-            },
-            "history": [],
-            "messages": [],
-            "reference": [],
-            "path": [],
-            "answer": []
-        }
+        self.dsl = (
+            json.loads(dsl)
+            if dsl
+            else {
+                "components": {
+                    "begin": {
+                        "obj": {
+                            "component_name": "Begin",
+                            "params": {"prologue": "Hi there!"},
+                        },
+                        "downstream": [],
+                        "upstream": [],
+                        "parent_id": "",
+                    }
+                },
+                "history": [],
+                "messages": [],
+                "reference": [],
+                "path": [],
+                "answer": [],
+            }
+        )
         self._tenant_id = tenant_id
         self._embed_id = ""
         self.load()
@@ -133,9 +135,7 @@ class Canvas:
         self.dsl["answer"] = self.answer
         self.dsl["reference"] = self.reference
         self.dsl["embed_id"] = self._embed_id
-        dsl = {
-            "components": {}
-        }
+        dsl = {"components": {}}
         for k in self.dsl.keys():
             if k in ["components"]:
                 continue
@@ -252,10 +252,15 @@ class Canvas:
             if loop:
                 raise OverflowError(f"Too much loops: {loop}")
 
-            if cpn["obj"].component_name.lower() in ["switch", "categorize", "relevant"]:
+            if cpn["obj"].component_name.lower() in [
+                "switch",
+                "categorize",
+                "relevant",
+            ]:
                 switch_out = cpn["obj"].output()[1].iloc[0, 0]
-                assert switch_out in self.components, \
-                    "{}'s output: {} not valid.".format(cpn_id, switch_out)
+                assert (
+                    switch_out in self.components
+                ), "{}'s output: {} not valid.".format(cpn_id, switch_out)
                 for m in prepare2run([switch_out]):
                     yield {"content": m, "running_status": True}
                 continue
@@ -265,7 +270,9 @@ class Canvas:
                 pid = cpn["parent_id"]
                 _, o = cpn["obj"].output(allow_partial=False)
                 _, oo = self.components[pid]["obj"].output(allow_partial=False)
-                self.components[pid]["obj"].set_output(pd.concat([oo.dropna(axis=1), o.dropna(axis=1)], ignore_index=True))
+                self.components[pid]["obj"].set_output(
+                    pd.concat([oo.dropna(axis=1), o.dropna(axis=1)], ignore_index=True)
+                )
                 downstream = [pid]
 
             for m in prepare2run(downstream):
@@ -292,7 +299,9 @@ class Canvas:
                 yield ans
 
         else:
-            raise Exception("The dialog flow has no way to interact with you. Please add an 'Interact' component to the end of the flow.")
+            raise Exception(
+                "The dialog flow has no way to interact with you. Please add an 'Interact' component to the end of the flow."
+            )
 
     def get_component(self, cpn_id):
         return self.components[cpn_id]
@@ -302,9 +311,18 @@ class Canvas:
 
     def get_history(self, window_size):
         convs = []
-        for role, obj in self.history[window_size * -1:]:
-            if isinstance(obj, list) and obj and all([isinstance(o, dict) for o in obj]):
-                convs.append({"role": role, "content": '\n'.join([str(s.get("content", "")) for s in obj])})
+        for role, obj in self.history[window_size * -1 :]:
+            if (
+                isinstance(obj, list)
+                and obj
+                and all([isinstance(o, dict) for o in obj])
+            ):
+                convs.append(
+                    {
+                        "role": role,
+                        "content": "\n".join([str(s.get("content", "")) for s in obj]),
+                    }
+                )
             else:
                 convs.append({"role": role, "content": str(obj)})
         return convs
@@ -324,7 +342,10 @@ class Canvas:
             return False
 
         for i in range(len(path)):
-            if path[i].lower().find("answer") == 0 or path[i].lower().find("iterationitem") == 0:
+            if (
+                path[i].lower().find("answer") == 0
+                or path[i].lower().find("iterationitem") == 0
+            ):
                 path = path[:i]
                 break
 
@@ -339,9 +360,9 @@ class Canvas:
             loop = max_loops
             while path_str.find(pat) == 0 and loop >= 0:
                 loop -= 1
-                if len(pat)+1 >= len(path_str):
+                if len(pat) + 1 >= len(path_str):
                     return False
-                path_str = path_str[len(pat)+1:]
+                path_str = path_str[len(pat) + 1 :]
             if loop < 0:
                 pat = " => ".join([p.split(":")[0] for p in path[0:loc]])
                 return pat + " => " + pat

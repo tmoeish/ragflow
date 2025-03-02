@@ -100,7 +100,7 @@ def set_llm_cache(llmnm, txt, v, history, genconf):
     hasher.update(str(genconf).encode("utf-8"))
 
     k = hasher.hexdigest()
-    REDIS_CONN.set(k, v.encode("utf-8"), 24*3600)
+    REDIS_CONN.set(k, v.encode("utf-8"), 24 * 3600)
 
 
 def get_embed_cache(llmnm, txt):
@@ -122,7 +122,7 @@ def set_embed_cache(llmnm, txt, arr):
 
     k = hasher.hexdigest()
     arr = json.dumps(arr.tolist() if isinstance(arr, np.ndarray) else arr)
-    REDIS_CONN.set(k, arr.encode("utf-8"), 24*3600)
+    REDIS_CONN.set(k, arr.encode("utf-8"), 24 * 3600)
 
 
 def get_tags_from_cache(kb_ids):
@@ -153,9 +153,9 @@ def graph_merge(g1, g2):
 
     for source, target, attr in g1.edges(data=True):
         if g.has_edge(source, target):
-            g[source][target].update({"weight": attr.get("weight", 0)+1})
+            g[source][target].update({"weight": attr.get("weight", 0) + 1})
             continue
-        g.add_edge(source, target)#, **attr)
+        g.add_edge(source, target)  # , **attr)
 
     for node_degree in g.degree:
         g.nodes[str(node_degree[0])]["rank"] = int(node_degree[1])
@@ -232,7 +232,9 @@ def is_float_regex(value):
 
 
 def chunk_id(chunk):
-    return xxhash.xxh64((chunk["content_with_weight"] + chunk["kb_id"]).encode("utf-8")).hexdigest()
+    return xxhash.xxh64(
+        (chunk["content_with_weight"] + chunk["kb_id"]).encode("utf-8")
+    ).hexdigest()
 
 
 def get_entity(tenant_id, kb_id, ent_name):
@@ -240,7 +242,7 @@ def get_entity(tenant_id, kb_id, ent_name):
         "fields": ["content_with_weight"],
         "entity_kwd": ent_name,
         "size": 10000,
-        "knowledge_graph_kwd": ["entity"]
+        "knowledge_graph_kwd": ["entity"],
     }
     res = []
     es_res = settings.retrievaler.search(conds, search.index_name(tenant_id), [kb_id])
@@ -266,13 +268,20 @@ def set_entity(tenant_id, kb_id, embd_mdl, ent_name, meta):
         "content_ltks": rag_tokenizer.tokenize(meta["description"]),
         "source_id": list(set(meta["source_id"])),
         "kb_id": kb_id,
-        "available_int": 0
+        "available_int": 0,
     }
-    chunk["content_sm_ltks"] = rag_tokenizer.fine_grained_tokenize(chunk["content_ltks"])
-    res = settings.retrievaler.search({"entity_kwd": ent_name, "size": 1, "fields": []},
-                                      search.index_name(tenant_id), [kb_id])
+    chunk["content_sm_ltks"] = rag_tokenizer.fine_grained_tokenize(
+        chunk["content_ltks"]
+    )
+    res = settings.retrievaler.search(
+        {"entity_kwd": ent_name, "size": 1, "fields": []},
+        search.index_name(tenant_id),
+        [kb_id],
+    )
     if res.ids:
-        settings.docStoreConn.update({"entity_kwd": ent_name}, chunk, search.index_name(tenant_id), kb_id)
+        settings.docStoreConn.update(
+            {"entity_kwd": ent_name}, chunk, search.index_name(tenant_id), kb_id
+        )
     else:
         ebd = get_embed_cache(embd_mdl.llm_name, ent_name)
         if ebd is None:
@@ -284,7 +293,9 @@ def set_entity(tenant_id, kb_id, embd_mdl, ent_name, meta):
                 logging.exception(f"Fail to embed entity: {e}")
         if ebd is not None:
             chunk["q_%d_vec" % len(ebd)] = ebd
-        settings.docStoreConn.insert([{"id": chunk_id(chunk), **chunk}], search.index_name(tenant_id), kb_id)
+        settings.docStoreConn.insert(
+            [{"id": chunk_id(chunk), **chunk}], search.index_name(tenant_id), kb_id
+        )
 
 
 def get_relation(tenant_id, kb_id, from_ent_name, to_ent_name, size=1):
@@ -300,10 +311,14 @@ def get_relation(tenant_id, kb_id, from_ent_name, to_ent_name, size=1):
         "size": size,
         "from_entity_kwd": ents,
         "to_entity_kwd": ents,
-        "knowledge_graph_kwd": ["relation"]
+        "knowledge_graph_kwd": ["relation"],
     }
     res = []
-    es_res = settings.retrievaler.search(conds, search.index_name(tenant_id), [kb_id] if isinstance(kb_id, str) else kb_id)
+    es_res = settings.retrievaler.search(
+        conds,
+        search.index_name(tenant_id),
+        [kb_id] if isinstance(kb_id, str) else kb_id,
+    )
     for id in es_res.ids:
         try:
             if size == 1:
@@ -325,29 +340,44 @@ def set_relation(tenant_id, kb_id, embd_mdl, from_ent_name, to_ent_name, meta):
         "source_id": list(set(meta["source_id"])),
         "weight_int": int(meta["weight"]),
         "kb_id": kb_id,
-        "available_int": 0
+        "available_int": 0,
     }
-    chunk["content_sm_ltks"] = rag_tokenizer.fine_grained_tokenize(chunk["content_ltks"])
-    res = settings.retrievaler.search({"from_entity_kwd": to_ent_name, "to_entity_kwd": to_ent_name, "size": 1, "fields": []},
-                                      search.index_name(tenant_id), [kb_id])
+    chunk["content_sm_ltks"] = rag_tokenizer.fine_grained_tokenize(
+        chunk["content_ltks"]
+    )
+    res = settings.retrievaler.search(
+        {
+            "from_entity_kwd": to_ent_name,
+            "to_entity_kwd": to_ent_name,
+            "size": 1,
+            "fields": [],
+        },
+        search.index_name(tenant_id),
+        [kb_id],
+    )
 
     if res.ids:
-        settings.docStoreConn.update({"from_entity_kwd": from_ent_name, "to_entity_kwd": to_ent_name},
-                                 chunk,
-                                 search.index_name(tenant_id), kb_id)
+        settings.docStoreConn.update(
+            {"from_entity_kwd": from_ent_name, "to_entity_kwd": to_ent_name},
+            chunk,
+            search.index_name(tenant_id),
+            kb_id,
+        )
     else:
         txt = f"{from_ent_name}->{to_ent_name}"
         ebd = get_embed_cache(embd_mdl.llm_name, txt)
         if ebd is None:
             try:
-                ebd, _ = embd_mdl.encode([txt+f": {meta['description']}"])
+                ebd, _ = embd_mdl.encode([txt + f": {meta['description']}"])
                 ebd = ebd[0]
                 set_embed_cache(embd_mdl.llm_name, txt, ebd)
             except Exception as e:
                 logging.exception(f"Fail to embed entity relation: {e}")
         if ebd is not None:
             chunk["q_%d_vec" % len(ebd)] = ebd
-        settings.docStoreConn.insert([{"id": chunk_id(chunk), **chunk}], search.index_name(tenant_id), kb_id)
+        settings.docStoreConn.insert(
+            [{"id": chunk_id(chunk), **chunk}], search.index_name(tenant_id), kb_id
+        )
 
 
 def get_graph(tenant_id, kb_id):
@@ -355,13 +385,17 @@ def get_graph(tenant_id, kb_id):
         "fields": ["content_with_weight", "source_id"],
         "removed_kwd": "N",
         "size": 1,
-        "knowledge_graph_kwd": ["graph"]
+        "knowledge_graph_kwd": ["graph"],
     }
     res = settings.retrievaler.search(conds, search.index_name(tenant_id), [kb_id])
     for id in res.ids:
         try:
-            return json_graph.node_link_graph(json.loads(res.field[id]["content_with_weight"]), edges="edges"), \
-                   res.field[id]["source_id"]
+            return (
+                json_graph.node_link_graph(
+                    json.loads(res.field[id]["content_with_weight"]), edges="edges"
+                ),
+                res.field[id]["source_id"],
+            )
         except Exception:
             continue
     return rebuild_graph(tenant_id, kb_id)
@@ -369,20 +403,28 @@ def get_graph(tenant_id, kb_id):
 
 def set_graph(tenant_id, kb_id, graph, docids):
     chunk = {
-        "content_with_weight": json.dumps(nx.node_link_data(graph, edges="edges"), ensure_ascii=False,
-                                          indent=2),
+        "content_with_weight": json.dumps(
+            nx.node_link_data(graph, edges="edges"), ensure_ascii=False, indent=2
+        ),
         "knowledge_graph_kwd": "graph",
         "kb_id": kb_id,
         "source_id": list(docids),
         "available_int": 0,
-        "removed_kwd": "N"
+        "removed_kwd": "N",
     }
-    res = settings.retrievaler.search({"knowledge_graph_kwd": "graph", "size": 1, "fields": []}, search.index_name(tenant_id), [kb_id])
+    res = settings.retrievaler.search(
+        {"knowledge_graph_kwd": "graph", "size": 1, "fields": []},
+        search.index_name(tenant_id),
+        [kb_id],
+    )
     if res.ids:
-        settings.docStoreConn.update({"knowledge_graph_kwd": "graph"}, chunk,
-                                     search.index_name(tenant_id), kb_id)
+        settings.docStoreConn.update(
+            {"knowledge_graph_kwd": "graph"}, chunk, search.index_name(tenant_id), kb_id
+        )
     else:
-        settings.docStoreConn.insert([{"id": chunk_id(chunk), **chunk}], search.index_name(tenant_id), kb_id)
+        settings.docStoreConn.insert(
+            [{"id": chunk_id(chunk), **chunk}], search.index_name(tenant_id), kb_id
+        )
 
 
 def is_continuous_subsequence(subseq, seq):
@@ -398,10 +440,10 @@ def is_continuous_subsequence(subseq, seq):
                 break
         return indexes
 
-    index_list = find_all_indexes(seq,subseq[0])
+    index_list = find_all_indexes(seq, subseq[0])
     for idx in index_list:
-        if idx!=len(seq)-1:
-            if seq[idx+1]==subseq[-1]:
+        if idx != len(seq) - 1:
+            if seq[idx + 1] == subseq[-1]:
                 return True
     return False
 
@@ -417,7 +459,9 @@ def merge_tuples(list1, list2):
             already_match_flag = 0
             for match in matching_tuples:
                 matchh = (match[1], match[0])
-                if is_continuous_subsequence(match, tup) or is_continuous_subsequence(matchh, tup):
+                if is_continuous_subsequence(match, tup) or is_continuous_subsequence(
+                    matchh, tup
+                ):
                     continue
                 already_match_flag = 1
                 merged_tuple = tup + match[1:]
@@ -446,9 +490,9 @@ def update_nodes_pagerank_nhop_neighbour(tenant_id, kb_id, graph, n_hop):
         nbrs = []
         for path in source_edge:
             n = {"path": path, "weights": []}
-            wts = nx.get_edge_attributes(graph, 'weight')
-            for i in range(len(path)-1):
-                f, t = path[i], path[i+1]
+            wts = nx.get_edge_attributes(graph, "weight")
+            for i in range(len(path) - 1):
+                f, t = path[i], path[i + 1]
                 n["weights"].append(wts.get((f, t), 0))
             nbrs.append(n)
         return nbrs
@@ -457,10 +501,15 @@ def update_nodes_pagerank_nhop_neighbour(tenant_id, kb_id, graph, n_hop):
     for n, p in pr.items():
         graph.nodes[n]["pagerank"] = p
         try:
-            settings.docStoreConn.update({"entity_kwd": n, "kb_id": kb_id},
-                                         {"rank_flt": p,
-                                          "n_hop_with_weight": json.dumps(n_neighbor(n), ensure_ascii=False)},
-                                         search.index_name(tenant_id), kb_id)
+            settings.docStoreConn.update(
+                {"entity_kwd": n, "kb_id": kb_id},
+                {
+                    "rank_flt": p,
+                    "n_hop_with_weight": json.dumps(n_neighbor(n), ensure_ascii=False),
+                },
+                search.index_name(tenant_id),
+                kb_id,
+            )
         except Exception as e:
             logging.exception(e)
 
@@ -475,23 +524,37 @@ def update_nodes_pagerank_nhop_neighbour(tenant_id, kb_id, graph, n_hop):
         "content_with_weight": json.dumps(ty2ents, ensure_ascii=False),
         "kb_id": kb_id,
         "knowledge_graph_kwd": "ty2ents",
-        "available_int": 0
+        "available_int": 0,
     }
-    res = settings.retrievaler.search({"knowledge_graph_kwd": "ty2ents", "size": 1, "fields": []},
-                                      search.index_name(tenant_id), [kb_id])
+    res = settings.retrievaler.search(
+        {"knowledge_graph_kwd": "ty2ents", "size": 1, "fields": []},
+        search.index_name(tenant_id),
+        [kb_id],
+    )
     if res.ids:
-        settings.docStoreConn.update({"knowledge_graph_kwd": "ty2ents"},
-                                     chunk,
-                                     search.index_name(tenant_id), kb_id)
+        settings.docStoreConn.update(
+            {"knowledge_graph_kwd": "ty2ents"},
+            chunk,
+            search.index_name(tenant_id),
+            kb_id,
+        )
     else:
-        settings.docStoreConn.insert([{"id": chunk_id(chunk), **chunk}], search.index_name(tenant_id), kb_id)
+        settings.docStoreConn.insert(
+            [{"id": chunk_id(chunk), **chunk}], search.index_name(tenant_id), kb_id
+        )
 
 
 def get_entity_type2sampels(idxnms, kb_ids: list):
-    es_res = settings.retrievaler.search({"knowledge_graph_kwd": "ty2ents", "kb_id": kb_ids,
-                                       "size": 10000,
-                                       "fields": ["content_with_weight"]},
-                                      idxnms, kb_ids)
+    es_res = settings.retrievaler.search(
+        {
+            "knowledge_graph_kwd": "ty2ents",
+            "kb_id": kb_ids,
+            "size": 10000,
+            "fields": ["content_with_weight"],
+        },
+        idxnms,
+        kb_ids,
+    )
 
     res = defaultdict(list)
     for id in es_res.ids:
@@ -522,15 +585,28 @@ def flat_uniq_list(arr, key):
 def rebuild_graph(tenant_id, kb_id):
     graph = nx.Graph()
     src_ids = []
-    flds = ["entity_kwd", "entity_type_kwd", "from_entity_kwd", "to_entity_kwd", "weight_int", "knowledge_graph_kwd", "source_id"]
+    flds = [
+        "entity_kwd",
+        "entity_type_kwd",
+        "from_entity_kwd",
+        "to_entity_kwd",
+        "weight_int",
+        "knowledge_graph_kwd",
+        "source_id",
+    ]
     bs = 256
-    for i in range(0, 39*bs, bs):
-        es_res = settings.docStoreConn.search(flds, [],
-                                 {"kb_id": kb_id, "knowledge_graph_kwd": ["entity", "relation"]},
-                                 [],
-                                 OrderByExpr(),
-                                 i, bs, search.index_name(tenant_id), [kb_id]
-                                 )
+    for i in range(0, 39 * bs, bs):
+        es_res = settings.docStoreConn.search(
+            flds,
+            [],
+            {"kb_id": kb_id, "knowledge_graph_kwd": ["entity", "relation"]},
+            [],
+            OrderByExpr(),
+            i,
+            bs,
+            search.index_name(tenant_id),
+            [kb_id],
+        )
         tot = settings.docStoreConn.getTotal(es_res)
         if tot == 0:
             return None, None
@@ -544,7 +620,7 @@ def rebuild_graph(tenant_id, kb_id):
                 graph.add_edge(
                     d["from_entity_kwd"],
                     d["to_entity_kwd"],
-                    weight=int(d["weight_int"])
+                    weight=int(d["weight_int"]),
                 )
 
         if len(es_res.keys()) < 128:

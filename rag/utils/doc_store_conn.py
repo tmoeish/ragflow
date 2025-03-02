@@ -127,19 +127,26 @@ class FusionExpr(ABC):
         self.fusion_params = fusion_params
 
 
-MatchExpr = MatchTextExpr | MatchDenseExpr | MatchSparseExpr | MatchTensorExpr | FusionExpr
+MatchExpr = (
+    MatchTextExpr | MatchDenseExpr | MatchSparseExpr | MatchTensorExpr | FusionExpr
+)
+
 
 class OrderByExpr(ABC):
     def __init__(self):
         self.fields = list()
+
     def asc(self, field: str):
         self.fields.append((field, 0))
         return self
+
     def desc(self, field: str):
         self.fields.append((field, 1))
         return self
+
     def fields(self):
         return self.fields
+
 
 class DocStoreConnection(ABC):
     """
@@ -191,17 +198,18 @@ class DocStoreConnection(ABC):
 
     @abstractmethod
     def search(
-        self, selectFields: list[str],
-            highlightFields: list[str],
-            condition: dict,
-            matchExprs: list[MatchExpr],
-            orderBy: OrderByExpr,
-            offset: int,
-            limit: int,
-            indexNames: str|list[str],
-            knowledgebaseIds: list[str],
-            aggFields: list[str] = [],
-            rank_feature: dict | None = None
+        self,
+        selectFields: list[str],
+        highlightFields: list[str],
+        condition: dict,
+        matchExprs: list[MatchExpr],
+        orderBy: OrderByExpr,
+        offset: int,
+        limit: int,
+        indexNames: str | list[str],
+        knowledgebaseIds: list[str],
+        aggFields: list[str] = [],
+        rank_feature: dict | None = None,
     ):
         """
         Search with given conjunctive equivalent filtering condition and return all fields of matched documents
@@ -209,21 +217,27 @@ class DocStoreConnection(ABC):
         raise NotImplementedError("Not implemented")
 
     @abstractmethod
-    def get(self, chunkId: str, indexName: str, knowledgebaseIds: list[str]) -> dict | None:
+    def get(
+        self, chunkId: str, indexName: str, knowledgebaseIds: list[str]
+    ) -> dict | None:
         """
         Get single chunk with given id
         """
         raise NotImplementedError("Not implemented")
 
     @abstractmethod
-    def insert(self, rows: list[dict], indexName: str, knowledgebaseId: str = None) -> list[str]:
+    def insert(
+        self, rows: list[dict], indexName: str, knowledgebaseId: str = None
+    ) -> list[str]:
         """
         Update or insert a bulk of rows
         """
         raise NotImplementedError("Not implemented")
 
     @abstractmethod
-    def update(self, condition: dict, newValue: dict, indexName: str, knowledgebaseId: str) -> bool:
+    def update(
+        self, condition: dict, newValue: dict, indexName: str, knowledgebaseId: str
+    ) -> bool:
         """
         Update rows with given conjunctive equivalent filtering condition
         """
@@ -263,6 +277,7 @@ class DocStoreConnection(ABC):
     """
     SQL
     """
+
     @abstractmethod
     def sql(sql: str, fetch_size: int, format: str):
         """

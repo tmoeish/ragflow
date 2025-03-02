@@ -19,7 +19,8 @@ from api.utils.api_utils import get_error_data_result, token_required
 from api.utils.api_utils import get_result
 from flask import request
 
-@manager.route('/agents', methods=['GET'])  # noqa: F821
+
+@manager.route("/agents", methods=["GET"])  # noqa: F821
 @token_required
 def list_agents(tenant_id):
     id = request.args.get("id")
@@ -35,5 +36,7 @@ def list_agents(tenant_id):
         desc = False
     else:
         desc = True
-    canvas = UserCanvasService.get_list(tenant_id,page_number,items_per_page,orderby,desc,id,title)
+    canvas = UserCanvasService.get_list(
+        tenant_id, page_number, items_per_page, orderby, desc, id, title
+    )
     return get_result(data=canvas)

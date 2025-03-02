@@ -14,7 +14,7 @@
 #  limitations under the License.
 #
 from api.db import StatusEnum, TenantPermission
-from api.db.db_models import Knowledgebase, DB, Tenant, User, UserTenant,Document
+from api.db.db_models import Knowledgebase, DB, Tenant, User, UserTenant, Document
 from api.db.services.common_service import CommonService
 from peewee import fn
 
@@ -24,21 +24,29 @@ class KnowledgebaseService(CommonService):
 
     @classmethod
     @DB.connection_context()
-    def list_documents_by_ids(cls,kb_ids):
-        doc_ids=cls.model.select(Document.id.alias("document_id")).join(Document,on=(cls.model.id == Document.kb_id)).where(
-            cls.model.id.in_(kb_ids)
+    def list_documents_by_ids(cls, kb_ids):
+        doc_ids = (
+            cls.model.select(Document.id.alias("document_id"))
+            .join(Document, on=(cls.model.id == Document.kb_id))
+            .where(cls.model.id.in_(kb_ids))
         )
-        doc_ids =list(doc_ids.dicts())
+        doc_ids = list(doc_ids.dicts())
         doc_ids = [doc["document_id"] for doc in doc_ids]
         return doc_ids
 
     @classmethod
     @DB.connection_context()
-    def get_by_tenant_ids(cls, joined_tenant_ids, user_id,
-                          page_number, items_per_page,
-                          orderby, desc, keywords,
-                          parser_id=None
-                          ):
+    def get_by_tenant_ids(
+        cls,
+        joined_tenant_ids,
+        user_id,
+        page_number,
+        items_per_page,
+        orderby,
+        desc,
+        keywords,
+        parser_id=None,
+    ):
         fields = [
             cls.model.id,
             cls.model.avatar,
@@ -52,23 +60,39 @@ class KnowledgebaseService(CommonService):
             cls.model.parser_id,
             cls.model.embd_id,
             User.nickname,
-            User.avatar.alias('tenant_avatar'),
-            cls.model.update_time
+            User.avatar.alias("tenant_avatar"),
+            cls.model.update_time,
         ]
         if keywords:
-            kbs = cls.model.select(*fields).join(User, on=(cls.model.tenant_id == User.id)).where(
-                ((cls.model.tenant_id.in_(joined_tenant_ids) & (cls.model.permission ==
-                                                                TenantPermission.TEAM.value)) | (
-                    cls.model.tenant_id == user_id))
-                & (cls.model.status == StatusEnum.VALID.value),
-                (fn.LOWER(cls.model.name).contains(keywords.lower()))
+            kbs = (
+                cls.model.select(*fields)
+                .join(User, on=(cls.model.tenant_id == User.id))
+                .where(
+                    (
+                        (
+                            cls.model.tenant_id.in_(joined_tenant_ids)
+                            & (cls.model.permission == TenantPermission.TEAM.value)
+                        )
+                        | (cls.model.tenant_id == user_id)
+                    )
+                    & (cls.model.status == StatusEnum.VALID.value),
+                    (fn.LOWER(cls.model.name).contains(keywords.lower())),
+                )
             )
         else:
-            kbs = cls.model.select(*fields).join(User, on=(cls.model.tenant_id == User.id)).where(
-                ((cls.model.tenant_id.in_(joined_tenant_ids) & (cls.model.permission ==
-                                                                TenantPermission.TEAM.value)) | (
-                    cls.model.tenant_id == user_id))
-                & (cls.model.status == StatusEnum.VALID.value)
+            kbs = (
+                cls.model.select(*fields)
+                .join(User, on=(cls.model.tenant_id == User.id))
+                .where(
+                    (
+                        (
+                            cls.model.tenant_id.in_(joined_tenant_ids)
+                            & (cls.model.permission == TenantPermission.TEAM.value)
+                        )
+                        | (cls.model.tenant_id == user_id)
+                    )
+                    & (cls.model.status == StatusEnum.VALID.value)
+                )
             )
         if parser_id:
             kbs = kbs.where(cls.model.parser_id == parser_id)
@@ -110,11 +134,20 @@ class KnowledgebaseService(CommonService):
             cls.model.chunk_num,
             cls.model.parser_id,
             cls.model.parser_config,
-            cls.model.pagerank]
-        kbs = cls.model.select(*fields).join(Tenant, on=(
-                (Tenant.id == cls.model.tenant_id) & (Tenant.status == StatusEnum.VALID.value))).where(
-            (cls.model.id == kb_id),
-            (cls.model.status == StatusEnum.VALID.value)
+            cls.model.pagerank,
+        ]
+        kbs = (
+            cls.model.select(*fields)
+            .join(
+                Tenant,
+                on=(
+                    (Tenant.id == cls.model.tenant_id)
+                    & (Tenant.status == StatusEnum.VALID.value)
+                ),
+            )
+            .where(
+                (cls.model.id == kb_id), (cls.model.status == StatusEnum.VALID.value)
+            )
         )
         if not kbs:
             return
@@ -174,17 +207,30 @@ class KnowledgebaseService(CommonService):
 
     @classmethod
     @DB.connection_context()
-    def get_list(cls, joined_tenant_ids, user_id,
-                 page_number, items_per_page, orderby, desc, id, name):
+    def get_list(
+        cls,
+        joined_tenant_ids,
+        user_id,
+        page_number,
+        items_per_page,
+        orderby,
+        desc,
+        id,
+        name,
+    ):
         kbs = cls.model.select()
         if id:
             kbs = kbs.where(cls.model.id == id)
         if name:
             kbs = kbs.where(cls.model.name == name)
         kbs = kbs.where(
-            ((cls.model.tenant_id.in_(joined_tenant_ids) & (cls.model.permission ==
-                                                            TenantPermission.TEAM.value)) | (
-                     cls.model.tenant_id == user_id))
+            (
+                (
+                    cls.model.tenant_id.in_(joined_tenant_ids)
+                    & (cls.model.permission == TenantPermission.TEAM.value)
+                )
+                | (cls.model.tenant_id == user_id)
+            )
             & (cls.model.status == StatusEnum.VALID.value)
         )
         if desc:
@@ -199,9 +245,12 @@ class KnowledgebaseService(CommonService):
     @classmethod
     @DB.connection_context()
     def accessible(cls, kb_id, user_id):
-        docs = cls.model.select(
-            cls.model.id).join(UserTenant, on=(UserTenant.tenant_id == Knowledgebase.tenant_id)
-            ).where(cls.model.id == kb_id, UserTenant.user_id == user_id).paginate(0, 1)
+        docs = (
+            cls.model.select(cls.model.id)
+            .join(UserTenant, on=(UserTenant.tenant_id == Knowledgebase.tenant_id))
+            .where(cls.model.id == kb_id, UserTenant.user_id == user_id)
+            .paginate(0, 1)
+        )
         docs = docs.dicts()
         if not docs:
             return False
@@ -210,26 +259,36 @@ class KnowledgebaseService(CommonService):
     @classmethod
     @DB.connection_context()
     def get_kb_by_id(cls, kb_id, user_id):
-        kbs = cls.model.select().join(UserTenant, on=(UserTenant.tenant_id == Knowledgebase.tenant_id)
-            ).where(cls.model.id == kb_id, UserTenant.user_id == user_id).paginate(0, 1)
+        kbs = (
+            cls.model.select()
+            .join(UserTenant, on=(UserTenant.tenant_id == Knowledgebase.tenant_id))
+            .where(cls.model.id == kb_id, UserTenant.user_id == user_id)
+            .paginate(0, 1)
+        )
         kbs = kbs.dicts()
         return list(kbs)
 
     @classmethod
     @DB.connection_context()
     def get_kb_by_name(cls, kb_name, user_id):
-        kbs = cls.model.select().join(UserTenant, on=(UserTenant.tenant_id == Knowledgebase.tenant_id)
-            ).where(cls.model.name == kb_name, UserTenant.user_id == user_id).paginate(0, 1)
+        kbs = (
+            cls.model.select()
+            .join(UserTenant, on=(UserTenant.tenant_id == Knowledgebase.tenant_id))
+            .where(cls.model.name == kb_name, UserTenant.user_id == user_id)
+            .paginate(0, 1)
+        )
         kbs = kbs.dicts()
         return list(kbs)
 
     @classmethod
     @DB.connection_context()
     def accessible4deletion(cls, kb_id, user_id):
-        docs = cls.model.select(
-            cls.model.id).where(cls.model.id == kb_id, cls.model.created_by == user_id).paginate(0, 1)
+        docs = (
+            cls.model.select(cls.model.id)
+            .where(cls.model.id == kb_id, cls.model.created_by == user_id)
+            .paginate(0, 1)
+        )
         docs = docs.dicts()
         if not docs:
             return False
         return True
-

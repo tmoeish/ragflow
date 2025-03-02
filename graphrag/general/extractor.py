@@ -22,8 +22,14 @@ from copy import deepcopy
 from typing import Callable
 
 from graphrag.general.graph_prompt import SUMMARIZE_DESCRIPTIONS_PROMPT
-from graphrag.utils import get_llm_cache, set_llm_cache, handle_single_entity_extraction, \
-    handle_single_relationship_extraction, split_string_by_multi_markers, flat_uniq_list
+from graphrag.utils import (
+    get_llm_cache,
+    set_llm_cache,
+    handle_single_entity_extraction,
+    handle_single_relationship_extraction,
+    split_string_by_multi_markers,
+    flat_uniq_list,
+)
 from rag.llm.chat_model import Base as CompletionLLM
 from rag.utils import truncate
 
@@ -66,19 +72,20 @@ class Extractor:
         set_llm_cache(self._llm.llm_name, system, response, history, gen_conf)
         return response
 
-    def _entities_and_relations(self, chunk_key: str, records: list, tuple_delimiter: str):
+    def _entities_and_relations(
+        self, chunk_key: str, records: list, tuple_delimiter: str
+    ):
         maybe_nodes = defaultdict(list)
         maybe_edges = defaultdict(list)
         ent_types = [t.lower() for t in self._entity_types]
         for record in records:
-            record_attributes = split_string_by_multi_markers(
-                record, [tuple_delimiter]
-            )
+            record_attributes = split_string_by_multi_markers(record, [tuple_delimiter])
 
-            if_entities = handle_single_entity_extraction(
-                record_attributes, chunk_key
-            )
-            if if_entities is not None and if_entities.get("entity_type", "unknown").lower() in ent_types:
+            if_entities = handle_single_entity_extraction(record_attributes, chunk_key)
+            if (
+                if_entities is not None
+                and if_entities.get("entity_type", "unknown").lower() in ent_types
+            ):
                 maybe_nodes[if_entities["entity_name"]].append(if_entities)
                 continue
 
@@ -91,26 +98,25 @@ class Extractor:
                 )
         return dict(maybe_nodes), dict(maybe_edges)
 
-    def __call__(
-        self, chunks: list[tuple[str, str]],
-            callback: Callable | None = None
-    ):
+    def __call__(self, chunks: list[tuple[str, str]], callback: Callable | None = None):
 
         results = []
-        max_workers = int(os.environ.get('GRAPH_EXTRACTOR_MAX_WORKERS', 10))
+        max_workers = int(os.environ.get("GRAPH_EXTRACTOR_MAX_WORKERS", 10))
         with ThreadPoolExecutor(max_workers=max_workers) as exe:
             threads = []
             for i, (cid, ck) in enumerate(chunks):
-                ck = truncate(ck, int(self._llm.max_length*0.8))
-                threads.append(
-                    exe.submit(self._process_single_content, (cid, ck)))
+                ck = truncate(ck, int(self._llm.max_length * 0.8))
+                threads.append(exe.submit(self._process_single_content, (cid, ck)))
 
             for i, _ in enumerate(threads):
                 n, r, tc = _.result()
                 if not isinstance(n, Exception):
                     results.append((n, r))
                     if callback:
-                        callback(0.5 + 0.1 * i / len(threads), f"Entities extraction progress ... {i + 1}/{len(threads)} ({tc} tokens)")
+                        callback(
+                            0.5 + 0.1 * i / len(threads),
+                            f"Entities extraction progress ... {i + 1}/{len(threads)} ({tc} tokens)",
+                        )
                 elif callback:
                     callback(msg="Knowledge graph extraction error:{}".format(str(n)))
 
@@ -126,14 +132,15 @@ class Extractor:
         with ThreadPoolExecutor(max_workers=max_workers) as exe:
             threads = []
             for en_nm, ents in maybe_nodes.items():
-                threads.append(
-                    exe.submit(self._merge_nodes, en_nm, ents))
+                threads.append(exe.submit(self._merge_nodes, en_nm, ents))
             for t in threads:
                 n = t.result()
                 if not isinstance(n, Exception):
                     all_entities_data.append(n)
                 elif callback:
-                    callback(msg="Knowledge graph nodes merging error: {}".format(str(n)))
+                    callback(
+                        msg="Knowledge graph nodes merging error: {}".format(str(n))
+                    )
 
         logging.info("Inserting relationships into storage...")
         all_relationships_data = []
@@ -177,9 +184,7 @@ class Extractor:
         )
         already_source_ids = flat_uniq_list(entities, "source_id")
         try:
-            description = self._handle_entity_relation_summary(
-                entity_name, description
-            )
+            description = self._handle_entity_relation_summary(entity_name, description)
             node_data = dict(
                 entity_type=entity_type,
                 description=description,
@@ -191,12 +196,7 @@ class Extractor:
         except Exception as e:
             return e
 
-    def _merge_edges(
-            self,
-            src_id: str,
-            tgt_id: str,
-            edges_data: list[dict]
-    ):
+    def _merge_edges(self, src_id: str, tgt_id: str, edges_data: list[dict]):
         if not edges_data:
             return
         already_weights = []
@@ -221,11 +221,14 @@ class Extractor:
         for need_insert_id in [src_id, tgt_id]:
             if self._get_entity_(need_insert_id):
                 continue
-            self._set_entity_(need_insert_id, {
-                        "source_id": source_id,
-                        "description": description,
-                        "entity_type": 'UNKNOWN'
-                    })
+            self._set_entity_(
+                need_insert_id,
+                {
+                    "source_id": source_id,
+                    "description": description,
+                    "entity_type": "UNKNOWN",
+                },
+            )
         description = self._handle_entity_relation_summary(
             f"({src_id}, {tgt_id})", description
         )
@@ -235,16 +238,14 @@ class Extractor:
             description=description,
             keywords=keywords,
             weight=weight,
-            source_id=source_id
+            source_id=source_id,
         )
         self._set_relation_(src_id, tgt_id, edge_data)
 
         return edge_data
 
     def _handle_entity_relation_summary(
-            self,
-            entity_or_relation_name: str,
-            description: str
+        self, entity_or_relation_name: str, description: str
     ) -> str:
         summary_max_tokens = 512
         use_description = truncate(description, summary_max_tokens)
@@ -256,5 +257,7 @@ class Extractor:
         )
         use_prompt = prompt_template.format(**context_base)
         logging.info(f"Trigger summary: {entity_or_relation_name}")
-        summary = self._chat(use_prompt, [{"role": "user", "content": "Output: "}], {"temperature": 0.8})
+        summary = self._chat(
+            use_prompt, [{"role": "user", "content": "Output: "}], {"temperature": 0.8}
+        )
         return summary

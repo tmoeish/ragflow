@@ -39,13 +39,22 @@ class Template(ComponentBase):
 
     def get_dependent_components(self):
         inputs = self.get_input_elements()
-        cpnts = set([i["key"] for i in inputs if i["key"].lower().find("answer") < 0 and i["key"].lower().find("begin") < 0])
+        cpnts = set(
+            [
+                i["key"]
+                for i in inputs
+                if i["key"].lower().find("answer") < 0
+                and i["key"].lower().find("begin") < 0
+            ]
+        )
         return list(cpnts)
 
     def get_input_elements(self):
         key_set = set([])
         res = []
-        for r in re.finditer(r"\{([a-z]+[:@][a-z0-9_-]+)\}", self._param.content, flags=re.IGNORECASE):
+        for r in re.finditer(
+            r"\{([a-z]+[:@][a-z0-9_-]+)\}", self._param.content, flags=re.IGNORECASE
+        ):
             cpn_id = r.group(1)
             if cpn_id in key_set:
                 continue
@@ -113,22 +122,14 @@ class Template(ComponentBase):
                 v = json.dumps(v, ensure_ascii=False)
             except Exception:
                 pass
-            content = re.sub(
-                r"\{%s\}" % re.escape(n), v, content
-            )
-            content = re.sub(
-                r"(\\\"|\")", "", content
-            )
-            content = re.sub(
-                r"(#+)", r" \1 ", content
-            )
+            content = re.sub(r"\{%s\}" % re.escape(n), v, content)
+            content = re.sub(r"(\\\"|\")", "", content)
+            content = re.sub(r"(#+)", r" \1 ", content)
 
         return Template.be_output(content)
 
     def make_kwargs(self, para, kwargs, value):
-        self._param.inputs.append(
-            {"component_id": para["key"], "content": value}
-        )
+        self._param.inputs.append({"component_id": para["key"], "content": value})
         try:
             value = json.loads(value)
         except Exception:

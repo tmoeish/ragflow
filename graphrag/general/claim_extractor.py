@@ -15,7 +15,11 @@ from typing import Any
 
 import tiktoken
 
-from graphrag.general.claim_prompt import CLAIM_EXTRACTION_PROMPT, CONTINUE_PROMPT, LOOP_PROMPT
+from graphrag.general.claim_prompt import (
+    CLAIM_EXTRACTION_PROMPT,
+    CONTINUE_PROMPT,
+    LOOP_PROMPT,
+)
 from graphrag.general.extractor import Extractor
 from rag.llm.chat_model import Base as CompletionLLM
 from graphrag.utils import ErrorHandlerFn, perform_variable_replacements
@@ -154,9 +158,7 @@ class ClaimExtractor(Extractor):
         claim["doc_id"] = document_id
         return claim
 
-    def _process_document(
-        self, prompt_args: dict, doc, doc_index: int
-    ) -> list[dict]:
+    def _process_document(self, prompt_args: dict, doc, doc_index: int) -> list[dict]:
         record_delimiter = prompt_args.get(
             self._record_delimiter_key, DEFAULT_RECORD_DELIMITER
         )
@@ -164,18 +166,25 @@ class ClaimExtractor(Extractor):
             self._completion_delimiter_key, DEFAULT_COMPLETION_DELIMITER
         )
         variables = {
-                        self._input_text_key: doc,
-                        **prompt_args,
-                    }
-        text = perform_variable_replacements(self._extraction_prompt, variables=variables)
+            self._input_text_key: doc,
+            **prompt_args,
+        }
+        text = perform_variable_replacements(
+            self._extraction_prompt, variables=variables
+        )
         gen_conf = {"temperature": 0.5}
         results = self._chat(text, [{"role": "user", "content": "Output:"}], gen_conf)
         claims = results.strip().removesuffix(completion_delimiter)
-        history = [{"role": "system", "content": text}, {"role": "assistant", "content": results}]
+        history = [
+            {"role": "system", "content": text},
+            {"role": "assistant", "content": results},
+        ]
 
         # Repeat to ensure we maximize entity count
         for i in range(self._max_gleanings):
-            text = perform_variable_replacements(CONTINUE_PROMPT, history=history, variables=variables)
+            text = perform_variable_replacements(
+                CONTINUE_PROMPT, history=history, variables=variables
+            )
             history.append({"role": "user", "content": text})
             extension = self._chat("", history, gen_conf)
             claims += record_delimiter + extension.strip().removesuffix(
@@ -238,7 +247,14 @@ class ClaimExtractor(Extractor):
                 "source_text": pull_field(7, claim_fields),
                 "doc_id": pull_field(8, claim_fields),
             }
-            if any([not o["subject_id"], not o["object_id"], o["subject_id"].lower() == "none", o["object_id"] == "none"]):
+            if any(
+                [
+                    not o["subject_id"],
+                    not o["object_id"],
+                    o["subject_id"].lower() == "none",
+                    o["object_id"] == "none",
+                ]
+            ):
                 continue
             result.append(o)
         return result
@@ -246,8 +262,22 @@ class ClaimExtractor(Extractor):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('-t', '--tenant_id', default=False, help="Tenant ID", action='store', required=True)
-    parser.add_argument('-d', '--doc_id', default=False, help="Document ID", action='store', required=True)
+    parser.add_argument(
+        "-t",
+        "--tenant_id",
+        default=False,
+        help="Tenant ID",
+        action="store",
+        required=True,
+    )
+    parser.add_argument(
+        "-d",
+        "--doc_id",
+        default=False,
+        help="Document ID",
+        action="store",
+        required=True,
+    )
     args = parser.parse_args()
 
     from api.db import LLMType
@@ -258,11 +288,20 @@ if __name__ == "__main__":
     kb_ids = KnowledgebaseService.get_kb_ids(args.tenant_id)
 
     ex = ClaimExtractor(LLMBundle(args.tenant_id, LLMType.CHAT))
-    docs = [d["content_with_weight"] for d in settings.retrievaler.chunk_list(args.doc_id, args.tenant_id, kb_ids, max_count=12, fields=["content_with_weight"])]
+    docs = [
+        d["content_with_weight"]
+        for d in settings.retrievaler.chunk_list(
+            args.doc_id,
+            args.tenant_id,
+            kb_ids,
+            max_count=12,
+            fields=["content_with_weight"],
+        )
+    ]
     info = {
         "input_text": docs,
         "entity_specs": "organization, person",
-        "claim_description": ""
+        "claim_description": "",
     }
     claim = ex(info)
     logging.info(json.dumps(claim.output, ensure_ascii=False, indent=2))

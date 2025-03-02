@@ -21,7 +21,9 @@ from rag.nlp import num_tokens_from_string
 
 
 class RAGFlowTxtParser:
-    def __call__(self, fnm, binary=None, chunk_token_num=128, delimiter="\n!?;。；！？"):
+    def __call__(
+        self, fnm, binary=None, chunk_token_num=128, delimiter="\n!?;。；！？"
+    ):
         txt = get_text(fnm, binary)
         return self.parser_txt(txt, chunk_token_num, delimiter)
 
@@ -47,7 +49,7 @@ class RAGFlowTxtParser:
         for m in re.finditer(r"`([^`]+)`", delimiter, re.I):
             f, t = m.span()
             dels.append(m.group(1))
-            dels.extend(list(delimiter[s: f]))
+            dels.extend(list(delimiter[s:f]))
             s = t
         if s < len(delimiter):
             dels.extend(list(delimiter[s:]))

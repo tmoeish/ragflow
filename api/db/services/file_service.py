@@ -38,20 +38,22 @@ class FileService(CommonService):
 
     @classmethod
     @DB.connection_context()
-    def get_by_pf_id(cls, tenant_id, pf_id, page_number, items_per_page,
-                     orderby, desc, keywords):
+    def get_by_pf_id(
+        cls, tenant_id, pf_id, page_number, items_per_page, orderby, desc, keywords
+    ):
         if keywords:
             files = cls.model.select().where(
                 (cls.model.tenant_id == tenant_id),
                 (cls.model.parent_id == pf_id),
                 (fn.LOWER(cls.model.name).contains(keywords.lower())),
-                ~(cls.model.id == pf_id)
+                ~(cls.model.id == pf_id),
             )
         else:
-            files = cls.model.select().where((cls.model.tenant_id == tenant_id),
-                                             (cls.model.parent_id == pf_id),
-                                             ~(cls.model.id == pf_id)
-                                             )
+            files = cls.model.select().where(
+                (cls.model.tenant_id == tenant_id),
+                (cls.model.parent_id == pf_id),
+                ~(cls.model.id == pf_id),
+            )
         count = files.count()
         if desc:
             files = files.order_by(cls.model.getter_by(orderby).desc())
@@ -64,38 +66,48 @@ class FileService(CommonService):
         for file in res_files:
             if file["type"] == FileType.FOLDER.value:
                 file["size"] = cls.get_folder_size(file["id"])
-                file['kbs_info'] = []
-                children = list(cls.model.select().where(
-                    (cls.model.tenant_id == tenant_id),
-                    (cls.model.parent_id == file["id"]),
-                    ~(cls.model.id == file["id"]),
-                ).dicts())
-                file["has_child_folder"] = any(value["type"] == FileType.FOLDER.value for value in children)                       
+                file["kbs_info"] = []
+                children = list(
+                    cls.model.select()
+                    .where(
+                        (cls.model.tenant_id == tenant_id),
+                        (cls.model.parent_id == file["id"]),
+                        ~(cls.model.id == file["id"]),
+                    )
+                    .dicts()
+                )
+                file["has_child_folder"] = any(
+                    value["type"] == FileType.FOLDER.value for value in children
+                )
                 continue
-            kbs_info = cls.get_kb_id_by_file_id(file['id'])
-            file['kbs_info'] = kbs_info
+            kbs_info = cls.get_kb_id_by_file_id(file["id"])
+            file["kbs_info"] = kbs_info
 
         return res_files, count
 
     @classmethod
     @DB.connection_context()
     def get_kb_id_by_file_id(cls, file_id):
-        kbs = (cls.model.select(*[Knowledgebase.id, Knowledgebase.name])
-               .join(File2Document, on=(File2Document.file_id == file_id))
-               .join(Document, on=(File2Document.document_id == Document.id))
-               .join(Knowledgebase, on=(Knowledgebase.id == Document.kb_id))
-               .where(cls.model.id == file_id))
+        kbs = (
+            cls.model.select(*[Knowledgebase.id, Knowledgebase.name])
+            .join(File2Document, on=(File2Document.file_id == file_id))
+            .join(Document, on=(File2Document.document_id == Document.id))
+            .join(Knowledgebase, on=(Knowledgebase.id == Document.kb_id))
+            .where(cls.model.id == file_id)
+        )
         if not kbs:
             return []
         kbs_info_list = []
         for kb in list(kbs.dicts()):
-            kbs_info_list.append({"kb_id": kb['id'], "kb_name": kb['name']})
+            kbs_info_list.append({"kb_id": kb["id"], "kb_name": kb["name"]})
         return kbs_info_list
 
     @classmethod
     @DB.connection_context()
     def get_by_pf_id_name(cls, id, name):
-        file = cls.model.select().where((cls.model.parent_id == id) & (cls.model.name == name))
+        file = cls.model.select().where(
+            (cls.model.parent_id == id) & (cls.model.name == name)
+        )
         if file.count():
             e, file = cls.get_by_id(file[0].id)
             if not e:
@@ -133,16 +145,18 @@ class FileService(CommonService):
         if count > len(name) - 2:
             return file
         else:
-            file = cls.insert({
-                "id": get_uuid(),
-                "parent_id": parent_id,
-                "tenant_id": current_user.id,
-                "created_by": current_user.id,
-                "name": name[count],
-                "location": "",
-                "size": 0,
-                "type": FileType.FOLDER.value
-            })
+            file = cls.insert(
+                {
+                    "id": get_uuid(),
+                    "parent_id": parent_id,
+                    "tenant_id": current_user.id,
+                    "created_by": current_user.id,
+                    "name": name[count],
+                    "location": "",
+                    "size": 0,
+                    "type": FileType.FOLDER.value,
+                }
+            )
             return cls.create_folder(file, file.id, name, count + 1)
 
     @classmethod
@@ -157,9 +171,9 @@ class FileService(CommonService):
     @classmethod
     @DB.connection_context()
     def get_root_folder(cls, tenant_id):
-        for file in cls.model.select().where((cls.model.tenant_id == tenant_id),
-                                        (cls.model.parent_id == cls.model.id)
-                                        ):
+        for file in cls.model.select().where(
+            (cls.model.tenant_id == tenant_id), (cls.model.parent_id == cls.model.id)
+        ):
             return file.to_dict()
 
         file_id = get_uuid()
@@ -180,16 +194,21 @@ class FileService(CommonService):
     @DB.connection_context()
     def get_kb_folder(cls, tenant_id):
         for root in cls.model.select().where(
-                (cls.model.tenant_id == tenant_id), (cls.model.parent_id == cls.model.id)):
+            (cls.model.tenant_id == tenant_id), (cls.model.parent_id == cls.model.id)
+        ):
             for folder in cls.model.select().where(
-                    (cls.model.tenant_id == tenant_id), (cls.model.parent_id == root.id),
-                    (cls.model.name == KNOWLEDGEBASE_FOLDER_NAME)):
+                (cls.model.tenant_id == tenant_id),
+                (cls.model.parent_id == root.id),
+                (cls.model.name == KNOWLEDGEBASE_FOLDER_NAME),
+            ):
                 return folder.to_dict()
         assert False, "Can't find the KB folder. Database init error."
 
     @classmethod
     @DB.connection_context()
-    def new_a_file_from_kb(cls, tenant_id, name, parent_id, ty=FileType.FOLDER.value, size=0, location=""):
+    def new_a_file_from_kb(
+        cls, tenant_id, name, parent_id, ty=FileType.FOLDER.value, size=0, location=""
+    ):
         for file in cls.query(tenant_id=tenant_id, parent_id=parent_id, name=name):
             return file.to_dict()
         file = {
@@ -201,7 +220,7 @@ class FileService(CommonService):
             "type": ty,
             "size": size,
             "location": location,
-            "source_type": FileSource.KNOWLEDGEBASE
+            "source_type": FileSource.KNOWLEDGEBASE,
         }
         cls.save(**file)
         return file
@@ -209,12 +228,16 @@ class FileService(CommonService):
     @classmethod
     @DB.connection_context()
     def init_knowledgebase_docs(cls, root_id, tenant_id):
-        for _ in cls.model.select().where((cls.model.name == KNOWLEDGEBASE_FOLDER_NAME)\
-                                          & (cls.model.parent_id == root_id)):
+        for _ in cls.model.select().where(
+            (cls.model.name == KNOWLEDGEBASE_FOLDER_NAME)
+            & (cls.model.parent_id == root_id)
+        ):
             return
         folder = cls.new_a_file_from_kb(tenant_id, KNOWLEDGEBASE_FOLDER_NAME, root_id)
 
-        for kb in Knowledgebase.select(*[Knowledgebase.id, Knowledgebase.name]).where(Knowledgebase.tenant_id==tenant_id):
+        for kb in Knowledgebase.select(*[Knowledgebase.id, Knowledgebase.name]).where(
+            Knowledgebase.tenant_id == tenant_id
+        ):
             kb_folder = cls.new_a_file_from_kb(tenant_id, kb.name, folder["id"])
             for doc in DocumentService.query(kb_id=kb.id):
                 FileService.add_file_from_kb(doc.to_dict(), kb_folder["id"], tenant_id)
@@ -267,12 +290,16 @@ class FileService(CommonService):
     @DB.connection_context()
     def delete_folder_by_pf_id(cls, user_id, folder_id):
         try:
-            files = cls.model.select().where((cls.model.tenant_id == user_id)
-                                             & (cls.model.parent_id == folder_id))
+            files = cls.model.select().where(
+                (cls.model.tenant_id == user_id) & (cls.model.parent_id == folder_id)
+            )
             for file in files:
                 cls.delete_folder_by_pf_id(user_id, file.id)
-            return cls.model.delete().where((cls.model.tenant_id == user_id)
-                                            & (cls.model.id == folder_id)).execute(),
+            return (
+                cls.model.delete()
+                .where((cls.model.tenant_id == user_id) & (cls.model.id == folder_id))
+                .execute(),
+            )
         except Exception:
             logging.exception("delete_folder_by_pf_id")
             raise RuntimeError("Database error (File retrieval)!")
@@ -290,8 +317,9 @@ class FileService(CommonService):
 
         def dfs(parent_id):
             nonlocal size
-            for f in cls.model.select(*[cls.model.id, cls.model.size, cls.model.type]).where(
-                    cls.model.parent_id == parent_id, cls.model.id != parent_id):
+            for f in cls.model.select(
+                *[cls.model.id, cls.model.size, cls.model.type]
+            ).where(cls.model.parent_id == parent_id, cls.model.id != parent_id):
                 size += f.size
                 if f.type == FileType.FOLDER.value:
                     dfs(f.id)
@@ -313,16 +341,18 @@ class FileService(CommonService):
             "type": doc["type"],
             "size": doc["size"],
             "location": doc["location"],
-            "source_type": FileSource.KNOWLEDGEBASE
+            "source_type": FileSource.KNOWLEDGEBASE,
         }
         cls.save(**file)
-        File2DocumentService.save(**{"id": get_uuid(), "file_id": file["id"], "document_id": doc["id"]})
-    
+        File2DocumentService.save(
+            **{"id": get_uuid(), "file_id": file["id"], "document_id": doc["id"]}
+        )
+
     @classmethod
     @DB.connection_context()
     def move_file(cls, file_ids, folder_id):
         try:
-            cls.filter_update((cls.model.id << file_ids, ), { 'parent_id': folder_id })
+            cls.filter_update((cls.model.id << file_ids,), {"parent_id": folder_id})
         except Exception:
             logging.exception("move_file")
             raise RuntimeError("Database error (File move)!")
@@ -339,16 +369,19 @@ class FileService(CommonService):
         err, files = [], []
         for file in file_objs:
             try:
-                MAX_FILE_NUM_PER_USER = int(os.environ.get('MAX_FILE_NUM_PER_USER', 0))
-                if MAX_FILE_NUM_PER_USER > 0 and DocumentService.get_doc_count(kb.tenant_id) >= MAX_FILE_NUM_PER_USER:
+                MAX_FILE_NUM_PER_USER = int(os.environ.get("MAX_FILE_NUM_PER_USER", 0))
+                if (
+                    MAX_FILE_NUM_PER_USER > 0
+                    and DocumentService.get_doc_count(kb.tenant_id)
+                    >= MAX_FILE_NUM_PER_USER
+                ):
                     raise RuntimeError("Exceed the maximum file number of a free user!")
                 if len(file.filename) >= 128:
                     raise RuntimeError("Exceed the maximum length of file name!")
 
                 filename = duplicate_name(
-                    DocumentService.query,
-                    name=file.filename,
-                    kb_id=kb.id)
+                    DocumentService.query, name=file.filename, kb_id=kb.id
+                )
                 filetype = filename_type(filename)
                 if filetype == FileType.OTHER.value:
                     raise RuntimeError("This type of file has not been supported yet!")
@@ -362,9 +395,9 @@ class FileService(CommonService):
                 doc_id = get_uuid()
 
                 img = thumbnail_img(filename, blob)
-                thumbnail_location = ''
+                thumbnail_location = ""
                 if img is not None:
-                    thumbnail_location = f'thumbnail_{doc_id}.png'
+                    thumbnail_location = f"thumbnail_{doc_id}.png"
                     STORAGE_IMPL.put(kb.id, thumbnail_location, img)
 
                 doc = {
@@ -377,7 +410,7 @@ class FileService(CommonService):
                     "name": filename,
                     "location": location,
                     "size": len(blob),
-                    "thumbnail": thumbnail_location
+                    "thumbnail": thumbnail_location,
                 }
                 DocumentService.insert(doc)
 
@@ -399,9 +432,13 @@ class FileService(CommonService):
             ParserType.PRESENTATION.value: presentation,
             ParserType.PICTURE.value: picture,
             ParserType.AUDIO.value: audio,
-            ParserType.EMAIL.value: email
+            ParserType.EMAIL.value: email,
         }
-        parser_config = {"chunk_token_num": 16096, "delimiter": "\n!?;。；！？", "layout_recognize": "Plain Text"}
+        parser_config = {
+            "chunk_token_num": 16096,
+            "delimiter": "\n!?;。；！？",
+            "layout_recognize": "Plain Text",
+        }
         exe = ThreadPoolExecutor(max_workers=12)
         threads = []
         for file in file_objs:
@@ -411,11 +448,20 @@ class FileService(CommonService):
                 "parser_config": parser_config,
                 "from_page": 0,
                 "to_page": 100000,
-                "tenant_id": user_id
+                "tenant_id": user_id,
             }
             filetype = filename_type(file.filename)
             blob = file.read()
-            threads.append(exe.submit(FACTORY.get(FileService.get_parser(filetype, file.filename, ""), naive).chunk, file.filename, blob, **kwargs))
+            threads.append(
+                exe.submit(
+                    FACTORY.get(
+                        FileService.get_parser(filetype, file.filename, ""), naive
+                    ).chunk,
+                    file.filename,
+                    blob,
+                    **kwargs,
+                )
+            )
 
         res = []
         for th in threads:

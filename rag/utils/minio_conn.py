@@ -37,14 +37,14 @@ class RAGFlowMinio(object):
             pass
 
         try:
-            self.conn = Minio(settings.MINIO["host"],
-                              access_key=settings.MINIO["user"],
-                              secret_key=settings.MINIO["password"],
-                              secure=False
-                              )
+            self.conn = Minio(
+                settings.MINIO["host"],
+                access_key=settings.MINIO["user"],
+                secret_key=settings.MINIO["password"],
+                secure=False,
+            )
         except Exception:
-            logging.exception(
-                "Fail to connect %s " % settings.MINIO["host"])
+            logging.exception("Fail to connect %s " % settings.MINIO["host"])
 
     def __close__(self):
         del self.conn
@@ -54,10 +54,7 @@ class RAGFlowMinio(object):
         bucket, fnm, binary = "txtxtxtxt1", "txtxtxtxt1", b"_t@@@1"
         if not self.conn.bucket_exists(bucket):
             self.conn.make_bucket(bucket)
-        r = self.conn.put_object(bucket, fnm,
-                                 BytesIO(binary),
-                                 len(binary)
-                                 )
+        r = self.conn.put_object(bucket, fnm, BytesIO(binary), len(binary))
         return r
 
     def put(self, bucket, fnm, binary):
@@ -66,10 +63,7 @@ class RAGFlowMinio(object):
                 if not self.conn.bucket_exists(bucket):
                     self.conn.make_bucket(bucket)
 
-                r = self.conn.put_object(bucket, fnm,
-                                         BytesIO(binary),
-                                         len(binary)
-                                         )
+                r = self.conn.put_object(bucket, fnm, BytesIO(binary), len(binary))
                 return r
             except Exception:
                 logging.exception(f"Fail to put {bucket}/{fnm}:")
@@ -128,7 +122,7 @@ if __name__ == "__main__":
 
     img = Image.open(fnm)
     buff = BytesIO()
-    img.save(buff, format='JPEG')
+    img.save(buff, format="JPEG")
     print(conn.put("test", "11-408.jpg", buff.getvalue()))
     bts = conn.get("test", "11-408.jpg")
     img = Image.open(BytesIO(bts))

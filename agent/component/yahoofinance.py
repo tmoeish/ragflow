@@ -60,21 +60,59 @@ class YahooFinance(ComponentBase, ABC):
         try:
             msft = yf.Ticker(ans)
             if self._param.info:
-                yohoo_res.append({"content": "info:\n" + pd.Series(msft.info).to_markdown() + "\n"})
+                yohoo_res.append(
+                    {"content": "info:\n" + pd.Series(msft.info).to_markdown() + "\n"}
+                )
             if self._param.history:
-                yohoo_res.append({"content": "history:\n" + msft.history().to_markdown() + "\n"})
+                yohoo_res.append(
+                    {"content": "history:\n" + msft.history().to_markdown() + "\n"}
+                )
             if self._param.financials:
-                yohoo_res.append({"content": "calendar:\n" + pd.DataFrame(msft.calendar).to_markdown() + "\n"})
+                yohoo_res.append(
+                    {
+                        "content": "calendar:\n"
+                        + pd.DataFrame(msft.calendar).to_markdown()
+                        + "\n"
+                    }
+                )
             if self._param.balance_sheet:
-                yohoo_res.append({"content": "balance sheet:\n" + msft.balance_sheet.to_markdown() + "\n"})
                 yohoo_res.append(
-                    {"content": "quarterly balance sheet:\n" + msft.quarterly_balance_sheet.to_markdown() + "\n"})
+                    {
+                        "content": "balance sheet:\n"
+                        + msft.balance_sheet.to_markdown()
+                        + "\n"
+                    }
+                )
+                yohoo_res.append(
+                    {
+                        "content": "quarterly balance sheet:\n"
+                        + msft.quarterly_balance_sheet.to_markdown()
+                        + "\n"
+                    }
+                )
             if self._param.cash_flow_statement:
-                yohoo_res.append({"content": "cash flow statement:\n" + msft.cashflow.to_markdown() + "\n"})
                 yohoo_res.append(
-                    {"content": "quarterly cash flow statement:\n" + msft.quarterly_cashflow.to_markdown() + "\n"})
+                    {
+                        "content": "cash flow statement:\n"
+                        + msft.cashflow.to_markdown()
+                        + "\n"
+                    }
+                )
+                yohoo_res.append(
+                    {
+                        "content": "quarterly cash flow statement:\n"
+                        + msft.quarterly_cashflow.to_markdown()
+                        + "\n"
+                    }
+                )
             if self._param.news:
-                yohoo_res.append({"content": "news:\n" + pd.DataFrame(msft.news).to_markdown() + "\n"})
+                yohoo_res.append(
+                    {
+                        "content": "news:\n"
+                        + pd.DataFrame(msft.news).to_markdown()
+                        + "\n"
+                    }
+                )
         except Exception:
             logging.exception("YahooFinance got exception")
 
