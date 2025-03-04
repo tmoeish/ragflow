@@ -4,11 +4,10 @@ Reference:
  - [LightRag](https://github.com/HKUDS/LightRAG)
  - [MiniRAG](https://github.com/HKUDS/MiniRAG)
 """
+
 PROMPTS = {}
 
-PROMPTS[
-    "minirag_query2kwd"
-] = """---Role---
+PROMPTS["minirag_query2kwd"] = """---Role---
 
 You are a helpful assistant tasked with identifying both answer-type and low-level keywords in the user's query.
 
@@ -156,9 +155,7 @@ Output:
 
 """
 
-PROMPTS[
-    "keywords_extraction"
-] = """---Role---
+PROMPTS["keywords_extraction"] = """---Role---
 
 You are a helpful assistant tasked with identifying both high-level and low-level keywords in the user's query.
 

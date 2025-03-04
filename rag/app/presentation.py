@@ -42,9 +42,9 @@ class Ppt(PptParser):
                     buffered, drawing.imaging.ImageFormat.jpeg
                 )
                 imgs.append(Image.open(buffered))
-        assert len(imgs) == len(
-            txts
-        ), "Slides text and image do not match: {} vs. {}".format(len(imgs), len(txts))
+        assert len(imgs) == len(txts), (
+            "Slides text and image do not match: {} vs. {}".format(len(imgs), len(txts))
+        )
         callback(0.9, "Image extraction finished")
         self.is_english = is_english(txts)
         return [(txts[i], imgs[i]) for i in range(len(txts))]

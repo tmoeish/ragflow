@@ -116,7 +116,12 @@ def init_settings():
         "secret_key", str(date.today())
     )
 
-    global AUTHENTICATION_CONF, CLIENT_AUTHENTICATION, HTTP_APP_KEY, GITHUB_OAUTH, FEISHU_OAUTH
+    global \
+        AUTHENTICATION_CONF, \
+        CLIENT_AUTHENTICATION, \
+        HTTP_APP_KEY, \
+        GITHUB_OAUTH, \
+        FEISHU_OAUTH
     # authentication
     AUTHENTICATION_CONF = get_base_config("authentication", {})
 
@@ -127,7 +132,7 @@ def init_settings():
     FEISHU_OAUTH = get_base_config("oauth", {}).get("feishu")
 
     global DOC_ENGINE, docStoreConn, retrievaler, kg_retrievaler
-    DOC_ENGINE = os.environ.get("DOC_ENGINE", "elasticsearch")
+    DOC_ENGINE = os.environ.get("DOC_ENGINE", "infinity")
     lower_case_doc_engine = DOC_ENGINE.lower()
     if lower_case_doc_engine == "elasticsearch":
         docStoreConn = rag.utils.es_conn.ESConnection()

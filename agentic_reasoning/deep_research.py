@@ -82,9 +82,9 @@ class DeepResearcher:
                     }
                 )
             else:
-                msg_hisotry[-1][
-                    "content"
-                ] += "\n\nContinues reasoning with the new information.\n"
+                msg_hisotry[-1]["content"] += (
+                    "\n\nContinues reasoning with the new information.\n"
+                )
             for ans in self.chat_mdl.chat_streamly(
                 REASON_PROMPT, msg_hisotry, {"temperature": 0.7}
             ):
@@ -109,7 +109,7 @@ class DeepResearcher:
             for search_query in queries:
                 logging.info(f"[THINK]Query: {ii}. {search_query}")
                 msg_hisotry.append({"role": "assistant", "content": search_query})
-                think += f"\n\n> {ii +1}. {search_query}\n\n"
+                think += f"\n\n> {ii + 1}. {search_query}\n\n"
                 yield {
                     "answer": think + "</think>",
                     "reference": {},

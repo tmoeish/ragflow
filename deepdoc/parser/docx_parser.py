@@ -23,7 +23,6 @@ from io import BytesIO
 
 
 class RAGFlowDocxParser:
-
     def __extract_table_content(self, tb):
         df = []
         for row in tb.rows:
@@ -31,7 +30,6 @@ class RAGFlowDocxParser:
         return self.__compose_table_content(pd.DataFrame(df))
 
     def __compose_table_content(self, df):
-
         def blockType(b):
             patt = [
                 ("^(20|19)[0-9]{2}[年/-][0-9]{1,2}[月/-][0-9]{1,2}日*$", "Dt"),

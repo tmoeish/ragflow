@@ -82,7 +82,6 @@ def set_conversation():
 def get():
     conv_id = request.args["conversation_id"]
     try:
-
         e, conv = ConversationService.get_by_id(conv_id)
         if not e:
             return get_data_error_result(message="Conversation not found!")
@@ -128,7 +127,6 @@ def get():
 
 @manager.route("/getsse/<dialog_id>", methods=["GET"])  # type: ignore # noqa: F821
 def getsse(dialog_id):
-
     token = request.headers.get("Authorization").split()
     if len(token) != 2:
         return get_data_error_result(message='Authorization is not valid!"')
@@ -254,23 +252,35 @@ def completion():
             try:
                 for ans in chat(dia, msg, True, **req):
                     ans = structure_answer(conv, ans, message_id, conv.id)
-                    yield "data:" + json.dumps(
-                        {"code": 0, "message": "", "data": ans}, ensure_ascii=False
-                    ) + "\n\n"
+                    yield (
+                        "data:"
+                        + json.dumps(
+                            {"code": 0, "message": "", "data": ans}, ensure_ascii=False
+                        )
+                        + "\n\n"
+                    )
                 ConversationService.update_by_id(conv.id, conv.to_dict())
             except Exception as e:
                 traceback.print_exc()
-                yield "data:" + json.dumps(
-                    {
-                        "code": 500,
-                        "message": str(e),
-                        "data": {"answer": "**ERROR**: " + str(e), "reference": []},
-                    },
-                    ensure_ascii=False,
-                ) + "\n\n"
-            yield "data:" + json.dumps(
-                {"code": 0, "message": "", "data": True}, ensure_ascii=False
-            ) + "\n\n"
+                yield (
+                    "data:"
+                    + json.dumps(
+                        {
+                            "code": 500,
+                            "message": str(e),
+                            "data": {"answer": "**ERROR**: " + str(e), "reference": []},
+                        },
+                        ensure_ascii=False,
+                    )
+                    + "\n\n"
+                )
+            yield (
+                "data:"
+                + json.dumps(
+                    {"code": 0, "message": "", "data": True}, ensure_ascii=False
+                )
+                + "\n\n"
+            )
 
         if req.get("stream", True):
             resp = Response(stream(), mimetype="text/event-stream")
@@ -397,21 +407,31 @@ def ask_about():
         nonlocal req, uid
         try:
             for ans in ask(req["question"], req["kb_ids"], uid):
-                yield "data:" + json.dumps(
-                    {"code": 0, "message": "", "data": ans}, ensure_ascii=False
-                ) + "\n\n"
+                yield (
+                    "data:"
+                    + json.dumps(
+                        {"code": 0, "message": "", "data": ans}, ensure_ascii=False
+                    )
+                    + "\n\n"
+                )
         except Exception as e:
-            yield "data:" + json.dumps(
-                {
-                    "code": 500,
-                    "message": str(e),
-                    "data": {"answer": "**ERROR**: " + str(e), "reference": []},
-                },
-                ensure_ascii=False,
-            ) + "\n\n"
-        yield "data:" + json.dumps(
-            {"code": 0, "message": "", "data": True}, ensure_ascii=False
-        ) + "\n\n"
+            yield (
+                "data:"
+                + json.dumps(
+                    {
+                        "code": 500,
+                        "message": str(e),
+                        "data": {"answer": "**ERROR**: " + str(e), "reference": []},
+                    },
+                    ensure_ascii=False,
+                )
+                + "\n\n"
+            )
+        yield (
+            "data:"
+            + json.dumps({"code": 0, "message": "", "data": True}, ensure_ascii=False)
+            + "\n\n"
+        )
 
     resp = Response(stream(), mimetype="text/event-stream")
     resp.headers.add_header("Cache-control", "no-cache")

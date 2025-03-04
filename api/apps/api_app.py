@@ -288,10 +288,14 @@ def completion():
                             }
                             fillin_conv(ans)
                             rename_field(ans)
-                            yield "data:" + json.dumps(
-                                {"code": 0, "message": "", "data": ans},
-                                ensure_ascii=False,
-                            ) + "\n\n"
+                            yield (
+                                "data:"
+                                + json.dumps(
+                                    {"code": 0, "message": "", "data": ans},
+                                    ensure_ascii=False,
+                                )
+                                + "\n\n"
+                            )
 
                         canvas.messages.append(
                             {
@@ -306,20 +310,28 @@ def completion():
                         cvs.dsl = json.loads(str(canvas))
                         API4ConversationService.append_message(conv.id, conv.to_dict())
                     except Exception as e:
-                        yield "data:" + json.dumps(
-                            {
-                                "code": 500,
-                                "message": str(e),
-                                "data": {
-                                    "answer": "**ERROR**: " + str(e),
-                                    "reference": [],
+                        yield (
+                            "data:"
+                            + json.dumps(
+                                {
+                                    "code": 500,
+                                    "message": str(e),
+                                    "data": {
+                                        "answer": "**ERROR**: " + str(e),
+                                        "reference": [],
+                                    },
                                 },
-                            },
-                            ensure_ascii=False,
-                        ) + "\n\n"
-                    yield "data:" + json.dumps(
-                        {"code": 0, "message": "", "data": True}, ensure_ascii=False
-                    ) + "\n\n"
+                                ensure_ascii=False,
+                            )
+                            + "\n\n"
+                        )
+                    yield (
+                        "data:"
+                        + json.dumps(
+                            {"code": 0, "message": "", "data": True}, ensure_ascii=False
+                        )
+                        + "\n\n"
+                    )
 
                 resp = Response(sse(), mimetype="text/event-stream")
                 resp.headers.add_header("Cache-control", "no-cache")
@@ -368,22 +380,34 @@ def completion():
                 for ans in chat(dia, msg, True, **req):
                     fillin_conv(ans)
                     rename_field(ans)
-                    yield "data:" + json.dumps(
-                        {"code": 0, "message": "", "data": ans}, ensure_ascii=False
-                    ) + "\n\n"
+                    yield (
+                        "data:"
+                        + json.dumps(
+                            {"code": 0, "message": "", "data": ans}, ensure_ascii=False
+                        )
+                        + "\n\n"
+                    )
                 API4ConversationService.append_message(conv.id, conv.to_dict())
             except Exception as e:
-                yield "data:" + json.dumps(
-                    {
-                        "code": 500,
-                        "message": str(e),
-                        "data": {"answer": "**ERROR**: " + str(e), "reference": []},
-                    },
-                    ensure_ascii=False,
-                ) + "\n\n"
-            yield "data:" + json.dumps(
-                {"code": 0, "message": "", "data": True}, ensure_ascii=False
-            ) + "\n\n"
+                yield (
+                    "data:"
+                    + json.dumps(
+                        {
+                            "code": 500,
+                            "message": str(e),
+                            "data": {"answer": "**ERROR**: " + str(e), "reference": []},
+                        },
+                        ensure_ascii=False,
+                    )
+                    + "\n\n"
+                )
+            yield (
+                "data:"
+                + json.dumps(
+                    {"code": 0, "message": "", "data": True}, ensure_ascii=False
+                )
+                + "\n\n"
+            )
 
         if req.get("stream", True):
             resp = Response(stream(), mimetype="text/event-stream")

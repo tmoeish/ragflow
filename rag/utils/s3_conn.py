@@ -115,12 +115,10 @@ class RAGFlowS3(object):
 
     def obj_exist(self, bucket, fnm):
         try:
-
             if self.conn.head_object(Bucket=bucket, Key=fnm):
                 return True
         except ClientError as e:
             if e.response["Error"]["Code"] == "404":
-
                 return False
             else:
                 raise

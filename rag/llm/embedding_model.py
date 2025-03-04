@@ -306,7 +306,6 @@ class OllamaEmbed(Base):
 
 
 class FastEmbed(DefaultEmbedding):
-
     def __init__(
         self,
         key: str | None = None,
@@ -430,7 +429,6 @@ class JinaEmbed(Base):
         model_name="jina-embeddings-v3",
         base_url="https://api.jina.ai/v1/embeddings",
     ):
-
         self.base_url = "https://api.jina.ai/v1/embeddings"
         self.headers = {
             "Content-Type": "application/json",
@@ -468,7 +466,6 @@ class InfinityEmbed(Base):
         engine_kwargs: dict = {},
         key=None,
     ):
-
         from infinity_emb import EngineArgs
         from infinity_emb.engine import AsyncEngineArray
 

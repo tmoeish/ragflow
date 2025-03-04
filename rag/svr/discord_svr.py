@@ -48,7 +48,6 @@ async def on_message(message):
         return
 
     if client.user.mentioned_in(message):
-
         if len(message.content.split("> ")) == 1:
             await message.channel.send("Hi~ How can I help you? ")
         else:

@@ -92,22 +92,30 @@ def completion(tenant_id, agent_id, question, session_id=None, stream=True, **kw
         }
         API4ConversationService.save(**conv)
         if query:
-            yield "data:" + json.dumps(
-                {
-                    "code": 0,
-                    "message": "",
-                    "data": {
-                        "session_id": session_id,
-                        "answer": canvas.get_prologue(),
-                        "reference": [],
-                        "param": canvas.get_preset_param(),
+            yield (
+                "data:"
+                + json.dumps(
+                    {
+                        "code": 0,
+                        "message": "",
+                        "data": {
+                            "session_id": session_id,
+                            "answer": canvas.get_prologue(),
+                            "reference": [],
+                            "param": canvas.get_preset_param(),
+                        },
                     },
-                },
-                ensure_ascii=False,
-            ) + "\n\n"
-            yield "data:" + json.dumps(
-                {"code": 0, "message": "", "data": True}, ensure_ascii=False
-            ) + "\n\n"
+                    ensure_ascii=False,
+                )
+                + "\n\n"
+            )
+            yield (
+                "data:"
+                + json.dumps(
+                    {"code": 0, "message": "", "data": True}, ensure_ascii=False
+                )
+                + "\n\n"
+            )
             return
         else:
             conv = API4Conversation(**conv)
@@ -129,22 +137,33 @@ def completion(tenant_id, agent_id, question, session_id=None, stream=True, **kw
         try:
             for ans in canvas.run(stream=stream):
                 if ans.get("running_status"):
-                    yield "data:" + json.dumps(
-                        {
-                            "code": 0,
-                            "message": "",
-                            "data": {"answer": ans["content"], "running_status": True},
-                        },
-                        ensure_ascii=False,
-                    ) + "\n\n"
+                    yield (
+                        "data:"
+                        + json.dumps(
+                            {
+                                "code": 0,
+                                "message": "",
+                                "data": {
+                                    "answer": ans["content"],
+                                    "running_status": True,
+                                },
+                            },
+                            ensure_ascii=False,
+                        )
+                        + "\n\n"
+                    )
                     continue
                 for k in ans.keys():
                     final_ans[k] = ans[k]
                 ans = {"answer": ans["content"], "reference": ans.get("reference", [])}
                 ans = structure_answer(conv, ans, message_id, session_id)
-                yield "data:" + json.dumps(
-                    {"code": 0, "message": "", "data": ans}, ensure_ascii=False
-                ) + "\n\n"
+                yield (
+                    "data:"
+                    + json.dumps(
+                        {"code": 0, "message": "", "data": ans}, ensure_ascii=False
+                    )
+                    + "\n\n"
+                )
 
             canvas.messages.append(
                 {
@@ -163,17 +182,23 @@ def completion(tenant_id, agent_id, question, session_id=None, stream=True, **kw
             traceback.print_exc()
             conv.dsl = json.loads(str(canvas))
             API4ConversationService.append_message(conv.id, conv.to_dict())
-            yield "data:" + json.dumps(
-                {
-                    "code": 500,
-                    "message": str(e),
-                    "data": {"answer": "**ERROR**: " + str(e), "reference": []},
-                },
-                ensure_ascii=False,
-            ) + "\n\n"
-        yield "data:" + json.dumps(
-            {"code": 0, "message": "", "data": True}, ensure_ascii=False
-        ) + "\n\n"
+            yield (
+                "data:"
+                + json.dumps(
+                    {
+                        "code": 500,
+                        "message": str(e),
+                        "data": {"answer": "**ERROR**: " + str(e), "reference": []},
+                    },
+                    ensure_ascii=False,
+                )
+                + "\n\n"
+            )
+        yield (
+            "data:"
+            + json.dumps({"code": 0, "message": "", "data": True}, ensure_ascii=False)
+            + "\n\n"
+        )
 
     else:
         for answer in canvas.run(stream=False):

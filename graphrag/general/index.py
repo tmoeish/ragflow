@@ -165,7 +165,6 @@ class WithCommunity(Dealer):
     def __init__(
         self, tenant_id: str, kb_id: str, llm_bdl, embed_bdl=None, callback=None
     ):
-
         self.community_structure = None
         self.community_reports = None
         self.llm_bdl = llm_bdl

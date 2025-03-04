@@ -36,13 +36,13 @@ class DecodeImage(object):
     def __call__(self, data):
         img = data["image"]
         if six.PY2:
-            assert (
-                isinstance(img, str) and len(img) > 0
-            ), "invalid input 'img' in DecodeImage"
+            assert isinstance(img, str) and len(img) > 0, (
+                "invalid input 'img' in DecodeImage"
+            )
         else:
-            assert (
-                isinstance(img, bytes) and len(img) > 0
-            ), "invalid input 'img' in DecodeImage"
+            assert isinstance(img, bytes) and len(img) > 0, (
+                "invalid input 'img' in DecodeImage"
+            )
         img = np.frombuffer(img, dtype="uint8")
         if self.ignore_orientation:
             img = cv2.imdecode(img, cv2.IMREAD_IGNORE_ORIENTATION | cv2.IMREAD_COLOR)
@@ -164,14 +164,13 @@ class Pad(object):
         self.size_div = size_div
 
     def __call__(self, data):
-
         img = data["image"]
         img_h, img_w = img.shape[0], img.shape[1]
         if self.size:
             resize_h2, resize_w2 = self.size
-            assert (
-                img_h < resize_h2 and img_w < resize_w2
-            ), "(h, w) of target size should be greater than (img_h, img_w)"
+            assert img_h < resize_h2 and img_w < resize_w2, (
+                "(h, w) of target size should be greater than (img_h, img_w)"
+            )
         else:
             resize_h2 = max(
                 int(math.ceil(img.shape[0] / self.size_div) * self.size_div),
@@ -513,8 +512,9 @@ class KieResize(object):
         max_long_edge = max(scale)
         max_short_edge = min(scale)
         scale_factor = min(max_long_edge / max(h, w), max_short_edge / min(h, w))
-        resize_w, resize_h = int(w * float(scale_factor) + 0.5), int(
-            h * float(scale_factor) + 0.5
+        resize_w, resize_h = (
+            int(w * float(scale_factor) + 0.5),
+            int(h * float(scale_factor) + 0.5),
         )
         max_stride = 32
         resize_h = (resize_h + max_stride - 1) // max_stride * max_stride

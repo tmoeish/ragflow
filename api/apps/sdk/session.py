@@ -202,9 +202,7 @@ def chat_completion(tenant_id, chat_id):
         return get_result(data=answer)
 
 
-@manager.route(
-    "chats_openai/<chat_id>/chat/completions", methods=["POST"]
-)  # noqa: F821
+@manager.route("chats_openai/<chat_id>/chat/completions", methods=["POST"])  # noqa: F821
 @validate_request("model", "messages")  # noqa: F821
 @token_required
 def chat_completion_openai_like(tenant_id, chat_id):
@@ -592,21 +590,31 @@ def ask_about(tenant_id):
         nonlocal req, uid
         try:
             for ans in ask(req["question"], req["kb_ids"], uid):
-                yield "data:" + json.dumps(
-                    {"code": 0, "message": "", "data": ans}, ensure_ascii=False
-                ) + "\n\n"
+                yield (
+                    "data:"
+                    + json.dumps(
+                        {"code": 0, "message": "", "data": ans}, ensure_ascii=False
+                    )
+                    + "\n\n"
+                )
         except Exception as e:
-            yield "data:" + json.dumps(
-                {
-                    "code": 500,
-                    "message": str(e),
-                    "data": {"answer": "**ERROR**: " + str(e), "reference": []},
-                },
-                ensure_ascii=False,
-            ) + "\n\n"
-        yield "data:" + json.dumps(
-            {"code": 0, "message": "", "data": True}, ensure_ascii=False
-        ) + "\n\n"
+            yield (
+                "data:"
+                + json.dumps(
+                    {
+                        "code": 500,
+                        "message": str(e),
+                        "data": {"answer": "**ERROR**: " + str(e), "reference": []},
+                    },
+                    ensure_ascii=False,
+                )
+                + "\n\n"
+            )
+        yield (
+            "data:"
+            + json.dumps({"code": 0, "message": "", "data": True}, ensure_ascii=False)
+            + "\n\n"
+        )
 
     resp = Response(stream(), mimetype="text/event-stream")
     resp.headers.add_header("Cache-control", "no-cache")

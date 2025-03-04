@@ -134,7 +134,6 @@ class BaiduFanyi(ComponentBase, ABC):
     component_name = "BaiduFanyi"
 
     def _run(self, history, **kwargs):
-
         ans = self.get_input()
         ans = " - ".join(ans["content"]) if "content" in ans else ""
         if not ans:

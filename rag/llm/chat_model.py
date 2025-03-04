@@ -680,7 +680,6 @@ class MiniMaxChat(Base):
 
 
 class MistralChat(Base):
-
     def __init__(self, key, model_name, base_url=None):
         from mistralai.client import MistralClient
 
@@ -738,7 +737,6 @@ class MistralChat(Base):
 
 
 class BedrockChat(Base):
-
     def __init__(self, key, model_name, **kwargs):
         import boto3
 
@@ -849,7 +847,6 @@ class BedrockChat(Base):
 
 
 class GeminiChat(Base):
-
     def __init__(self, key, model_name, base_url=None):
         from google.generativeai import client, GenerativeModel
 
@@ -1298,9 +1295,9 @@ class SparkChat(Base):
             "Spark-4.0-Ultra": "4.0Ultra",
         }
         version2model = {v: k for k, v in model2version.items()}
-        assert (
-            model_name in model2version or model_name in version2model
-        ), f"The given model name is not supported yet. Support: {list(model2version.keys())}"
+        assert model_name in model2version or model_name in version2model, (
+            f"The given model name is not supported yet. Support: {list(model2version.keys())}"
+        )
         if model_name in model2version:
             model_version = model2version[model_name]
         else:

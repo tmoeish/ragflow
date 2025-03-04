@@ -36,7 +36,6 @@ def retrieval(tenant_id):
     top = int(retrieval_setting.get("top_k", 1024))
 
     try:
-
         e, kb = KnowledgebaseService.get_by_id(kb_id)
         if not e:
             return build_error_result(

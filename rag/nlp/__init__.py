@@ -625,7 +625,6 @@ def naive_merge(sections, chunk_token_num=128, delimiter="\n。；！？"):
             pos = ""
         # Ensure that the length of the merged chunk does not exceed chunk_token_num
         if tk_nums[-1] > chunk_token_num:
-
             if t.find(pos) < 0:
                 t += pos
             cks.append(t)

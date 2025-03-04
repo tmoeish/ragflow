@@ -258,9 +258,9 @@ class Canvas:
                 "relevant",
             ]:
                 switch_out = cpn["obj"].output()[1].iloc[0, 0]
-                assert (
-                    switch_out in self.components
-                ), "{}'s output: {} not valid.".format(cpn_id, switch_out)
+                assert switch_out in self.components, (
+                    "{}'s output: {} not valid.".format(cpn_id, switch_out)
+                )
                 for m in prepare2run([switch_out]):
                     yield {"content": m, "running_status": True}
                 continue

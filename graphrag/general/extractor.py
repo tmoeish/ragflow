@@ -99,7 +99,6 @@ class Extractor:
         return dict(maybe_nodes), dict(maybe_edges)
 
     def __call__(self, chunks: list[tuple[str, str]], callback: Callable | None = None):
-
         results = []
         max_workers = int(os.environ.get("GRAPH_EXTRACTOR_MAX_WORKERS", 10))
         with ThreadPoolExecutor(max_workers=max_workers) as exe:

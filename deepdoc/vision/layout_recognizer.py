@@ -232,11 +232,13 @@ class LayoutRecognizer4YOLOv10(LayoutRecognizer):
             ww, hh = new_unpad
             img = np.array(cv2.cvtColor(img, cv2.COLOR_BGR2RGB)).astype(np.float32)
             img = cv2.resize(img, new_unpad, interpolation=cv2.INTER_LINEAR)
-            top, bottom = int(round(dh - 0.1)) if self.center else 0, int(
-                round(dh + 0.1)
+            top, bottom = (
+                int(round(dh - 0.1)) if self.center else 0,
+                int(round(dh + 0.1)),
             )
-            left, right = int(round(dw - 0.1)) if self.center else 0, int(
-                round(dw + 0.1)
+            left, right = (
+                int(round(dw - 0.1)) if self.center else 0,
+                int(round(dw + 0.1)),
             )
             img = cv2.copyMakeBorder(
                 img,

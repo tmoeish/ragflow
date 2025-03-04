@@ -4,6 +4,7 @@
 Reference:
  - [graphrag](https://github.com/microsoft/graphrag)
 """
+
 import logging
 import re
 from typing import Any, Callable
@@ -28,7 +29,6 @@ class GraphExtractionResult:
 
 
 class GraphExtractor(Extractor):
-
     _max_gleanings: int
 
     def __init__(

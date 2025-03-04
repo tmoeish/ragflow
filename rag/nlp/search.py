@@ -283,10 +283,10 @@ class Dealer:
                     )
                 )
 
-        assert len(ans_v[0]) == len(
-            chunk_v[0]
-        ), "The dimension of query and chunk do not match: {} vs. {}".format(
-            len(ans_v[0]), len(chunk_v[0])
+        assert len(ans_v[0]) == len(chunk_v[0]), (
+            "The dimension of query and chunk do not match: {} vs. {}".format(
+                len(ans_v[0]), len(chunk_v[0])
+            )
         )
 
         chunks_tks = [

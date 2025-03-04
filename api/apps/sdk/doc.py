@@ -176,9 +176,7 @@ def upload(dataset_id, tenant_id):
     return get_result(data=renamed_doc_list)
 
 
-@manager.route(
-    "/datasets/<dataset_id>/documents/<document_id>", methods=["PUT"]
-)  # noqa: F821
+@manager.route("/datasets/<dataset_id>/documents/<document_id>", methods=["PUT"])  # noqa: F821
 @token_required
 def update_doc(tenant_id, dataset_id, document_id):
     """
@@ -328,9 +326,7 @@ def update_doc(tenant_id, dataset_id, document_id):
     return get_result()
 
 
-@manager.route(
-    "/datasets/<dataset_id>/documents/<document_id>", methods=["GET"]
-)  # noqa: F821
+@manager.route("/datasets/<dataset_id>/documents/<document_id>", methods=["GET"])  # noqa: F821
 @token_required
 def download(tenant_id, dataset_id, document_id):
     """
@@ -757,9 +753,7 @@ def stop_parsing(tenant_id, dataset_id):
     return get_result()
 
 
-@manager.route(
-    "/datasets/<dataset_id>/documents/<document_id>/chunks", methods=["GET"]
-)  # noqa: F821
+@manager.route("/datasets/<dataset_id>/documents/<document_id>/chunks", methods=["GET"])  # noqa: F821
 @token_required
 def list_chunks(tenant_id, dataset_id, document_id):
     """

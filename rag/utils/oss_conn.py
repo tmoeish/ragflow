@@ -95,8 +95,9 @@ class RAGFlowOSS(object):
         bucket = self.bucket
         fnm = "txtxtxtxt1"
         fnm, binary = (
-            f"{self.prefix_path}/{fnm}" if self.prefix_path else fnm
-        ), b"_t@@@1"
+            (f"{self.prefix_path}/{fnm}" if self.prefix_path else fnm),
+            b"_t@@@1",
+        )
         if not self.bucket_exists(bucket):
             self.conn.create_bucket(Bucket=bucket)
             logging.debug(f"create bucket {bucket} ********")

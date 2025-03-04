@@ -22,7 +22,6 @@ import pandas as pd
 
 class RAGFlowExcelParser:
     def html(self, fnm, chunk_rows=256):
-
         # if isinstance(fnm, str):
         #     wb = load_workbook(fnm)
         # else:

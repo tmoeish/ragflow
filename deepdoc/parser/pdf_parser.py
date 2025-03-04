@@ -942,7 +942,6 @@ class RAGFlowPdfParser:
         )
 
     def __filterout_scraps(self, boxes, ZM):
-
         def width(b):
             return b["x1"] - b["x0"]
 
@@ -989,8 +988,8 @@ class RAGFlowPdfParser:
 
                     if not usefull(boxes[i]):
                         continue
-                    if mmj or (
-                        self._x_dis(boxes[i], line) < pw / 10
+                    if (
+                        mmj or (self._x_dis(boxes[i], line) < pw / 10)
                     ):  # and abs(width(boxes[i])-width_mean)/max(width(boxes[i]),width_mean)<0.5):
                         # concat following
                         dfs(boxes[i], i)

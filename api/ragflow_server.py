@@ -18,31 +18,29 @@
 # from beartype.claw import beartype_all  # <-- you didn't sign up for this
 # beartype_all(conf=BeartypeConf(violation_type=UserWarning))    # <-- emit warnings from all code
 
+from rag.settings import print_rag_settings
+from api.utils import show_configs
+from api.versions import get_ragflow_version
+from api.db.init_data import init_web_data
+from api.db.db_models import init_database_tables as init_web_db
+from api import utils
+from api.db.services.document_service import DocumentService
+from api.db.runtime_config import RuntimeConfig
+from api.apps import app
+from api import settings
+from werkzeug.serving import run_simple
+import threading
+from concurrent.futures import ThreadPoolExecutor
+import traceback
+import time
+import sys
+import signal
+import os
+import logging
 from api.utils.log_utils import initRootLogger
 
 initRootLogger("ragflow_server")
 
-import logging
-import os
-import signal
-import sys
-import time
-import traceback
-from concurrent.futures import ThreadPoolExecutor
-import threading
-
-from werkzeug.serving import run_simple
-from api import settings
-from api.apps import app
-from api.db.runtime_config import RuntimeConfig
-from api.db.services.document_service import DocumentService
-from api import utils
-
-from api.db.db_models import init_database_tables as init_web_db
-from api.db.init_data import init_web_data
-from api.versions import get_ragflow_version
-from api.utils import show_configs
-from rag.settings import print_rag_settings
 
 stop_event = threading.Event()
 
@@ -66,11 +64,11 @@ def signal_handler(sig, frame):
 if __name__ == "__main__":
     logging.info(
         r"""
-        ____   ___    ______ ______ __               
+        ____   ___    ______ ______ __
        / __ \ /   |  / ____// ____// /____  _      __
       / /_/ // /| | / / __ / /_   / // __ \| | /| / /
-     / _, _// ___ |/ /_/ // __/  / // /_/ /| |/ |/ / 
-    /_/ |_|/_/  |_|\____//_/    /_/ \____/ |__/|__/                             
+     / _, _// ___ |/ /_/ // __/  / // /_/ /| |/ |/ /
+    /_/ |_|/_/  |_|\____//_/    /_/ \____/ |__/|__/
 
     """
     )

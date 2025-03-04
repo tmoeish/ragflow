@@ -128,23 +128,29 @@ def completion(
             "user_id": kwargs.get("user_id", ""),
         }
         ConversationService.save(**conv)
-        yield "data:" + json.dumps(
-            {
-                "code": 0,
-                "message": "",
-                "data": {
-                    "answer": conv["message"][0]["content"],
-                    "reference": {},
-                    "audio_binary": None,
-                    "id": None,
-                    "session_id": session_id,
+        yield (
+            "data:"
+            + json.dumps(
+                {
+                    "code": 0,
+                    "message": "",
+                    "data": {
+                        "answer": conv["message"][0]["content"],
+                        "reference": {},
+                        "audio_binary": None,
+                        "id": None,
+                        "session_id": session_id,
+                    },
                 },
-            },
-            ensure_ascii=False,
-        ) + "\n\n"
-        yield "data:" + json.dumps(
-            {"code": 0, "message": "", "data": True}, ensure_ascii=False
-        ) + "\n\n"
+                ensure_ascii=False,
+            )
+            + "\n\n"
+        )
+        yield (
+            "data:"
+            + json.dumps({"code": 0, "message": "", "data": True}, ensure_ascii=False)
+            + "\n\n"
+        )
         return
 
     conv = ConversationService.query(id=session_id, dialog_id=chat_id)
@@ -173,22 +179,28 @@ def completion(
         try:
             for ans in chat(dia, msg, True, **kwargs):
                 ans = structure_answer(conv, ans, message_id, session_id)
-                yield "data:" + json.dumps(
-                    {"code": 0, "data": ans}, ensure_ascii=False
-                ) + "\n\n"
+                yield (
+                    "data:"
+                    + json.dumps({"code": 0, "data": ans}, ensure_ascii=False)
+                    + "\n\n"
+                )
             ConversationService.update_by_id(conv.id, conv.to_dict())
         except Exception as e:
-            yield "data:" + json.dumps(
-                {
-                    "code": 500,
-                    "message": str(e),
-                    "data": {"answer": "**ERROR**: " + str(e), "reference": []},
-                },
-                ensure_ascii=False,
-            ) + "\n\n"
-        yield "data:" + json.dumps(
-            {"code": 0, "data": True}, ensure_ascii=False
-        ) + "\n\n"
+            yield (
+                "data:"
+                + json.dumps(
+                    {
+                        "code": 500,
+                        "message": str(e),
+                        "data": {"answer": "**ERROR**: " + str(e), "reference": []},
+                    },
+                    ensure_ascii=False,
+                )
+                + "\n\n"
+            )
+        yield (
+            "data:" + json.dumps({"code": 0, "data": True}, ensure_ascii=False) + "\n\n"
+        )
 
     else:
         answer = None
@@ -217,23 +229,29 @@ def iframe_completion(dialog_id, question, session_id=None, stream=True, **kwarg
             ],
         }
         API4ConversationService.save(**conv)
-        yield "data:" + json.dumps(
-            {
-                "code": 0,
-                "message": "",
-                "data": {
-                    "answer": conv["message"][0]["content"],
-                    "reference": {},
-                    "audio_binary": None,
-                    "id": None,
-                    "session_id": session_id,
+        yield (
+            "data:"
+            + json.dumps(
+                {
+                    "code": 0,
+                    "message": "",
+                    "data": {
+                        "answer": conv["message"][0]["content"],
+                        "reference": {},
+                        "audio_binary": None,
+                        "id": None,
+                        "session_id": session_id,
+                    },
                 },
-            },
-            ensure_ascii=False,
-        ) + "\n\n"
-        yield "data:" + json.dumps(
-            {"code": 0, "message": "", "data": True}, ensure_ascii=False
-        ) + "\n\n"
+                ensure_ascii=False,
+            )
+            + "\n\n"
+        )
+        yield (
+            "data:"
+            + json.dumps({"code": 0, "message": "", "data": True}, ensure_ascii=False)
+            + "\n\n"
+        )
         return
     else:
         session_id = session_id
@@ -265,22 +283,32 @@ def iframe_completion(dialog_id, question, session_id=None, stream=True, **kwarg
         try:
             for ans in chat(dia, msg, True, **kwargs):
                 ans = structure_answer(conv, ans, message_id, session_id)
-                yield "data:" + json.dumps(
-                    {"code": 0, "message": "", "data": ans}, ensure_ascii=False
-                ) + "\n\n"
+                yield (
+                    "data:"
+                    + json.dumps(
+                        {"code": 0, "message": "", "data": ans}, ensure_ascii=False
+                    )
+                    + "\n\n"
+                )
             API4ConversationService.append_message(conv.id, conv.to_dict())
         except Exception as e:
-            yield "data:" + json.dumps(
-                {
-                    "code": 500,
-                    "message": str(e),
-                    "data": {"answer": "**ERROR**: " + str(e), "reference": []},
-                },
-                ensure_ascii=False,
-            ) + "\n\n"
-        yield "data:" + json.dumps(
-            {"code": 0, "message": "", "data": True}, ensure_ascii=False
-        ) + "\n\n"
+            yield (
+                "data:"
+                + json.dumps(
+                    {
+                        "code": 500,
+                        "message": str(e),
+                        "data": {"answer": "**ERROR**: " + str(e), "reference": []},
+                    },
+                    ensure_ascii=False,
+                )
+                + "\n\n"
+            )
+        yield (
+            "data:"
+            + json.dumps({"code": 0, "message": "", "data": True}, ensure_ascii=False)
+            + "\n\n"
+        )
 
     else:
         answer = None

@@ -106,7 +106,7 @@ def kb_prompt(kbinfos, max_tokens):
         if max_tokens * 0.97 < used_token_count:
             knowledges = knowledges[:i]
             logging.warning(
-                f"Not all the retrieval into prompt: {i+1}/{len(knowledges)}"
+                f"Not all the retrieval into prompt: {i + 1}/{len(knowledges)}"
             )
             break
 

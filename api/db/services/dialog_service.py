@@ -113,9 +113,9 @@ def chat_solo(dialog, messages, stream=True):
 
 
 def chat(dialog, messages, stream=True, **kwargs):
-    assert (
-        messages[-1]["role"] == "user"
-    ), "The last content of this conversation is not from user."
+    assert messages[-1]["role"] == "user", (
+        "The last content of this conversation is not from user."
+    )
     if not dialog.kb_ids:
         for ans in chat_solo(dialog, messages, stream):
             yield ans
@@ -615,9 +615,7 @@ def ask(question, kb_ids, tenant_id):
 
     The above is information from knowledge bases.
 
-    """ % "\n".join(
-        knowledges
-    )
+    """ % "\n".join(knowledges)
     msg = [{"role": "user", "content": question}]
 
     def decorate_answer(answer):
