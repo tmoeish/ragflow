@@ -55,13 +55,21 @@ from functools import partial
 @manager.route("/new_token", methods=["POST"])  # noqa: F821
 @login_required
 def new_token():
+    """
+    创建新的API令牌
+    - 验证用户租户信息
+    - 生成新的令牌
+    - 保存令牌信息到数据库
+    """
     req = request.json
     try:
+        # 获取用户的租户信息
         tenants = UserTenantService.query(user_id=current_user.id)
         if not tenants:
             return get_data_error_result(message="Tenant not found!")
 
         tenant_id = tenants[0].tenant_id
+        # 构建令牌对象
         obj = {
             "tenant_id": tenant_id,
             "token": generate_confirmation_token(tenant_id),
@@ -70,6 +78,7 @@ def new_token():
             "update_time": None,
             "update_date": None,
         }
+        # 根据请求类型设置对话ID
         if req.get("canvas_id"):
             obj["dialog_id"] = req["canvas_id"]
             obj["source"] = "agent"
@@ -87,16 +96,22 @@ def new_token():
 @manager.route("/token_list", methods=["GET"])  # noqa: F821
 @login_required
 def token_list():
+    """
+    获取指定对话或画布的令牌列表
+    """
     try:
+        # 验证租户信息
         tenants = UserTenantService.query(user_id=current_user.id)
         if not tenants:
             return get_data_error_result(message="Tenant not found!")
 
+        # 获取对话ID或画布ID
         id = (
             request.args["dialog_id"]
             if "dialog_id" in request.args
             else request.args["canvas_id"]
         )
+        # 查询令牌列表
         objs = APITokenService.query(tenant_id=tenants[0].tenant_id, dialog_id=id)
         return get_json_result(data=[o.to_dict() for o in objs])
     except Exception as e:
@@ -107,6 +122,9 @@ def token_list():
 @validate_request("tokens", "tenant_id")
 @login_required
 def rm():
+    """
+    删除指定的API令牌
+    """
     req = request.json
     try:
         for token in req["tokens"]:
@@ -118,13 +136,22 @@ def rm():
         return server_error_response(e)
 
 
-@manager.route("/stats", methods=["GET"])  # noqa: F821
+@manager.route("/stats", methods=["GET"])
 @login_required
 def stats():
+    """
+    获取API使用统计数据
+    - 获取指定时间范围内的API调用统计
+    - 包括PV(页面访问量)、UV(独立访客数)、响应速度、token使用量等统计数据
+    """
     try:
+        # 验证租户信息
         tenants = UserTenantService.query(user_id=current_user.id)
         if not tenants:
             return get_data_error_result(message="Tenant not found!")
+
+        # 获取统计数据
+        # from_date默认为7天前,to_date默认为当前时间
         objs = API4ConversationService.stats(
             tenants[0].tenant_id,
             request.args.get(
@@ -134,24 +161,35 @@ def stats():
             request.args.get("to_date", datetime.now().strftime("%Y-%m-%d %H:%M:%S")),
             "agent" if "canvas_id" in request.args else None,
         )
+
+        # 整理统计结果
         res = {
-            "pv": [(o["dt"], o["pv"]) for o in objs],
-            "uv": [(o["dt"], o["uv"]) for o in objs],
-            "speed": [
+            "pv": [(o["dt"], o["pv"]) for o in objs],  # 页面访问量
+            "uv": [(o["dt"], o["uv"]) for o in objs],  # 独立访客数
+            "speed": [  # 响应速度(tokens/s)
                 (o["dt"], float(o["tokens"]) / (float(o["duration"] + 0.1)))
                 for o in objs
             ],
-            "tokens": [(o["dt"], float(o["tokens"]) / 1000.0) for o in objs],
-            "round": [(o["dt"], o["round"]) for o in objs],
-            "thumb_up": [(o["dt"], o["thumb_up"]) for o in objs],
+            "tokens": [
+                (o["dt"], float(o["tokens"]) / 1000.0) for o in objs
+            ],  # token使用量(k)
+            "round": [(o["dt"], o["round"]) for o in objs],  # 对话轮次
+            "thumb_up": [(o["dt"], o["thumb_up"]) for o in objs],  # 点赞数
         }
         return get_json_result(data=res)
     except Exception as e:
         return server_error_response(e)
 
 
-@manager.route("/new_conversation", methods=["GET"])  # noqa: F821
+@manager.route("/new_conversation", methods=["GET"])
 def set_conversation():
+    """
+    创建新的对话
+    - 验证API token
+    - 根据对话类型(agent或普通对话)创建新的对话
+    - 返回对话初始信息
+    """
+    # 验证API token
     token = request.headers.get("Authorization").split()[1]
     objs = APIToken.query(token=token)
     if not objs:
@@ -161,12 +199,15 @@ def set_conversation():
             code=settings.RetCode.AUTHENTICATION_ERROR,
         )
     try:
+        # agent类型对话处理
         if objs[0].source == "agent":
+            # 获取画布信息
             e, cvs = UserCanvasService.get_by_id(objs[0].dialog_id)
             if not e:
                 return server_error_response("canvas not found.")
             if not isinstance(cvs.dsl, str):
                 cvs.dsl = json.dumps(cvs.dsl, ensure_ascii=False)
+            # 创建画布对象并获取开场白
             canvas = Canvas(cvs.dsl, objs[0].tenant_id)
             conv = {
                 "id": get_uuid(),
@@ -177,10 +218,14 @@ def set_conversation():
             }
             API4ConversationService.save(**conv)
             return get_json_result(data=conv)
+
+        # 普通对话处理
         else:
+            # 获取对话信息
             e, dia = DialogService.get_by_id(objs[0].dialog_id)
             if not e:
                 return get_data_error_result(message="Dialog not found")
+            # 创建对话
             conv = {
                 "id": get_uuid(),
                 "dialog_id": dia.id,
@@ -195,9 +240,16 @@ def set_conversation():
         return server_error_response(e)
 
 
-@manager.route("/completion", methods=["POST"])  # noqa: F821
+@manager.route("/completion", methods=["POST"])
 @validate_request("conversation_id", "messages")
 def completion():
+    """
+    处理对话补全请求
+    - 验证API token
+    - 根据对话类型(agent或普通对话)处理用户输入
+    - 返回AI助手的回复
+    """
+    # 验证API token
     token = request.headers.get("Authorization").split()[1]
     objs = APIToken.query(token=token)
     if not objs:
@@ -206,13 +258,16 @@ def completion():
             message='Authentication error: API key is invalid!"',
             code=settings.RetCode.AUTHENTICATION_ERROR,
         )
+
     req = request.json
+    # 获取对话信息
     e, conv = API4ConversationService.get_by_id(req["conversation_id"])
     if not e:
         return get_data_error_result(message="Conversation not found!")
     if "quote" not in req:
         req["quote"] = False
 
+    # 处理消息列表
     msg = []
     for m in req["messages"]:
         if m["role"] == "system":
@@ -224,7 +279,11 @@ def completion():
         msg[-1]["id"] = get_uuid()
     message_id = msg[-1]["id"]
 
+    # 辅助函数:填充对话内容
     def fillin_conv(ans):
+        """
+        更新对话内容和引用信息
+        """
         nonlocal conv, message_id
         if not conv.reference:
             conv.reference.append(ans["reference"])
@@ -237,7 +296,11 @@ def completion():
         }
         ans["id"] = message_id
 
+    # 辅助函数:重命名引用字段
     def rename_field(ans):
+        """
+        重命名引用中的字段名称
+        """
         reference = ans["reference"]
         if not isinstance(reference, dict):
             return
@@ -247,18 +310,22 @@ def completion():
                 chunk_i.pop("docnm_kwd")
 
     try:
+        # agent类型对话处理
         if conv.source == "agent":
             stream = req.get("stream", True)
             conv.message.append(msg[-1])
+            # 获取画布信息
             e, cvs = UserCanvasService.get_by_id(conv.dialog_id)
             if not e:
                 return server_error_response("canvas not found.")
             del req["conversation_id"]
             del req["messages"]
 
+            # 初始化画布DSL
             if not isinstance(cvs.dsl, str):
                 cvs.dsl = json.dumps(cvs.dsl, ensure_ascii=False)
 
+            # 初始化对话引用和消息
             if not conv.reference:
                 conv.reference = []
             conv.message.append({"role": "assistant", "content": "", "id": message_id})
@@ -267,18 +334,24 @@ def completion():
             final_ans = {"reference": [], "content": ""}
             canvas = Canvas(cvs.dsl, objs[0].tenant_id)
 
+            # 处理用户输入
             canvas.messages.append(msg[-1])
             canvas.add_user_input(msg[-1]["content"])
             answer = canvas.run(stream=stream)
 
             assert answer is not None, "Nothing. Is it over?"
 
+            # 流式响应处理
             if stream:
                 assert isinstance(answer, partial), "Nothing. Is it over?"
 
                 def sse():
+                    """
+                    生成服务器发送事件(SSE)响应
+                    """
                     nonlocal answer, cvs, conv
                     try:
+                        # 处理流式回复
                         for ans in answer():
                             for k in ans.keys():
                                 final_ans[k] = ans[k]
@@ -297,6 +370,7 @@ def completion():
                                 + "\n\n"
                             )
 
+                        # 更新画布状态
                         canvas.messages.append(
                             {
                                 "role": "assistant",
@@ -333,6 +407,7 @@ def completion():
                         + "\n\n"
                     )
 
+                # 返回SSE响应
                 resp = Response(sse(), mimetype="text/event-stream")
                 resp.headers.add_header("Cache-control", "no-cache")
                 resp.headers.add_header("Connection", "keep-alive")
@@ -361,22 +436,29 @@ def completion():
             rename_field(result)
             return get_json_result(data=result)
 
-        # ******************For dialog******************
+        # ******************普通对话处理******************
         conv.message.append(msg[-1])
+        # 获取对话信息
         e, dia = DialogService.get_by_id(conv.dialog_id)
         if not e:
             return get_data_error_result(message="Dialog not found!")
         del req["conversation_id"]
         del req["messages"]
 
+        # 初始化对话引用和消息
         if not conv.reference:
             conv.reference = []
         conv.message.append({"role": "assistant", "content": "", "id": message_id})
         conv.reference.append({"chunks": [], "doc_aggs": []})
 
+        # 处理流式响应
         def stream():
+            """
+            生成流式对话响应
+            """
             nonlocal dia, msg, req, conv
             try:
+                # 处理对话回复
                 for ans in chat(dia, msg, True, **req):
                     fillin_conv(ans)
                     rename_field(ans)
@@ -389,6 +471,7 @@ def completion():
                     )
                 API4ConversationService.append_message(conv.id, conv.to_dict())
             except Exception as e:
+                # 异常处理
                 yield (
                     "data:"
                     + json.dumps(
@@ -409,6 +492,7 @@ def completion():
                 + "\n\n"
             )
 
+        # 根据请求类型返回流式或非流式响应
         if req.get("stream", True):
             resp = Response(stream(), mimetype="text/event-stream")
             resp.headers.add_header("Cache-control", "no-cache")
@@ -417,6 +501,7 @@ def completion():
             resp.headers.add_header("Content-Type", "text/event-stream; charset=utf-8")
             return resp
 
+        # 非流式响应处理
         answer = None
         for ans in chat(dia, msg, **req):
             answer = ans
@@ -430,9 +515,14 @@ def completion():
         return server_error_response(e)
 
 
-@manager.route("/conversation/<conversation_id>", methods=["GET"])  # noqa: F821
-# @login_required
+@manager.route("/conversation/<conversation_id>", methods=["GET"])
 def get(conversation_id):
+    """
+    获取指定对话的详细信息
+    - 验证API token
+    - 获取对话历史记录和引用信息
+    """
+    # 验证API token
     token = request.headers.get("Authorization").split()[1]
     objs = APIToken.query(token=token)
     if not objs:
@@ -443,11 +533,13 @@ def get(conversation_id):
         )
 
     try:
+        # 获取对话信息
         e, conv = API4ConversationService.get_by_id(conversation_id)
         if not e:
             return get_data_error_result(message="Conversation not found!")
 
         conv = conv.to_dict()
+        # 验证token权限
         if token != APIToken.query(dialog_id=conv["dialog_id"])[0].token:
             return get_json_result(
                 data=False,
@@ -455,6 +547,7 @@ def get(conversation_id):
                 code=settings.RetCode.AUTHENTICATION_ERROR,
             )
 
+        # 处理引用字段名称
         for referenct_i in conv["reference"]:
             if referenct_i is None or len(referenct_i) == 0:
                 continue
@@ -467,9 +560,17 @@ def get(conversation_id):
         return server_error_response(e)
 
 
-@manager.route("/document/upload", methods=["POST"])  # noqa: F821
+@manager.route("/document/upload", methods=["POST"])
 @validate_request("kb_name")
 def upload():
+    """
+    上传文档到知识库
+    - 验证API token
+    - 验证知识库信息
+    - 处理文件上传
+    - 保存文档信息
+    """
+    # 验证API token
     token = request.headers.get("Authorization").split()[1]
     objs = APIToken.query(token=token)
     if not objs:
@@ -479,10 +580,12 @@ def upload():
             code=settings.RetCode.AUTHENTICATION_ERROR,
         )
 
+    # 获取知识库信息
     kb_name = request.form.get("kb_name").strip()
     tenant_id = objs[0].tenant_id
 
     try:
+        # 验证知识库是否存在
         e, kb = KnowledgebaseService.get_by_name(kb_name, tenant_id)
         if not e:
             return get_data_error_result(message="Can't find this knowledgebase!")
@@ -490,6 +593,7 @@ def upload():
     except Exception as e:
         return server_error_response(e)
 
+    # 验证文件上传
     if "file" not in request.files:
         return get_json_result(
             data=False, message="No file part!", code=settings.RetCode.ARGUMENT_ERROR
@@ -503,6 +607,7 @@ def upload():
             code=settings.RetCode.ARGUMENT_ERROR,
         )
 
+    # 初始化文件存储结构
     root_folder = FileService.get_root_folder(tenant_id)
     pf_id = root_folder["id"]
     FileService.init_knowledgebase_docs(pf_id, tenant_id)
@@ -512,6 +617,7 @@ def upload():
     )
 
     try:
+        # 检查文件数量限制
         if DocumentService.get_doc_count(kb.tenant_id) >= int(
             os.environ.get("MAX_FILE_NUM_PER_USER", 8192)
         ):
@@ -519,6 +625,7 @@ def upload():
                 message="Exceed the maximum file number of a free user!"
             )
 
+        # 处理文件名和类型
         filename = duplicate_name(
             DocumentService.query, name=file.filename, kb_id=kb_id
         )
@@ -528,11 +635,14 @@ def upload():
                 message="This type of file has not been supported yet!"
             )
 
+        # 保存文件内容
         location = filename
         while STORAGE_IMPL.obj_exist(kb_id, location):
             location += "_"
         blob = request.files["file"].read()
         STORAGE_IMPL.put(kb_id, location, blob)
+
+        # 构建文档信息
         doc = {
             "id": get_uuid(),
             "kb_id": kb.id,
@@ -546,6 +656,7 @@ def upload():
             "thumbnail": thumbnail(filename, blob),
         }
 
+        # 处理解析器配置
         form_data = request.form
         if "parser_id" in form_data.keys():
             if (
@@ -553,6 +664,7 @@ def upload():
                 in list(vars(ParserType).values())[1:-3]
             ):
                 doc["parser_id"] = request.form.get("parser_id").strip()
+        # 根据文件类型设置特定解析器
         if doc["type"] == FileType.VISUAL:
             doc["parser_id"] = ParserType.PICTURE.value
         if doc["type"] == FileType.AURAL:
@@ -562,25 +674,28 @@ def upload():
         if re.search(r"\.(eml)$", filename):
             doc["parser_id"] = ParserType.EMAIL.value
 
+        # 保存文档信息
         doc_result = DocumentService.insert(doc)
         FileService.add_file_from_kb(doc, kb_folder["id"], kb.tenant_id)
     except Exception as e:
         return server_error_response(e)
 
+    # 处理文档解析请求
     if "run" in form_data.keys():
         if request.form.get("run").strip() == "1":
             try:
+                # 初始化解析进度信息
                 info = {"run": 1, "progress": 0}
                 info["progress_msg"] = ""
                 info["chunk_num"] = 0
                 info["token_num"] = 0
                 DocumentService.update_by_id(doc["id"], info)
-                # if str(req["run"]) == TaskStatus.CANCEL.value:
+
+                # 获取租户信息并开始解析任务
                 tenant_id = DocumentService.get_tenant_id(doc["id"])
                 if not tenant_id:
                     return get_data_error_result(message="Tenant not found!")
 
-                # e, doc = DocumentService.get_by_id(doc["id"])
                 TaskService.filter_delete([Task.doc_id == doc["id"]])
                 e, doc = DocumentService.get_by_id(doc["id"])
                 doc = doc.to_dict()
@@ -595,9 +710,16 @@ def upload():
     return get_json_result(data=doc_result.to_json())
 
 
-@manager.route("/document/upload_and_parse", methods=["POST"])  # noqa: F821
+@manager.route("/document/upload_and_parse", methods=["POST"])
 @validate_request("conversation_id")
 def upload_parse():
+    """
+    上传并解析文档
+    - 验证API token
+    - 上传文件并进行文档解析
+    - 返回文档ID列表
+    """
+    # 验证API token
     token = request.headers.get("Authorization").split()[1]
     objs = APIToken.query(token=token)
     if not objs:
@@ -607,11 +729,13 @@ def upload_parse():
             code=settings.RetCode.AUTHENTICATION_ERROR,
         )
 
+    # 验证文件上传
     if "file" not in request.files:
         return get_json_result(
             data=False, message="No file part!", code=settings.RetCode.ARGUMENT_ERROR
         )
 
+    # 处理上传的文件列表
     file_objs = request.files.getlist("file")
     for file_obj in file_objs:
         if file_obj.filename == "":
@@ -621,15 +745,22 @@ def upload_parse():
                 code=settings.RetCode.ARGUMENT_ERROR,
             )
 
+    # 上传并解析文档
     doc_ids = doc_upload_and_parse(
         request.form.get("conversation_id"), file_objs, objs[0].tenant_id
     )
     return get_json_result(data=doc_ids)
 
 
-@manager.route("/list_chunks", methods=["POST"])  # noqa: F821
-# @login_required
+@manager.route("/list_chunks", methods=["POST"])
 def list_chunks():
+    """
+    列出文档的分块内容
+    - 验证API token
+    - 根据文档名称或ID获取分块内容
+    - 返回分块列表
+    """
+    # 验证API token
     token = request.headers.get("Authorization").split()[1]
     objs = APIToken.query(token=token)
     if not objs:
@@ -642,18 +773,22 @@ def list_chunks():
     req = request.json
 
     try:
+        # 根据文档名称或ID获取租户信息和文档ID
         if "doc_name" in req.keys():
             tenant_id = DocumentService.get_tenant_id_by_name(req["doc_name"])
             doc_id = DocumentService.get_doc_id_by_doc_name(req["doc_name"])
-
         elif "doc_id" in req.keys():
             tenant_id = DocumentService.get_tenant_id(req["doc_id"])
             doc_id = req["doc_id"]
         else:
             return get_json_result(data=False, message="Can't find doc_name or doc_id")
+
+        # 获取知识库ID列表
         kb_ids = KnowledgebaseService.get_kb_ids(tenant_id)
 
+        # 获取分块列表
         res = settings.retrievaler.chunk_list(doc_id, tenant_id, kb_ids)
+        # 格式化返回结果
         res = [
             {
                 "content": res_item["content_with_weight"],
@@ -669,9 +804,15 @@ def list_chunks():
     return get_json_result(data=res)
 
 
-@manager.route("/list_kb_docs", methods=["POST"])  # noqa: F821
-# @login_required
+@manager.route("/list_kb_docs", methods=["POST"])
 def list_kb_docs():
+    """
+    列出知识库中的文档
+    - 验证API token
+    - 获取知识库文档列表
+    - 支持分页和搜索
+    """
+    # 验证API token
     token = request.headers.get("Authorization").split()[1]
     objs = APIToken.query(token=token)
     if not objs:
@@ -686,6 +827,7 @@ def list_kb_docs():
     kb_name = req.get("kb_name", "").strip()
 
     try:
+        # 验证知识库是否存在
         e, kb = KnowledgebaseService.get_by_name(kb_name, tenant_id)
         if not e:
             return get_data_error_result(message="Can't find this knowledgebase!")
@@ -694,6 +836,7 @@ def list_kb_docs():
     except Exception as e:
         return server_error_response(e)
 
+    # 获取分页参数
     page_number = int(req.get("page", 1))
     items_per_page = int(req.get("page_size", 15))
     orderby = req.get("orderby", "create_time")
@@ -701,6 +844,7 @@ def list_kb_docs():
     keywords = req.get("keywords", "")
 
     try:
+        # 获取文档列表
         docs, tol = DocumentService.get_by_kb_id(
             kb_id, page_number, items_per_page, orderby, desc, keywords
         )
@@ -712,9 +856,15 @@ def list_kb_docs():
         return server_error_response(e)
 
 
-@manager.route("/document/infos", methods=["POST"])  # noqa: F821
+@manager.route("/document/infos", methods=["POST"])
 @validate_request("doc_ids")
 def docinfos():
+    """
+    获取文档信息
+    - 验证API token
+    - 根据文档ID列表获取文档详细信息
+    """
+    # 验证API token
     token = request.headers.get("Authorization").split()[1]
     objs = APIToken.query(token=token)
     if not objs:
@@ -729,9 +879,15 @@ def docinfos():
     return get_json_result(data=list(docs.dicts()))
 
 
-@manager.route("/document", methods=["DELETE"])  # noqa: F821
-# @login_required
+@manager.route("/document", methods=["DELETE"])
 def document_rm():
+    """
+    删除文档
+    - 验证API token
+    - 根据文档名称或ID删除文档
+    - 清理相关存储和引用
+    """
+    # 验证API token
     token = request.headers.get("Authorization").split()[1]
     objs = APIToken.query(token=token)
     if not objs:
@@ -744,6 +900,7 @@ def document_rm():
     tenant_id = objs[0].tenant_id
     req = request.json
     try:
+        # 获取要删除的文档ID列表
         doc_ids = [
             DocumentService.get_doc_id_by_doc_name(doc_name)
             for doc_name in req.get("doc_names", [])
@@ -760,6 +917,7 @@ def document_rm():
     except Exception as e:
         return server_error_response(e)
 
+    # 初始化文件存储结构
     root_folder = FileService.get_root_folder(tenant_id)
     pf_id = root_folder["id"]
     FileService.init_knowledgebase_docs(pf_id, tenant_id)
@@ -767,6 +925,7 @@ def document_rm():
     errors = ""
     for doc_id in doc_ids:
         try:
+            # 获取文档信息
             e, doc = DocumentService.get_by_id(doc_id)
             if not e:
                 return get_data_error_result(message="Document not found!")
@@ -774,6 +933,7 @@ def document_rm():
             if not tenant_id:
                 return get_data_error_result(message="Tenant not found!")
 
+            # 获取存储地址并删除文档
             b, n = File2DocumentService.get_storage_address(doc_id=doc_id)
 
             if not DocumentService.remove_document(doc, tenant_id):
@@ -781,6 +941,7 @@ def document_rm():
                     message="Database error (Document removal)!"
                 )
 
+            # 清理文件和引用关系
             f2d = File2DocumentService.get_by_document_id(doc_id)
             FileService.filter_delete(
                 [

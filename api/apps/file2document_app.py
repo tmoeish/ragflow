@@ -1,17 +1,14 @@
 #
-#  Copyright 2024 The InfiniFlow Authors. All Rights Reserved.
+#  版权所有 2024 The InfiniFlow Authors. 保留所有权利。
 #
-#  Licensed under the Apache License, Version 2.0 (the "License");
-#  you may not use this file except in compliance with the License.
-#  You may obtain a copy of the License at
+#  根据Apache许可证2.0版（"许可证"）授权；除非遵循许可证，否则不得使用此文件。
+#  您可以在以下网址获取许可证副本：
 #
 #      http://www.apache.org/licenses/LICENSE-2.0
 #
-#  Unless required by applicable law or agreed to in writing, software
-#  distributed under the License is distributed on an "AS IS" BASIS,
-#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-#  See the License for the specific language governing permissions and
-#  limitations under the License
+#  除非适用法律要求或书面同意，否则软件按"原样"分发，
+#  无任何明示或暗示的担保或条件。
+#  有关许可证下特定语言的权限和限制，请参阅许可证。
 #
 
 from api.db.services.file2document_service import File2DocumentService
@@ -36,6 +33,10 @@ from api.utils.api_utils import get_json_result
 @login_required
 @validate_request("file_ids", "kb_ids")
 def convert():
+    """
+    将文件转换为文档的API端点。
+    需要用户登录并验证请求中包含file_ids和kb_ids。
+    """
     req = request.json
     kb_ids = req["kb_ids"]
     file_ids = req["file_ids"]
@@ -46,10 +47,11 @@ def convert():
             e, file = FileService.get_by_id(file_id)
             file_ids_list = [file_id]
             if file.type == FileType.FOLDER.value:
+                # 如果文件是文件夹，获取所有最内层文件的ID
                 file_ids_list = FileService.get_all_innermost_file_ids(file_id, [])
             for id in file_ids_list:
                 informs = File2DocumentService.get_by_file_id(id)
-                # delete
+                # 删除现有的文档信息
                 for inform in informs:
                     doc_id = inform.document_id
                     e, doc = DocumentService.get_by_id(doc_id)
@@ -64,7 +66,7 @@ def convert():
                         )
                 File2DocumentService.delete_by_file_id(id)
 
-                # insert
+                # 插入新的文档信息
                 for kb_id in kb_ids:
                     e, kb = KnowledgebaseService.get_by_id(kb_id)
                     if not e:
@@ -107,6 +109,10 @@ def convert():
 @login_required
 @validate_request("file_ids")
 def rm():
+    """
+    删除文件与文档关联的API端点。
+    需要用户登录并验证请求中包含file_ids。
+    """
     req = request.json
     file_ids = req["file_ids"]
     if not file_ids:

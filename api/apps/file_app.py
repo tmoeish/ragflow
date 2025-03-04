@@ -42,18 +42,22 @@ from rag.utils.storage_factory import STORAGE_IMPL
 @login_required
 # @validate_request("parent_id")
 def upload():
+    # 获取父文件夹ID
     pf_id = request.form.get("parent_id")
 
+    # 如果没有提供父文件夹ID，则获取用户的根文件夹ID
     if not pf_id:
         root_folder = FileService.get_root_folder(current_user.id)
         pf_id = root_folder["id"]
 
+    # 检查请求中是否包含文件
     if "file" not in request.files:
         return get_json_result(
             data=False, message="No file part!", code=settings.RetCode.ARGUMENT_ERROR
         )
     file_objs = request.files.getlist("file")
 
+    # 检查每个文件对象是否有文件名
     for file_obj in file_objs:
         if file_obj.filename == "":
             return get_json_result(
@@ -64,10 +68,12 @@ def upload():
     file_res = []
     try:
         for file_obj in file_objs:
+            # 获取父文件夹信息
             e, file = FileService.get_by_id(pf_id)
             if not e:
                 return get_data_error_result(message="Can't find this folder!")
             MAX_FILE_NUM_PER_USER = int(os.environ.get("MAX_FILE_NUM_PER_USER", 0))
+            # 检查用户文件数量是否超过限制
             if (
                 MAX_FILE_NUM_PER_USER > 0
                 and DocumentService.get_doc_count(current_user.id)
@@ -77,7 +83,7 @@ def upload():
                     message="Exceed the maximum file number of a free user!"
                 )
 
-            # split file name path
+            # 分割文件名路径
             if not file_obj.filename:
                 e, file = FileService.get_by_id(pf_id)
                 file_obj_names = [file.name, file_obj.filename]
@@ -86,13 +92,13 @@ def upload():
                 file_obj_names = full_path.split("/")
             file_len = len(file_obj_names)
 
-            # get folder
+            # 获取文件夹ID列表
             file_id_list = FileService.get_id_list_by_id(
                 pf_id, file_obj_names, 1, [pf_id]
             )
             len_id_list = len(file_id_list)
 
-            # create folder
+            # 创建文件夹
             if file_len != len_id_list:
                 e, file = FileService.get_by_id(file_id_list[len_id_list - 1])
                 if not e:
@@ -108,9 +114,10 @@ def upload():
                     file, file_id_list[len_id_list - 2], file_obj_names, len_id_list
                 )
 
-            # file type
+            # 确定文件类型
             filetype = filename_type(file_obj_names[file_len - 1])
             location = file_obj_names[file_len - 1]
+            # 检查存储中是否已存在相同位置的对象
             while STORAGE_IMPL.obj_exist(last_folder.id, location):
                 location += "_"
             blob = file_obj.read()
@@ -149,22 +156,26 @@ def create():
         pf_id = root_folder["id"]
 
     try:
+        # 检查父文件夹是否存在
         if not FileService.is_parent_folder_exist(pf_id):
             return get_json_result(
                 data=False,
                 message="Parent Folder Doesn't Exist!",
                 code=settings.RetCode.OPERATING_ERROR,
             )
+        # 检查同名文件夹是否已存在
         if FileService.query(name=req["name"], parent_id=pf_id):
             return get_data_error_result(
                 message="Duplicated folder name in the same folder."
             )
 
+        # 确定文件类型
         if input_file_type == FileType.FOLDER.value:
             file_type = FileType.FOLDER.value
         else:
             file_type = FileType.VIRTUAL.value
 
+        # 插入新文件或文件夹
         file = FileService.insert(
             {
                 "id": get_uuid(),
@@ -199,10 +210,12 @@ def list_files():
         pf_id = root_folder["id"]
         FileService.init_knowledgebase_docs(pf_id, current_user.id)
     try:
+        # 获取父文件夹信息
         e, file = FileService.get_by_id(pf_id)
         if not e:
             return get_data_error_result(message="Folder not found!")
 
+        # 获取文件列表和总数
         files, total = FileService.get_by_pf_id(
             current_user.id, pf_id, page_number, items_per_page, orderby, desc, keywords
         )
@@ -295,7 +308,7 @@ def rm():
                         message="Database error (File removal)!"
                     )
 
-            # delete file2document
+            # 删除文件与文档的关联
             informs = File2DocumentService.get_by_file_id(file_id)
             for inform in informs:
                 doc_id = inform.document_id
