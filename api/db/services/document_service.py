@@ -558,9 +558,9 @@ def queue_raptor_o_graphrag_tasks(doc, ty, msg):
     task["digest"] = hasher.hexdigest()
     bulk_insert_into_db(Task, [task], True)
     task["task_type"] = ty
-    assert REDIS_CONN.queue_product(SVR_QUEUE_NAME, message=task), (
-        "Can't access Redis. Please check the Redis' status."
-    )
+    assert REDIS_CONN.queue_product(
+        SVR_QUEUE_NAME, message=task
+    ), "Can't access Redis. Please check the Redis' status."
 
 
 def doc_upload_and_parse(conversation_id, file_objs, user_id):

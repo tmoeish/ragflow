@@ -36,13 +36,13 @@ class DecodeImage(object):
     def __call__(self, data):
         img = data["image"]
         if six.PY2:
-            assert isinstance(img, str) and len(img) > 0, (
-                "invalid input 'img' in DecodeImage"
-            )
+            assert (
+                isinstance(img, str) and len(img) > 0
+            ), "invalid input 'img' in DecodeImage"
         else:
-            assert isinstance(img, bytes) and len(img) > 0, (
-                "invalid input 'img' in DecodeImage"
-            )
+            assert (
+                isinstance(img, bytes) and len(img) > 0
+            ), "invalid input 'img' in DecodeImage"
         img = np.frombuffer(img, dtype="uint8")
         if self.ignore_orientation:
             img = cv2.imdecode(img, cv2.IMREAD_IGNORE_ORIENTATION | cv2.IMREAD_COLOR)
@@ -168,9 +168,9 @@ class Pad(object):
         img_h, img_w = img.shape[0], img.shape[1]
         if self.size:
             resize_h2, resize_w2 = self.size
-            assert img_h < resize_h2 and img_w < resize_w2, (
-                "(h, w) of target size should be greater than (img_h, img_w)"
-            )
+            assert (
+                img_h < resize_h2 and img_w < resize_w2
+            ), "(h, w) of target size should be greater than (img_h, img_w)"
         else:
             resize_h2 = max(
                 int(math.ceil(img.shape[0] / self.size_div) * self.size_div),

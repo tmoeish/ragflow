@@ -585,9 +585,9 @@ class ComponentBase(ABC):
                 upstream_outs.append(o)
             break
 
-        assert upstream_outs, (
-            "Can't inference the where the component input is. Please identify whose output is this component's input."
-        )
+        assert (
+            upstream_outs
+        ), "Can't inference the where the component input is. Please identify whose output is this component's input."
 
         df = pd.concat(upstream_outs, ignore_index=True)
         if "content" in df:

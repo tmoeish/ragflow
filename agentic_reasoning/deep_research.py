@@ -82,9 +82,9 @@ class DeepResearcher:
                     }
                 )
             else:
-                msg_hisotry[-1]["content"] += (
-                    "\n\nContinues reasoning with the new information.\n"
-                )
+                msg_hisotry[-1][
+                    "content"
+                ] += "\n\nContinues reasoning with the new information.\n"
             for ans in self.chat_mdl.chat_streamly(
                 REASON_PROMPT, msg_hisotry, {"temperature": 0.7}
             ):

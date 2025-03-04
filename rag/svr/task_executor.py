@@ -918,15 +918,7 @@ def handle_task():
 
 
 def report_status():
-    global \
-        CONSUMER_NAME, \
-        BOOT_AT, \
-        PENDING_TASKS, \
-        LAG_TASKS, \
-        mt_lock, \
-        DONE_TASKS, \
-        FAILED_TASKS, \
-        CURRENT_TASK
+    global CONSUMER_NAME, BOOT_AT, PENDING_TASKS, LAG_TASKS, mt_lock, DONE_TASKS, FAILED_TASKS, CURRENT_TASK
     REDIS_CONN.sadd("TASKEXE", CONSUMER_NAME)
     while True:
         try:

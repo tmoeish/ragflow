@@ -8,6 +8,9 @@ export http_proxy=""; export https_proxy=""; export no_proxy=""; export HTTP_PRO
 
 export LD_LIBRARY_PATH=/usr/lib/x86_64-linux-gnu/
 
+# Set PYTHONPATH to the project root directory
+export PYTHONPATH=$(dirname $(dirname "$0"))
+
 PY=python3
 
 # Set default number of workers if WS is not set or less than 1

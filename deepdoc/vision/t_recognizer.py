@@ -176,7 +176,9 @@ def get_table_html(img, tb_cpns, ocr):
     %s
     </body>
     </html>
-""" % TableStructureRecognizer.construct_table(boxes, html=True)
+""" % TableStructureRecognizer.construct_table(
+        boxes, html=True
+    )
     return html
 
 

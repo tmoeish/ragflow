@@ -1295,9 +1295,9 @@ class SparkChat(Base):
             "Spark-4.0-Ultra": "4.0Ultra",
         }
         version2model = {v: k for k, v in model2version.items()}
-        assert model_name in model2version or model_name in version2model, (
-            f"The given model name is not supported yet. Support: {list(model2version.keys())}"
-        )
+        assert (
+            model_name in model2version or model_name in version2model
+        ), f"The given model name is not supported yet. Support: {list(model2version.keys())}"
         if model_name in model2version:
             model_version = model2version[model_name]
         else:
