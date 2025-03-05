@@ -13,12 +13,14 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License
 #
+# 导入所需的模块和依赖
 import logging
 from datetime import datetime
 import json
 
 from flask_login import login_required, current_user
 
+# 导入数据库模型和服务
 from api.db.db_models import APIToken
 from api.db.services.api_service import APITokenService
 from api.db.services.knowledgebase_service import KnowledgebaseService
@@ -38,6 +40,7 @@ from timeit import default_timer as timer
 from rag.utils.redis_conn import REDIS_CONN
 
 
+# 获取系统版本信息的接口
 @manager.route("/version", methods=["GET"])  # noqa: F821
 @login_required
 def version():
@@ -61,6 +64,7 @@ def version():
     return get_json_result(data=get_ragflow_version())
 
 
+# 获取系统状态的接口，包括各个组件的健康状况
 @manager.route("/status", methods=["GET"])  # noqa: F821
 @login_required
 def status():
@@ -95,7 +99,10 @@ def status():
               type: string
               description: Error message.
     """
+    # 存储各组件状态的字典
     res = {}
+
+    # 检查文档引擎状态
     st = timer()
     try:
         res["doc_engine"] = settings.docStoreConn.health()
@@ -108,6 +115,7 @@ def status():
             "error": str(e),
         }
 
+    # 检查存储系统状态
     st = timer()
     try:
         STORAGE_IMPL.health()
@@ -124,6 +132,7 @@ def status():
             "error": str(e),
         }
 
+    # 检查数据库状态
     st = timer()
     try:
         KnowledgebaseService.get_by_id("x")
@@ -140,6 +149,7 @@ def status():
             "error": str(e),
         }
 
+    # 检查Redis状态
     st = timer()
     try:
         if not REDIS_CONN.health():
@@ -155,10 +165,13 @@ def status():
             "error": str(e),
         }
 
+    # 获取任务执行器的心跳信息
     task_executor_heartbeats = {}
     try:
+        # 获取所有任务执行器ID
         task_executors = REDIS_CONN.smembers("TASKEXE")
         now = datetime.now().timestamp()
+        # 获取每个执行器最近30分钟的心跳记录
         for task_executor_id in task_executors:
             heartbeats = REDIS_CONN.zrangebyscore(task_executor_id, now - 60 * 30, now)
             heartbeats = [json.loads(heartbeat) for heartbeat in heartbeats]
@@ -170,6 +183,7 @@ def status():
     return get_json_result(data=res)
 
 
+# 生成新的API令牌的接口
 @manager.route("/new_token", methods=["POST"])  # noqa: F821
 @login_required
 def new_token():
@@ -197,10 +211,12 @@ def new_token():
               description: The generated API token.
     """
     try:
+        # 获取当前用户的租户信息
         tenants = UserTenantService.query(user_id=current_user.id)
         if not tenants:
             return get_data_error_result(message="Tenant not found!")
 
+        # 创建新的API令牌
         tenant_id = tenants[0].tenant_id
         obj = {
             "tenant_id": tenant_id,
@@ -222,6 +238,7 @@ def new_token():
         return server_error_response(e)
 
 
+# 获取API令牌列表的接口
 @manager.route("/token_list", methods=["GET"])  # noqa: F821
 @login_required
 def token_list():
@@ -254,13 +271,16 @@ def token_list():
                     description: Token creation time.
     """
     try:
+        # 获取当前用户的租户信息
         tenants = UserTenantService.query(user_id=current_user.id)
         if not tenants:
             return get_data_error_result(message="Tenant not found!")
 
+        # 查询并返回该租户的所有API令牌
         tenant_id = tenants[0].tenant_id
         objs = APITokenService.query(tenant_id=tenant_id)
         objs = [o.to_dict() for o in objs]
+        # 为没有beta字段的令牌生成beta值
         for o in objs:
             if not o["beta"]:
                 o["beta"] = generate_confirmation_token(
@@ -274,6 +294,7 @@ def token_list():
         return server_error_response(e)
 
 
+# 删除指定API令牌的接口
 @manager.route("/token/<token>", methods=["DELETE"])  # noqa: F821
 @login_required
 def rm(token):
@@ -300,6 +321,7 @@ def rm(token):
               type: boolean
               description: Deletion status.
     """
+    # 删除指定的API令牌
     APITokenService.filter_delete(
         [APIToken.tenant_id == current_user.id, APIToken.token == token]
     )

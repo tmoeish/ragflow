@@ -14,10 +14,6 @@
 #  limitations under the License.
 #
 
-# from beartype import BeartypeConf
-# from beartype.claw import beartype_all  # <-- you didn't sign up for this
-# beartype_all(conf=BeartypeConf(violation_type=UserWarning))    # <-- emit warnings from all code
-
 # RAG设置模块 - 用于加载和显示RAG相关配置
 from rag.settings import print_rag_settings
 

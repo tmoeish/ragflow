@@ -83,6 +83,7 @@ def login():
         )
 
     email = request.json.get("email", "")
+    # 检查用户是否存在
     users = UserService.query(email=email)
     if not users:
         return get_json_result(
@@ -91,6 +92,7 @@ def login():
             message=f"Email: {email} is not registered!",
         )
 
+    # 验证密码
     password = request.json.get("password")
     try:
         password = decrypt(password)
@@ -103,6 +105,7 @@ def login():
 
     user = UserService.query_user(email, password)
     if user:
+        # 登录成功，更新用户信息
         response_data = user.to_json()
         user.access_token = get_uuid()
         login_user(user)
@@ -140,6 +143,7 @@ def github_callback():
     """
     import requests
 
+    # 获取GitHub访问令牌
     res = requests.post(
         settings.GITHUB_OAUTH.get("url"),
         data={
@@ -153,17 +157,21 @@ def github_callback():
     if "error" in res:
         return redirect("/?error=%s" % res["error_description"])
 
+    # 检查是否有邮箱权限
     if "user:email" not in res["scope"].split(","):
         return redirect("/?error=user:email not in scope")
 
     session["access_token"] = res["access_token"]
     session["access_token_from"] = "github"
+
+    # 获取用户信息
     user_info = user_info_from_github(session["access_token"])
     email_address = user_info["email"]
     users = UserService.query(email=email_address)
     user_id = get_uuid()
+
     if not users:
-        # User isn't try to register
+        # 新用户注册
         try:
             try:
                 avatar = download_img(user_info["avatar_url"])
@@ -187,7 +195,7 @@ def github_callback():
             if len(users) > 1:
                 raise Exception(f"Same email: {email_address} exists!")
 
-            # Try to log in
+            # 登录新用户
             user = users[0]
             login_user(user)
             return redirect("/?auth=%s" % user.get_id())
@@ -196,7 +204,7 @@ def github_callback():
             logging.exception(e)
             return redirect("/?error=%s" % str(e))
 
-    # User has already registered, try to log in
+    # 已注册用户直接登录
     user = users[0]
     user.access_token = get_uuid()
     login_user(user)
@@ -225,6 +233,7 @@ def feishu_callback():
     """
     import requests
 
+    # 获取应用访问令牌
     app_access_token_res = requests.post(
         settings.FEISHU_OAUTH.get("app_access_token_url"),
         data=json.dumps(
@@ -239,6 +248,7 @@ def feishu_callback():
     if app_access_token_res["code"] != 0:
         return redirect("/?error=%s" % app_access_token_res)
 
+    # 获取用户访问令牌
     res = requests.post(
         settings.FEISHU_OAUTH.get("user_access_token_url"),
         data=json.dumps(
@@ -256,16 +266,21 @@ def feishu_callback():
     if res["code"] != 0:
         return redirect("/?error=%s" % res["message"])
 
+    # 检查是否有邮箱权限
     if "contact:user.email:readonly" not in res["data"]["scope"].split():
         return redirect("/?error=contact:user.email:readonly not in scope")
+
     session["access_token"] = res["data"]["access_token"]
     session["access_token_from"] = "feishu"
+
+    # 获取用户信息
     user_info = user_info_from_feishu(session["access_token"])
     email_address = user_info["email"]
     users = UserService.query(email=email_address)
     user_id = get_uuid()
+
     if not users:
-        # User isn't try to register
+        # 新用户注册
         try:
             try:
                 avatar = download_img(user_info["avatar_url"])
@@ -289,7 +304,7 @@ def feishu_callback():
             if len(users) > 1:
                 raise Exception(f"Same email: {email_address} exists!")
 
-            # Try to log in
+            # 登录新用户
             user = users[0]
             login_user(user)
             return redirect("/?auth=%s" % user.get_id())
@@ -298,7 +313,7 @@ def feishu_callback():
             logging.exception(e)
             return redirect("/?error=%s" % str(e))
 
-    # User has already registered, try to log in
+    # 已注册用户直接登录
     user = users[0]
     user.access_token = get_uuid()
     login_user(user)
@@ -307,6 +322,14 @@ def feishu_callback():
 
 
 def user_info_from_feishu(access_token):
+    """从飞书获取用户信息
+
+    参数:
+        access_token: 飞书用户访问令牌
+
+    返回:
+        用户信息字典
+    """
     import requests
 
     headers = {
@@ -322,6 +345,14 @@ def user_info_from_feishu(access_token):
 
 
 def user_info_from_github(access_token):
+    """从GitHub获取用户信息
+
+    参数:
+        access_token: GitHub访问令牌
+
+    返回:
+        用户信息字典，包含邮箱地址
+    """
     import requests
 
     headers = {"Accept": "application/json", "Authorization": f"token {access_token}"}
@@ -393,6 +424,8 @@ def setting_user():
     """
     update_dict = {}
     request_data = request.json
+
+    # 处理密码更新
     if request_data.get("password"):
         new_password = request_data.get("new_password")
         if not check_password_hash(
@@ -407,6 +440,7 @@ def setting_user():
         if new_password:
             update_dict["password"] = generate_password_hash(decrypt(new_password))
 
+    # 处理其他字段更新
     for k in request_data.keys():
         if k in [
             "password",
@@ -463,6 +497,13 @@ def user_profile():
 
 
 def rollback_user_registration(user_id):
+    """回滚用户注册
+
+    当用户注册过程中出现错误时，清理已创建的相关数据
+
+    参数:
+        user_id: 用户ID
+    """
     try:
         UserService.delete_by_id(user_id)
     except Exception:

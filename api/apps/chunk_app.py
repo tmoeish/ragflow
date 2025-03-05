@@ -45,18 +45,25 @@ import re
 @login_required
 @validate_request("doc_id")
 def list_chunk():
+    # 获取请求参数
     req = request.json
     doc_id = req["doc_id"]
-    page = int(req.get("page", 1))
-    size = int(req.get("size", 30))
-    question = req.get("keywords", "")
+    page = int(req.get("page", 1))  # 分页页码，默认第1页
+    size = int(req.get("size", 30))  # 每页大小，默认30条
+    question = req.get("keywords", "")  # 搜索关键词
+
     try:
+        # 获取租户ID
         tenant_id = DocumentService.get_tenant_id(req["doc_id"])
         if not tenant_id:
             return get_data_error_result(message="Tenant not found!")
+
+        # 获取文档信息
         e, doc = DocumentService.get_by_id(doc_id)
         if not e:
             return get_data_error_result(message="Document not found!")
+
+        # 构建搜索查询
         kb_ids = KnowledgebaseService.get_kb_ids(tenant_id)
         query = {
             "doc_ids": [doc_id],
@@ -140,7 +147,9 @@ def get():
 @validate_request("doc_id", "chunk_id", "content_with_weight")
 def set():
     req = request.json
+    # 构建更新数据
     d = {"id": req["chunk_id"], "content_with_weight": req["content_with_weight"]}
+    # 对内容进行分词处理
     d["content_ltks"] = rag_tokenizer.tokenize(req["content_with_weight"])
     d["content_sm_ltks"] = rag_tokenizer.fine_grained_tokenize(d["content_ltks"])
     if "important_kwd" in req:
@@ -305,11 +314,12 @@ def create():
 @login_required
 @validate_request("kb_id", "question")
 def retrieval_test():
+    # 获取检索参数
     req = request.json
     page = int(req.get("page", 1))
     size = int(req.get("size", 30))
-    question = req["question"]
-    kb_ids = req["kb_id"]
+    question = req["question"]  # 检索问题
+    kb_ids = req["kb_id"]  # 知识库ID
     if isinstance(kb_ids, str):
         kb_ids = [kb_ids]
     doc_ids = req.get("doc_ids", [])
@@ -394,7 +404,9 @@ def retrieval_test():
 @manager.route("/knowledge_graph", methods=["GET"])  # noqa: F821
 @login_required
 def knowledge_graph():
+    # 获取文档ID
     doc_id = request.args["doc_id"]
+    # 获取租户ID和知识库IDs
     tenant_id = DocumentService.get_tenant_id(doc_id)
     kb_ids = KnowledgebaseService.get_kb_ids(tenant_id)
     req = {"doc_ids": [doc_id], "knowledge_graph_kwd": ["graph", "mind_map"]}

@@ -44,6 +44,7 @@ from api import settings
 from api import utils
 
 
+# 单例模式装饰器，用于确保一个类只有一个实例
 def singleton(cls, *args, **kw):
     instances = {}
 
@@ -56,7 +57,9 @@ def singleton(cls, *args, **kw):
     return _singleton
 
 
+# 定义连续字段类型集合
 CONTINUOUS_FIELD_TYPE = {IntegerField, FloatField, DateTimeField}
+# 自动日期时间戳字段前缀集合
 AUTO_DATE_TIMESTAMP_FIELD_PREFIX = {
     "create",
     "start",
@@ -67,15 +70,18 @@ AUTO_DATE_TIMESTAMP_FIELD_PREFIX = {
 }
 
 
+# 文本字段类型枚举
 class TextFieldType(Enum):
     MYSQL = "LONGTEXT"
     POSTGRES = "TEXT"
 
 
+# 长文本字段类，继承自TextField
 class LongTextField(TextField):
     field_type = TextFieldType[settings.DATABASE_TYPE.upper()].value
 
 
+# JSON字段类，继承自LongTextField
 class JSONField(LongTextField):
     default_value = {}
 
@@ -84,11 +90,13 @@ class JSONField(LongTextField):
         self._object_pairs_hook = object_pairs_hook
         super().__init__(**kwargs)
 
+    # 将Python对象转换为数据库存储的值
     def db_value(self, value):
         if value is None:
             value = self.default_value
         return utils.json_dumps(value)
 
+    # 将数据库存储的值转换为Python对象
     def python_value(self, value):
         if not value:
             return self.default_value
@@ -99,10 +107,12 @@ class JSONField(LongTextField):
         )
 
 
+# 列表字段类，继承自JSONField
 class ListField(JSONField):
     default_value = []
 
 
+# 序列化字段类，继承自LongTextField
 class SerializedField(LongTextField):
     def __init__(
         self,
@@ -116,6 +126,7 @@ class SerializedField(LongTextField):
         self._object_pairs_hook = object_pairs_hook
         super().__init__(**kwargs)
 
+    # 将Python对象转换为数据库存储的值
     def db_value(self, value):
         if self._serialized_type == SerializedType.PICKLE:
             return utils.serialize_b64(value, to_str=True)
@@ -128,6 +139,7 @@ class SerializedField(LongTextField):
                 f"the serialized type {self._serialized_type} is not supported"
             )
 
+    # 将数据库存储的值转换为Python对象
     def python_value(self, value):
         if self._serialized_type == SerializedType.PICKLE:
             return utils.deserialize_b64(value)
@@ -145,6 +157,7 @@ class SerializedField(LongTextField):
             )
 
 
+# 判断字段是否为连续字段
 def is_continuous_field(cls: typing.Type) -> bool:
     if cls in CONTINUOUS_FIELD_TYPE:
         return True
@@ -158,31 +171,38 @@ def is_continuous_field(cls: typing.Type) -> bool:
         return False
 
 
+# 获取自动日期时间戳字段集合
 def auto_date_timestamp_field():
     return {f"{f}_time" for f in AUTO_DATE_TIMESTAMP_FIELD_PREFIX}
 
 
+# 获取自动日期时间戳数据库字段集合
 def auto_date_timestamp_db_field():
     return {f"f_{f}_time" for f in AUTO_DATE_TIMESTAMP_FIELD_PREFIX}
 
 
+# 移除字段名前缀
 def remove_field_name_prefix(field_name):
     return field_name[2:] if field_name.startswith("f_") else field_name
 
 
+# 基础模型类，继承自Model
 class BaseModel(Model):
     create_time = BigIntegerField(null=True, index=True)
     create_date = DateTimeField(null=True, index=True)
     update_time = BigIntegerField(null=True, index=True)
     update_date = DateTimeField(null=True, index=True)
 
+    # 将模型转换为JSON格式
     def to_json(self):
-        # This function is obsolete
+        # 此函数已废弃
         return self.to_dict()
 
+    # 将模型转换为字典格式
     def to_dict(self):
         return self.__dict__["__data__"]
 
+    # 将模型转换为人类可读的字典格式
     def to_human_model_dict(self, only_primary_with: list = None):
         model_dict = self.__dict__["__data__"]
 
@@ -212,6 +232,7 @@ class BaseModel(Model):
     def getter_by(cls, attr):
         return operator.attrgetter(attr)(cls)
 
+    # 查询方法
     @classmethod
     def query(cls, reverse=None, order_by=None, **kwargs):
         filters = []
@@ -228,7 +249,7 @@ class BaseModel(Model):
                                 isinstance(v, str)
                                 and f_n in auto_date_timestamp_field()
                             ):
-                                # time type: %Y-%m-%d %H:%M:%S
+                                # 时间类型: %Y-%m-%d %H:%M:%S
                                 f_v[i] = utils.date_string_to_timestamp(v)
                         lt_value = f_v[0]
                         gt_value = f_v[1]
@@ -265,6 +286,7 @@ class BaseModel(Model):
         else:
             return []
 
+    # 插入方法
     @classmethod
     def insert(cls, __data=None, **insert):
         if isinstance(__data, dict) and __data:
@@ -274,7 +296,7 @@ class BaseModel(Model):
 
         return super().insert(__data, **insert)
 
-    # update and insert will call this method
+    # 更新和插入时调用的方法
     @classmethod
     def _normalize_data(cls, data, kwargs):
         normalized = super()._normalize_data(data, kwargs)
@@ -296,6 +318,7 @@ class BaseModel(Model):
         return normalized
 
 
+# JSON序列化字段类，继承自SerializedField
 class JsonSerializedField(SerializedField):
     def __init__(
         self, object_hook=utils.from_dict_hook, object_pairs_hook=None, **kwargs
@@ -308,16 +331,19 @@ class JsonSerializedField(SerializedField):
         )
 
 
+# 数据库连接池枚举
 class PooledDatabase(Enum):
     MYSQL = PooledMySQLDatabase
     POSTGRES = PooledPostgresqlDatabase
 
 
+# 数据库迁移器枚举
 class DatabaseMigrator(Enum):
     MYSQL = MySQLMigrator
     POSTGRES = PostgresqlMigrator
 
 
+# 数据库基类，使用单例模式
 @singleton
 class BaseDataBase:
     def __init__(self):
@@ -329,12 +355,14 @@ class BaseDataBase:
         logging.info("init database on cluster mode successfully")
 
 
+# PostgreSQL数据库锁类
 class PostgresDatabaseLock:
     def __init__(self, lock_name, timeout=10, db=None):
         self.lock_name = lock_name
         self.timeout = int(timeout)
         self.db = db if db else DB
 
+    # 获取锁
     def lock(self):
         cursor = self.db.execute_sql("SELECT pg_try_advisory_lock(%s)", self.timeout)
         ret = cursor.fetchone()
@@ -345,6 +373,7 @@ class PostgresDatabaseLock:
         else:
             raise Exception(f"failed to acquire lock {self.lock_name}")
 
+    # 释放锁
     def unlock(self):
         cursor = self.db.execute_sql("SELECT pg_advisory_unlock(%s)", self.timeout)
         ret = cursor.fetchone()
@@ -375,14 +404,16 @@ class PostgresDatabaseLock:
         return magic
 
 
+# MySQL数据库锁类
 class MysqlDatabaseLock:
     def __init__(self, lock_name, timeout=10, db=None):
         self.lock_name = lock_name
         self.timeout = int(timeout)
         self.db = db if db else DB
 
+    # 获取锁
     def lock(self):
-        # SQL parameters only support %s format placeholders
+        # SQL参数仅支持%s格式占位符
         cursor = self.db.execute_sql(
             "SELECT GET_LOCK(%s, %s)", (self.lock_name, self.timeout)
         )
@@ -394,6 +425,7 @@ class MysqlDatabaseLock:
         else:
             raise Exception(f"failed to acquire lock {self.lock_name}")
 
+    # 释放锁
     def unlock(self):
         cursor = self.db.execute_sql("SELECT RELEASE_LOCK(%s)", (self.lock_name,))
         ret = cursor.fetchone()
@@ -424,15 +456,18 @@ class MysqlDatabaseLock:
         return magic
 
 
+# 数据库锁枚举
 class DatabaseLock(Enum):
     MYSQL = MysqlDatabaseLock
     POSTGRES = PostgresDatabaseLock
 
 
+# 数据库连接实例
 DB = BaseDataBase().database_connection
 DB.lock = DatabaseLock[settings.DATABASE_TYPE.upper()].value
 
 
+# 关闭数据库连接
 def close_connection():
     try:
         if DB:
@@ -441,17 +476,21 @@ def close_connection():
         logging.exception(e)
 
 
+# 数据库模型基类，继承自BaseModel
 class DataBaseModel(BaseModel):
     class Meta:
         database = DB
 
 
+# 初始化数据库表
 @DB.connection_context()
-def init_database_tables(alter_fields=[]):
+def init_database_tables(alter_fields=None):
+    if alter_fields is None:
+        alter_fields = []
     members = inspect.getmembers(sys.modules[__name__], inspect.isclass)
     table_objs = []
     create_failed_list = []
-    for name, obj in members:
+    for _, obj in members:
         if obj != DataBaseModel and issubclass(obj, DataBaseModel):
             table_objs.append(obj)
             logging.debug(f"start create table {obj.__name__}")
@@ -467,6 +506,7 @@ def init_database_tables(alter_fields=[]):
     migrate_db()
 
 
+# 填充数据库模型对象
 def fill_db_model_object(model_object, human_model_dict):
     for k, v in human_model_dict.items():
         attr_name = "%s" % k
@@ -475,6 +515,7 @@ def fill_db_model_object(model_object, human_model_dict):
     return model_object
 
 
+# 用户模型类，继承自DataBaseModel和UserMixin
 class User(DataBaseModel, UserMixin):
     id = CharField(max_length=32, primary_key=True)
     access_token = CharField(max_length=255, null=True, index=True)
@@ -526,6 +567,7 @@ class User(DataBaseModel, UserMixin):
         db_table = "user"
 
 
+# 租户模型类，继承自DataBaseModel
 class Tenant(DataBaseModel):
     id = CharField(max_length=32, primary_key=True)
     name = CharField(max_length=100, null=True, help_text="Tenant name", index=True)
@@ -567,6 +609,7 @@ class Tenant(DataBaseModel):
         db_table = "tenant"
 
 
+# 用户租户模型类，继承自DataBaseModel
 class UserTenant(DataBaseModel):
     id = CharField(max_length=32, primary_key=True)
     user_id = CharField(max_length=32, null=False, index=True)
@@ -585,6 +628,7 @@ class UserTenant(DataBaseModel):
         db_table = "user_tenant"
 
 
+# 邀请码模型类，继承自DataBaseModel
 class InvitationCode(DataBaseModel):
     id = CharField(max_length=32, primary_key=True)
     code = CharField(max_length=32, null=False, index=True)
@@ -603,6 +647,7 @@ class InvitationCode(DataBaseModel):
         db_table = "invitation_code"
 
 
+# LLM工厂模型类，继承自DataBaseModel
 class LLMFactories(DataBaseModel):
     name = CharField(
         max_length=128, null=False, help_text="LLM factory name", primary_key=True
@@ -629,8 +674,9 @@ class LLMFactories(DataBaseModel):
         db_table = "llm_factories"
 
 
+# LLM模型类，继承自DataBaseModel
 class LLM(DataBaseModel):
-    # LLMs dictionary
+    # LLM字典
     llm_name = CharField(max_length=128, null=False, help_text="LLM name", index=True)
     model_type = CharField(
         max_length=128,
@@ -663,6 +709,7 @@ class LLM(DataBaseModel):
         db_table = "llm"
 
 
+# 租户LLM模型类，继承自DataBaseModel
 class TenantLLM(DataBaseModel):
     tenant_id = CharField(max_length=32, null=False, index=True)
     llm_factory = CharField(
@@ -690,6 +737,7 @@ class TenantLLM(DataBaseModel):
         primary_key = CompositeKey("tenant_id", "llm_factory", "llm_name")
 
 
+# 知识库模型类，继承自DataBaseModel
 class Knowledgebase(DataBaseModel):
     id = CharField(max_length=32, primary_key=True)
     avatar = TextField(null=True, help_text="avatar base64 string")
@@ -740,6 +788,7 @@ class Knowledgebase(DataBaseModel):
         db_table = "knowledgebase"
 
 
+# 文档模型类，继承自DataBaseModel
 class Document(DataBaseModel):
     id = CharField(max_length=32, primary_key=True)
     thumbnail = TextField(null=True, help_text="thumbnail base64 string")
@@ -791,6 +840,7 @@ class Document(DataBaseModel):
         db_table = "document"
 
 
+# 文件模型类，继承自DataBaseModel
 class File(DataBaseModel):
     id = CharField(max_length=32, primary_key=True)
     parent_id = CharField(
@@ -820,6 +870,7 @@ class File(DataBaseModel):
         db_table = "file"
 
 
+# 文件到文档模型类，继承自DataBaseModel
 class File2Document(DataBaseModel):
     id = CharField(max_length=32, primary_key=True)
     file_id = CharField(max_length=32, null=True, help_text="file id", index=True)
@@ -831,6 +882,7 @@ class File2Document(DataBaseModel):
         db_table = "file2document"
 
 
+# 任务模型类，继承自DataBaseModel
 class Task(DataBaseModel):
     id = CharField(max_length=32, primary_key=True)
     doc_id = CharField(max_length=32, null=False, index=True)
@@ -848,6 +900,7 @@ class Task(DataBaseModel):
     chunk_ids = LongTextField(null=True, help_text="chunk ids", default="")
 
 
+# 对话模型类，继承自DataBaseModel
 class Dialog(DataBaseModel):
     id = CharField(max_length=32, primary_key=True)
     tenant_id = CharField(max_length=32, null=False, index=True)
@@ -923,6 +976,7 @@ class Dialog(DataBaseModel):
         db_table = "dialog"
 
 
+# 会话模型类，继承自DataBaseModel
 class Conversation(DataBaseModel):
     id = CharField(max_length=32, primary_key=True)
     dialog_id = CharField(max_length=32, null=False, index=True)
@@ -937,6 +991,7 @@ class Conversation(DataBaseModel):
         db_table = "conversation"
 
 
+# API令牌模型类，继承自DataBaseModel
 class APIToken(DataBaseModel):
     tenant_id = CharField(max_length=32, null=False, index=True)
     token = CharField(max_length=255, null=False, index=True)
@@ -951,6 +1006,7 @@ class APIToken(DataBaseModel):
         primary_key = CompositeKey("tenant_id", "token")
 
 
+# API会话模型类，继承自DataBaseModel
 class API4Conversation(DataBaseModel):
     id = CharField(max_length=32, primary_key=True)
     dialog_id = CharField(max_length=32, null=False, index=True)
@@ -970,6 +1026,7 @@ class API4Conversation(DataBaseModel):
         db_table = "api_4_conversation"
 
 
+# 用户画布模型类，继承自DataBaseModel
 class UserCanvas(DataBaseModel):
     id = CharField(max_length=32, primary_key=True)
     avatar = TextField(null=True, help_text="avatar base64 string")
@@ -986,6 +1043,7 @@ class UserCanvas(DataBaseModel):
         db_table = "user_canvas"
 
 
+# 画布模板模型类，继承自DataBaseModel
 class CanvasTemplate(DataBaseModel):
     id = CharField(max_length=32, primary_key=True)
     avatar = TextField(null=True, help_text="avatar base64 string")
@@ -1001,6 +1059,7 @@ class CanvasTemplate(DataBaseModel):
         db_table = "canvas_template"
 
 
+# 数据库迁移函数
 def migrate_db():
     with DB.transaction():
         migrator = DatabaseMigrator[settings.DATABASE_TYPE.upper()].value(DB)
