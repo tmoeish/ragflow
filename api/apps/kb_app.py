@@ -30,13 +30,9 @@ from api.db.services.file_service import FileService
 from api.db.services.knowledgebase_service import KnowledgebaseService
 from api.db.services.user_service import TenantService, UserTenantService
 from api.utils import get_uuid
-from api.utils.api_utils import (
-    get_data_error_result,
-    get_json_result,
-    not_allowed_parameters,
-    server_error_response,
-    validate_request,
-)
+from api.utils.api_utils import (get_data_error_result, get_json_result,
+                                 not_allowed_parameters, server_error_response,
+                                 validate_request)
 from rag.nlp import search
 from rag.settings import PAGERANK_FLD
 

@@ -13,16 +13,12 @@ from typing import Any, Callable
 import networkx as nx
 import tiktoken
 
-from graphrag.general.extractor import (
-    DEFAULT_ENTITY_TYPES,
-    ENTITY_EXTRACTION_MAX_GLEANINGS,
-    Extractor,
-)
-from graphrag.general.graph_prompt import (
-    CONTINUE_PROMPT,
-    GRAPH_EXTRACTION_PROMPT,
-    LOOP_PROMPT,
-)
+from graphrag.general.extractor import (DEFAULT_ENTITY_TYPES,
+                                        ENTITY_EXTRACTION_MAX_GLEANINGS,
+                                        Extractor)
+from graphrag.general.graph_prompt import (CONTINUE_PROMPT,
+                                           GRAPH_EXTRACTION_PROMPT,
+                                           LOOP_PROMPT)
 from graphrag.utils import ErrorHandlerFn, perform_variable_replacements
 from rag.llm.chat_model import Base as CompletionLLM
 from rag.utils import num_tokens_from_string

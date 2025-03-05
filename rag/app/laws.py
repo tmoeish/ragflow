@@ -24,15 +24,9 @@ from tika import parser
 from api.db import ParserType
 from deepdoc.parser import DocxParser, HtmlParser, PdfParser, PlainParser
 from deepdoc.parser.utils import get_text
-from rag.nlp import (
-    bullets_category,
-    docx_question_level,
-    hierarchical_merge,
-    make_colon_as_title,
-    rag_tokenizer,
-    remove_contents_table,
-    tokenize_chunks,
-)
+from rag.nlp import (bullets_category, docx_question_level, hierarchical_merge,
+                     make_colon_as_title, rag_tokenizer, remove_contents_table,
+                     tokenize_chunks)
 
 
 class Docx(DocxParser):

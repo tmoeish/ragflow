@@ -23,12 +23,8 @@ import pandas as pd
 
 from api.utils import get_uuid
 from graphrag.query_analyze_prompt import PROMPTS
-from graphrag.utils import (
-    get_entity_type2sampels,
-    get_llm_cache,
-    get_relation,
-    set_llm_cache,
-)
+from graphrag.utils import (get_entity_type2sampels, get_llm_cache,
+                            get_relation, set_llm_cache)
 from rag.nlp.search import Dealer, index_name
 from rag.utils import num_tokens_from_string
 from rag.utils.doc_store_conn import OrderByExpr

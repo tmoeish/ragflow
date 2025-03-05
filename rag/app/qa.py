@@ -28,17 +28,9 @@ from PIL import Image
 
 from deepdoc.parser import DocxParser, ExcelParser, PdfParser
 from deepdoc.parser.utils import get_text
-from rag.nlp import (
-    add_positions,
-    concat_img,
-    docx_question_level,
-    has_qbullet,
-    is_english,
-    qbullets_category,
-    rag_tokenizer,
-    random_choices,
-    tokenize_table,
-)
+from rag.nlp import (add_positions, concat_img, docx_question_level,
+                     has_qbullet, is_english, qbullets_category, rag_tokenizer,
+                     random_choices, tokenize_table)
 
 
 class Excel(ExcelParser):

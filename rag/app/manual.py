@@ -24,15 +24,9 @@ from PIL import Image
 
 from api.db import ParserType
 from deepdoc.parser import DocxParser, PdfParser, PlainParser
-from rag.nlp import (
-    bullets_category,
-    docx_question_level,
-    rag_tokenizer,
-    title_frequency,
-    tokenize,
-    tokenize_chunks,
-    tokenize_table,
-)
+from rag.nlp import (bullets_category, docx_question_level, rag_tokenizer,
+                     title_frequency, tokenize, tokenize_chunks,
+                     tokenize_table)
 from rag.utils import num_tokens_from_string
 
 

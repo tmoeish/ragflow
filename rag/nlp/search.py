@@ -22,12 +22,8 @@ import numpy as np
 from rag.nlp import query, rag_tokenizer
 from rag.settings import PAGERANK_FLD, TAG_FLD
 from rag.utils import rmSpace
-from rag.utils.doc_store_conn import (
-    DocStoreConnection,
-    FusionExpr,
-    MatchDenseExpr,
-    OrderByExpr,
-)
+from rag.utils.doc_store_conn import (DocStoreConnection, FusionExpr,
+                                      MatchDenseExpr, OrderByExpr)
 
 
 def index_name(uid):

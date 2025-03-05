@@ -31,14 +31,9 @@ from api.db.services.file_service import FileService
 from api.db.services.knowledgebase_service import KnowledgebaseService
 from api.db.services.llm_service import LLMBundle, TenantLLMService
 from api.db.services.task_service import TaskService, queue_tasks
-from api.utils.api_utils import (
-    construct_json_result,
-    get_error_data_result,
-    get_parser_config,
-    get_result,
-    server_error_response,
-    token_required,
-)
+from api.utils.api_utils import (construct_json_result, get_error_data_result,
+                                 get_parser_config, get_result,
+                                 server_error_response, token_required)
 from rag.app.qa import beAdoc, rmPrefix
 from rag.app.tag import label_question
 from rag.nlp import rag_tokenizer, search

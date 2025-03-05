@@ -22,15 +22,12 @@ from peewee import MySQLDatabase, PostgresqlDatabase
 
 from agent.canvas import Canvas
 from api.db.db_models import APIToken
-from api.db.services.canvas_service import CanvasTemplateService, UserCanvasService
+from api.db.services.canvas_service import (CanvasTemplateService,
+                                            UserCanvasService)
 from api.settings import RetCode
 from api.utils import get_uuid
-from api.utils.api_utils import (
-    get_data_error_result,
-    get_json_result,
-    server_error_response,
-    validate_request,
-)
+from api.utils.api_utils import (get_data_error_result, get_json_result,
+                                 server_error_response, validate_request)
 
 
 @manager.route("/templates", methods=["GET"])  # noqa: F821

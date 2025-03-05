@@ -1215,9 +1215,8 @@ class HunyuanChat(Base):
         self.client = hunyuan_client.HunyuanClient(cred, "")
 
     def chat(self, system, history, gen_conf):
-        from tencentcloud.common.exception.tencent_cloud_sdk_exception import (
-            TencentCloudSDKException,
-        )
+        from tencentcloud.common.exception.tencent_cloud_sdk_exception import \
+            TencentCloudSDKException
         from tencentcloud.hunyuan.v20230901 import models
 
         _gen_conf = {}
@@ -1241,9 +1240,8 @@ class HunyuanChat(Base):
             return ans + "\n**ERROR**: " + str(e), 0
 
     def chat_streamly(self, system, history, gen_conf):
-        from tencentcloud.common.exception.tencent_cloud_sdk_exception import (
-            TencentCloudSDKException,
-        )
+        from tencentcloud.common.exception.tencent_cloud_sdk_exception import \
+            TencentCloudSDKException
         from tencentcloud.hunyuan.v20230901 import models
 
         _gen_conf = {}

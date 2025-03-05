@@ -23,15 +23,10 @@ from api import settings
 from api.db import StatusEnum, UserTenantRole
 from api.db.db_models import UserTenant
 from api.db.services.user_service import UserService, UserTenantService
-
 # 导入工具函数
 from api.utils import delta_seconds, get_uuid
-from api.utils.api_utils import (
-    get_data_error_result,
-    get_json_result,
-    server_error_response,
-    validate_request,
-)
+from api.utils.api_utils import (get_data_error_result, get_json_result,
+                                 server_error_response, validate_request)
 
 
 @manager.route("/<tenant_id>/user/list", methods=["GET"])  # noqa: F821

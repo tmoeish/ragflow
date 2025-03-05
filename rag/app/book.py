@@ -22,18 +22,10 @@ from tika import parser
 
 from deepdoc.parser import DocxParser, HtmlParser, PdfParser, PlainParser
 from deepdoc.parser.utils import get_text
-from rag.nlp import (
-    bullets_category,
-    hierarchical_merge,
-    is_english,
-    make_colon_as_title,
-    naive_merge,
-    rag_tokenizer,
-    random_choices,
-    remove_contents_table,
-    tokenize_chunks,
-    tokenize_table,
-)
+from rag.nlp import (bullets_category, hierarchical_merge, is_english,
+                     make_colon_as_title, naive_merge, rag_tokenizer,
+                     random_choices, remove_contents_table, tokenize_chunks,
+                     tokenize_table)
 
 
 class Pdf(PdfParser):

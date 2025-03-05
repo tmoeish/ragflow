@@ -27,22 +27,13 @@ from api.db import FileType, UserTenantRole
 from api.db.db_models import TenantLLM
 from api.db.services.file_service import FileService
 from api.db.services.llm_service import LLMService, TenantLLMService
-from api.db.services.user_service import TenantService, UserService, UserTenantService
-from api.utils import (
-    current_timestamp,
-    datetime_format,
-    decrypt,
-    download_img,
-    get_format_time,
-    get_uuid,
-)
-from api.utils.api_utils import (
-    construct_response,
-    get_data_error_result,
-    get_json_result,
-    server_error_response,
-    validate_request,
-)
+from api.db.services.user_service import (TenantService, UserService,
+                                          UserTenantService)
+from api.utils import (current_timestamp, datetime_format, decrypt,
+                       download_img, get_format_time, get_uuid)
+from api.utils.api_utils import (construct_response, get_data_error_result,
+                                 get_json_result, server_error_response,
+                                 validate_request)
 
 
 @manager.route("/login", methods=["POST", "GET"])  # noqa: F821

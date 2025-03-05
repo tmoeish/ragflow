@@ -21,35 +21,19 @@ from io import BytesIO
 from timeit import default_timer as timer
 
 from docx import Document
-from docx.image.exceptions import (
-    InvalidImageStreamError,
-    UnexpectedEndOfFileError,
-    UnrecognizedImageError,
-)
+from docx.image.exceptions import (InvalidImageStreamError,
+                                   UnexpectedEndOfFileError,
+                                   UnrecognizedImageError)
 from markdown import markdown
 from PIL import Image
 from tika import parser
 
-from deepdoc.parser import (
-    DocxParser,
-    ExcelParser,
-    HtmlParser,
-    JsonParser,
-    MarkdownParser,
-    PdfParser,
-    TxtParser,
-)
+from deepdoc.parser import (DocxParser, ExcelParser, HtmlParser, JsonParser,
+                            MarkdownParser, PdfParser, TxtParser)
 from deepdoc.parser.pdf_parser import PlainParser
-from rag.nlp import (
-    concat_img,
-    find_codec,
-    naive_merge,
-    naive_merge_docx,
-    rag_tokenizer,
-    tokenize_chunks,
-    tokenize_chunks_docx,
-    tokenize_table,
-)
+from rag.nlp import (concat_img, find_codec, naive_merge, naive_merge_docx,
+                     rag_tokenizer, tokenize_chunks, tokenize_chunks_docx,
+                     tokenize_table)
 from rag.utils import num_tokens_from_string
 
 

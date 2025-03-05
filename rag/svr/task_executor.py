@@ -13,35 +13,15 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-# from beartype import BeartypeConf
-# from beartype.claw import beartype_all  # <-- you didn't sign up for this
-# beartype_all(conf=BeartypeConf(violation_type=UserWarning))    # <-- emit warnings from all code
-import random
-import sys
-
-from api.utils.log_utils import get_project_base_directory, initRootLogger
-from graphrag.general.graph_extractor import GraphExtractor as GeneralKGExt
-from graphrag.general.index import Dealer, WithCommunity, WithResolution
-from graphrag.light.graph_extractor import GraphExtractor as LightKGExt
-from graphrag.utils import (
-    get_llm_cache,
-    get_tags_from_cache,
-    set_llm_cache,
-    set_tags_to_cache,
-)
-from rag.prompts import content_tagging, keyword_extraction, question_proposal
-
-CONSUMER_NO = "0" if len(sys.argv) < 2 else sys.argv[1]
-CONSUMER_NAME = "task_executor_" + CONSUMER_NO
-initRootLogger(CONSUMER_NAME)
-
 import asyncio
 import copy
 import json
 import logging
 import os
+import random
 import re
 import signal
+import sys
 import threading
 import time
 import tracemalloc
@@ -62,35 +42,28 @@ from api.db.services.document_service import DocumentService
 from api.db.services.file2document_service import File2DocumentService
 from api.db.services.llm_service import LLMBundle
 from api.db.services.task_service import TaskService
+from api.utils.log_utils import get_project_base_directory, initRootLogger
 from api.versions import get_ragflow_version
-from rag.app import (
-    audio,
-    book,
-    email,
-    laws,
-    manual,
-    naive,
-    one,
-    paper,
-    picture,
-    presentation,
-    qa,
-    resume,
-    table,
-    tag,
-)
+from graphrag.general.graph_extractor import GraphExtractor as GeneralKGExt
+from graphrag.general.index import Dealer, WithCommunity, WithResolution
+from graphrag.light.graph_extractor import GraphExtractor as LightKGExt
+from graphrag.utils import (get_llm_cache, get_tags_from_cache, set_llm_cache,
+                            set_tags_to_cache)
+from rag.app import (audio, book, email, laws, manual, naive, one, paper,
+                     picture, presentation, qa, resume, table, tag)
 from rag.nlp import rag_tokenizer, search
-from rag.raptor import RecursiveAbstractiveProcessing4TreeOrganizedRetrieval as Raptor
-from rag.settings import (
-    DOC_MAXIMUM_SIZE,
-    PAGERANK_FLD,
-    SVR_QUEUE_NAME,
-    TAG_FLD,
-    print_rag_settings,
-)
+from rag.prompts import content_tagging, keyword_extraction, question_proposal
+from rag.raptor import \
+    RecursiveAbstractiveProcessing4TreeOrganizedRetrieval as Raptor
+from rag.settings import (DOC_MAXIMUM_SIZE, PAGERANK_FLD, SVR_QUEUE_NAME,
+                          TAG_FLD, print_rag_settings)
 from rag.utils import num_tokens_from_string
 from rag.utils.redis_conn import REDIS_CONN, Payload
 from rag.utils.storage_factory import STORAGE_IMPL
+
+CONSUMER_NO = "0" if len(sys.argv) < 2 else sys.argv[1]
+CONSUMER_NAME = "task_executor_" + CONSUMER_NO
+initRootLogger(CONSUMER_NAME)
 
 BATCH_SIZE = 64
 

@@ -22,14 +22,8 @@ from api.db.db_models import DB, LLM, LLMFactories, TenantLLM
 from api.db.services.common_service import CommonService
 from api.db.services.user_service import TenantService
 from api.utils.file_utils import get_project_base_directory
-from rag.llm import (
-    ChatModel,
-    CvModel,
-    EmbeddingModel,
-    RerankModel,
-    Seq2txtModel,
-    TTSModel,
-)
+from rag.llm import (ChatModel, CvModel, EmbeddingModel, RerankModel,
+                     Seq2txtModel, TTSModel)
 
 
 class LLMFactoriesService(CommonService):

@@ -837,9 +837,8 @@ class HunyuanCV(Base):
         self.lang = lang
 
     def describe(self, image, max_tokens=4096):
-        from tencentcloud.common.exception.tencent_cloud_sdk_exception import (
-            TencentCloudSDKException,
-        )
+        from tencentcloud.common.exception.tencent_cloud_sdk_exception import \
+            TencentCloudSDKException
         from tencentcloud.hunyuan.v20230901 import models
 
         b64 = self.image2base64(image)

@@ -33,14 +33,9 @@ from api.utils.file_utils import get_project_base_directory
 from rag import settings
 from rag.settings import PAGERANK_FLD
 from rag.utils import singleton
-from rag.utils.doc_store_conn import (
-    DocStoreConnection,
-    FusionExpr,
-    MatchDenseExpr,
-    MatchExpr,
-    MatchTextExpr,
-    OrderByExpr,
-)
+from rag.utils.doc_store_conn import (DocStoreConnection, FusionExpr,
+                                      MatchDenseExpr, MatchExpr, MatchTextExpr,
+                                      OrderByExpr)
 
 logger = logging.getLogger("ragflow.infinity_conn")
 
