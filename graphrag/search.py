@@ -17,21 +17,17 @@ import json
 import logging
 from collections import defaultdict
 from copy import deepcopy
+
 import json_repair
 import pandas as pd
 
 from api.utils import get_uuid
 from graphrag.query_analyze_prompt import PROMPTS
-from graphrag.utils import (
-    get_entity_type2sampels,
-    get_llm_cache,
-    set_llm_cache,
-    get_relation,
-)
+from graphrag.utils import (get_entity_type2sampels, get_llm_cache,
+                            get_relation, set_llm_cache)
+from rag.nlp.search import Dealer, index_name
 from rag.utils import num_tokens_from_string
 from rag.utils.doc_store_conn import OrderByExpr
-
-from rag.nlp.search import Dealer, index_name
 
 
 class KGSearch(Dealer):
@@ -407,8 +403,9 @@ class KGSearch(Dealer):
 
 
 if __name__ == "__main__":
-    from api import settings
     import argparse
+
+    from api import settings
     from api.db import LLMType
     from api.db.services.knowledgebase_service import KnowledgebaseService
     from api.db.services.llm_service import LLMBundle

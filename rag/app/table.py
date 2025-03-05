@@ -17,16 +17,17 @@
 import copy
 import re
 from io import BytesIO
-from xpinyin import Pinyin
+
 import numpy as np
 import pandas as pd
-from openpyxl import load_workbook
 from dateutil.parser import parse as datetime_parse
+from openpyxl import load_workbook
+from xpinyin import Pinyin
 
 from api.db.services.knowledgebase_service import KnowledgebaseService
+from deepdoc.parser import ExcelParser
 from deepdoc.parser.utils import get_text
 from rag.nlp import rag_tokenizer, tokenize
-from deepdoc.parser import ExcelParser
 
 
 class Excel(ExcelParser):

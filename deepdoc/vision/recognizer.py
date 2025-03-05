@@ -15,18 +15,19 @@
 #
 
 import logging
-import os
 import math
-import numpy as np
-import cv2
+import os
 from functools import cmp_to_key
 
+import cv2
+import numpy as np
 
 from api.utils.file_utils import get_project_base_directory
-from .operators import *  # noqa: F403
-from .operators import preprocess
+
 from . import operators
 from .ocr import load_model
+from .operators import *  # noqa: F403
+from .operators import preprocess
 
 
 class Recognizer(object):

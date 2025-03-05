@@ -14,9 +14,8 @@
 #  limitations under the License.
 #
 
-from .document import Document
-
 from .base import Base
+from .document import Document
 
 
 class DataSet(Base):

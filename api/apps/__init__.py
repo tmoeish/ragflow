@@ -13,27 +13,27 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 #
+import logging
 import os
 import sys
-import logging
 from importlib.util import module_from_spec, spec_from_file_location
 from pathlib import Path
-from flask import Blueprint, Flask
-from werkzeug.wrappers.request import Request
-from flask_cors import CORS
-from flasgger import Swagger
-from itsdangerous.url_safe import URLSafeTimedSerializer as Serializer
 
+from flasgger import Swagger
+from flask import Blueprint, Flask
+from flask_cors import CORS
+from flask_login import LoginManager
+from itsdangerous.url_safe import URLSafeTimedSerializer as Serializer
+from werkzeug.wrappers.request import Request
+
+from api import settings
+from api.constants import API_VERSION
 from api.db import StatusEnum
 from api.db.db_models import close_connection
 from api.db.services import UserService
 from api.utils import CustomJSONEncoder, commands
-
-from flask_session import Session
-from flask_login import LoginManager
-from api import settings
 from api.utils.api_utils import server_error_response
-from api.constants import API_VERSION
+from flask_session import Session
 
 __all__ = ["app"]
 

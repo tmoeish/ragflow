@@ -19,21 +19,17 @@ import re
 
 import flask
 from flask import request
-from flask_login import login_required, current_user
+from flask_login import current_user, login_required
 
+from api import settings
+from api.db import FileSource, FileType
+from api.db.services import duplicate_name
 from api.db.services.document_service import DocumentService
 from api.db.services.file2document_service import File2DocumentService
-from api.utils.api_utils import (
-    server_error_response,
-    get_data_error_result,
-    validate_request,
-)
-from api.utils import get_uuid
-from api.db import FileType, FileSource
-from api.db.services import duplicate_name
 from api.db.services.file_service import FileService
-from api import settings
-from api.utils.api_utils import get_json_result
+from api.utils import get_uuid
+from api.utils.api_utils import (get_data_error_result, get_json_result,
+                                 server_error_response, validate_request)
 from api.utils.file_utils import filename_type
 from rag.utils.storage_factory import STORAGE_IMPL
 

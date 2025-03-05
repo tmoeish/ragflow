@@ -15,24 +15,17 @@
 #
 
 import logging
-from tika import parser
 import re
 from io import BytesIO
 
+from tika import parser
+
+from deepdoc.parser import DocxParser, HtmlParser, PdfParser, PlainParser
 from deepdoc.parser.utils import get_text
-from rag.nlp import (
-    bullets_category,
-    is_english,
-    remove_contents_table,
-    hierarchical_merge,
-    make_colon_as_title,
-    naive_merge,
-    random_choices,
-    tokenize_table,
-    tokenize_chunks,
-)
-from rag.nlp import rag_tokenizer
-from deepdoc.parser import PdfParser, DocxParser, PlainParser, HtmlParser
+from rag.nlp import (bullets_category, hierarchical_merge, is_english,
+                     make_colon_as_title, naive_merge, rag_tokenizer,
+                     random_choices, remove_contents_table, tokenize_chunks,
+                     tokenize_table)
 
 
 class Pdf(PdfParser):

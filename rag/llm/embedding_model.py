@@ -13,25 +13,26 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 #
+import asyncio
+import json
 import logging
+import os
 import re
 import threading
+from abc import ABC
+
+import dashscope
+import google.generativeai as genai
+import numpy as np
 import requests
 from huggingface_hub import snapshot_download
-from zhipuai import ZhipuAI
-import os
-from abc import ABC
 from ollama import Client
-import dashscope
 from openai import OpenAI
-import numpy as np
-import asyncio
+from zhipuai import ZhipuAI
 
 from api import settings
 from api.utils.file_utils import get_home_cache_dir
 from rag.utils import num_tokens_from_string, truncate
-import google.generativeai as genai
-import json
 
 
 class Base(ABC):
@@ -75,8 +76,8 @@ class DefaultEmbedding(Base):
         """
         if not settings.LIGHTEN:
             with DefaultEmbedding._model_lock:
-                from FlagEmbedding import FlagModel
                 import torch
+                from FlagEmbedding import FlagModel
 
                 if (
                     not DefaultEmbedding._model

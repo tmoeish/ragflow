@@ -17,20 +17,13 @@ import json
 import logging
 import os
 
+from api.db import LLMType
+from api.db.db_models import DB, LLM, LLMFactories, TenantLLM
+from api.db.services.common_service import CommonService
 from api.db.services.user_service import TenantService
 from api.utils.file_utils import get_project_base_directory
-from rag.llm import (
-    EmbeddingModel,
-    CvModel,
-    ChatModel,
-    RerankModel,
-    Seq2txtModel,
-    TTSModel,
-)
-from api.db import LLMType
-from api.db.db_models import DB
-from api.db.db_models import LLMFactories, LLM, TenantLLM
-from api.db.services.common_service import CommonService
+from rag.llm import (ChatModel, CvModel, EmbeddingModel, RerankModel,
+                     Seq2txtModel, TTSModel)
 
 
 class LLMFactoriesService(CommonService):

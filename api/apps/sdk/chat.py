@@ -16,6 +16,7 @@
 import logging
 
 from flask import request
+
 from api import settings
 from api.db import StatusEnum
 from api.db.services.dialog_service import DialogService
@@ -23,8 +24,8 @@ from api.db.services.knowledgebase_service import KnowledgebaseService
 from api.db.services.llm_service import TenantLLMService
 from api.db.services.user_service import TenantService
 from api.utils import get_uuid
-from api.utils.api_utils import get_error_data_result, token_required
-from api.utils.api_utils import get_result
+from api.utils.api_utils import (get_error_data_result, get_result,
+                                 token_required)
 
 
 @manager.route("/chats", methods=["POST"])  # noqa: F821

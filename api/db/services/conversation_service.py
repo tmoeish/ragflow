@@ -13,16 +13,16 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 #
+import json
 import time
 from uuid import uuid4
+
 from api.db import StatusEnum
-from api.db.db_models import Conversation, DB
+from api.db.db_models import DB, Conversation
 from api.db.services.api_service import API4ConversationService
 from api.db.services.common_service import CommonService
 from api.db.services.dialog_service import DialogService, chat
 from api.utils import get_uuid
-import json
-
 from rag.prompts import chunks_format
 
 

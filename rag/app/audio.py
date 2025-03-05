@@ -17,9 +17,8 @@
 import re
 
 from api.db import LLMType
-from rag.nlp import rag_tokenizer
 from api.db.services.llm_service import LLMBundle
-from rag.nlp import tokenize
+from rag.nlp import rag_tokenizer, tokenize
 
 
 def chunk(filename, binary, tenant_id, lang, callback=None, **kwargs):

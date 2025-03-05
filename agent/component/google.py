@@ -15,8 +15,10 @@
 #
 import logging
 from abc import ABC
-from serpapi import GoogleSearch
+
 import pandas as pd
+from serpapi import GoogleSearch
+
 from agent.component.base import ComponentBase, ComponentParamBase
 
 

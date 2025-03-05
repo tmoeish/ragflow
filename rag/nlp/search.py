@@ -17,16 +17,13 @@ import logging
 import re
 from dataclasses import dataclass
 
-from rag.settings import TAG_FLD, PAGERANK_FLD
-from rag.utils import rmSpace
-from rag.nlp import rag_tokenizer, query
 import numpy as np
-from rag.utils.doc_store_conn import (
-    DocStoreConnection,
-    MatchDenseExpr,
-    FusionExpr,
-    OrderByExpr,
-)
+
+from rag.nlp import query, rag_tokenizer
+from rag.settings import PAGERANK_FLD, TAG_FLD
+from rag.utils import rmSpace
+from rag.utils.doc_store_conn import (DocStoreConnection, FusionExpr,
+                                      MatchDenseExpr, OrderByExpr)
 
 
 def index_name(uid):

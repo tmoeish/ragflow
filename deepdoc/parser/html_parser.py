@@ -15,10 +15,11 @@
 #  limitations under the License.
 #
 
-from rag.nlp import find_codec
-import readability
-import html_text
 import chardet
+import html_text
+import readability
+
+from rag.nlp import find_codec
 
 
 def get_encoding(file):

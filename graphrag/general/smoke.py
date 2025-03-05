@@ -25,7 +25,7 @@ from api.db.services.document_service import DocumentService
 from api.db.services.knowledgebase_service import KnowledgebaseService
 from api.db.services.llm_service import LLMBundle
 from api.db.services.user_service import TenantService
-from graphrag.general.index import WithCommunity, Dealer, WithResolution
+from graphrag.general.index import Dealer, WithCommunity, WithResolution
 from graphrag.light.graph_extractor import GraphExtractor
 from rag.utils.redis_conn import RedisDistributedLock
 

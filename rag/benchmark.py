@@ -13,23 +13,23 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 #
+import argparse
 import json
 import os
 import sys
 import time
-import argparse
 from collections import defaultdict
 
-from api.db import LLMType
-from api.db.services.llm_service import LLMBundle
-from api.db.services.knowledgebase_service import KnowledgebaseService
-from api import settings
-from api.utils import get_uuid
-from rag.nlp import tokenize, search
-from ranx import evaluate
-from ranx import Qrels, Run
 import pandas as pd
+from ranx import Qrels, Run, evaluate
 from tqdm import tqdm
+
+from api import settings
+from api.db import LLMType
+from api.db.services.knowledgebase_service import KnowledgebaseService
+from api.db.services.llm_service import LLMBundle
+from api.utils import get_uuid
+from rag.nlp import search, tokenize
 
 global max_docs
 max_docs = sys.maxsize

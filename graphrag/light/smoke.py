@@ -16,9 +16,10 @@
 
 import argparse
 import json
-from api import settings
+
 import networkx as nx
 
+from api import settings
 from api.db import LLMType
 from api.db.services.document_service import DocumentService
 from api.db.services.knowledgebase_service import KnowledgebaseService

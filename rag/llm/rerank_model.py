@@ -13,22 +13,22 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 #
+import json
+import os
 import re
 import threading
+from abc import ABC
 from urllib.parse import urljoin
 
-import requests
 import httpx
-from huggingface_hub import snapshot_download
-import os
-from abc import ABC
 import numpy as np
+import requests
+from huggingface_hub import snapshot_download
 from yarl import URL
 
 from api import settings
 from api.utils.file_utils import get_home_cache_dir
 from rag.utils import num_tokens_from_string, truncate
-import json
 
 
 def sigmoid(x):
@@ -529,8 +529,9 @@ class QWenRerank(Base):
         )
 
     def similarity(self, query: str, texts: list):
-        import dashscope
         from http import HTTPStatus
+
+        import dashscope
 
         resp = dashscope.TextReRank.call(
             api_key=self.api_key,

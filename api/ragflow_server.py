@@ -14,65 +14,47 @@
 #  limitations under the License.
 #
 
-# RAG设置模块 - 用于加载和显示RAG相关配置
-from rag.settings import print_rag_settings
-
-# 工具函数 - 用于显示系统配置信息
-from api.utils import show_configs
-
-# 版本控制 - 提供系统版本信息
-from api.versions import get_ragflow_version
-
-# 数据初始化 - 用于初始化Web应用的基础数据
-from api.db.init_data import init_web_data
-
-# 数据库模型 - 初始化数据库表结构
-from api.db.db_models import init_database_tables as init_web_db
-
-# 通用工具库
-from api import utils
-
-# 文档服务 - 处理文档的更新和进度追踪
-from api.db.services.document_service import DocumentService
-
-# 运行时配置 - 管理应用运行时的配置项
-from api.db.runtime_config import RuntimeConfig
-
-# Flask应用实例 - 主要的Web应用对象
-from api.apps import app
-
-# 应用设置 - 全局设置和配置
-from api import settings
+# 日志系统
+import logging
+# 操作系统接口
+import os
+# 信号处理 - 用于优雅关闭应用
+import signal
+# 系统功能访问
+import sys
+# 多线程支持
+import threading
+# 时间处理
+import time
+# 异常跟踪
+import traceback
+# 线程池执行器 - 用于异步任务处理
+from concurrent.futures import ThreadPoolExecutor
 
 # Werkzeug服务器 - 用于开发环境中运行Flask应用
 from werkzeug.serving import run_simple
 
-# 多线程支持
-import threading
-
-# 线程池执行器 - 用于异步任务处理
-from concurrent.futures import ThreadPoolExecutor
-
-# 异常跟踪
-import traceback
-
-# 时间处理
-import time
-
-# 系统功能访问
-import sys
-
-# 信号处理 - 用于优雅关闭应用
-import signal
-
-# 操作系统接口
-import os
-
-# 日志系统
-import logging
-
+# 应用设置 - 全局设置和配置
+# 通用工具库
+from api import settings, utils
+# Flask应用实例 - 主要的Web应用对象
+from api.apps import app
+# 数据库模型 - 初始化数据库表结构
+from api.db.db_models import init_database_tables as init_web_db
+# 数据初始化 - 用于初始化Web应用的基础数据
+from api.db.init_data import init_web_data
+# 运行时配置 - 管理应用运行时的配置项
+from api.db.runtime_config import RuntimeConfig
+# 文档服务 - 处理文档的更新和进度追踪
+from api.db.services.document_service import DocumentService
+# 工具函数 - 用于显示系统配置信息
+from api.utils import show_configs
 # 日志工具 - 初始化根日志器
 from api.utils.log_utils import initRootLogger
+# 版本控制 - 提供系统版本信息
+from api.versions import get_ragflow_version
+# RAG设置模块 - 用于加载和显示RAG相关配置
+from rag.settings import print_rag_settings
 
 # 初始化根日志器，设置日志文件名为'ragflow_server'
 initRootLogger("ragflow_server")

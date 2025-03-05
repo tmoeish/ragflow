@@ -14,8 +14,8 @@
 #  limitations under the License.
 #
 
-from ragflow_sdk import RAGFlow
 from common import HOST_ADDRESS
+from ragflow_sdk import RAGFlow
 
 
 def test_create_chat_with_name(get_api_key_fixture):

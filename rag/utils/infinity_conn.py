@@ -14,32 +14,28 @@
 #  limitations under the License.
 #
 
+import copy
+import json
 import logging
 import os
 import re
-import json
 import time
-import copy
+
 import infinity
+import polars as pl
 from infinity.common import ConflictType, InfinityException, SortType
-from infinity.index import IndexInfo, IndexType
 from infinity.connection_pool import ConnectionPool
 from infinity.errors import ErrorCode
+from infinity.index import IndexInfo, IndexType
+from polars.series.series import Series
+
+from api.utils.file_utils import get_project_base_directory
 from rag import settings
 from rag.settings import PAGERANK_FLD
 from rag.utils import singleton
-import polars as pl
-from polars.series.series import Series
-from api.utils.file_utils import get_project_base_directory
-
-from rag.utils.doc_store_conn import (
-    DocStoreConnection,
-    MatchExpr,
-    MatchTextExpr,
-    MatchDenseExpr,
-    FusionExpr,
-    OrderByExpr,
-)
+from rag.utils.doc_store_conn import (DocStoreConnection, FusionExpr,
+                                      MatchDenseExpr, MatchExpr, MatchTextExpr,
+                                      OrderByExpr)
 
 logger = logging.getLogger("ragflow.infinity_conn")
 

@@ -13,9 +13,9 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 #
+import logging
 import os
 import os.path
-import logging
 from logging.handlers import RotatingFileHandler
 
 

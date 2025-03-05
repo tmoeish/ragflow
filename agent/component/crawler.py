@@ -13,9 +13,11 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 #
-from abc import ABC
 import asyncio
+from abc import ABC
+
 from crawl4ai import AsyncWebCrawler
+
 from agent.component.base import ComponentBase, ComponentParamBase
 from api.utils.web_utils import is_valid_url
 

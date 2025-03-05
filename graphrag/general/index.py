@@ -15,25 +15,19 @@
 #
 import json
 import logging
-from functools import reduce, partial
+from functools import partial, reduce
+
 import networkx as nx
 
 from api import settings
-from graphrag.general.community_reports_extractor import CommunityReportsExtractor
 from graphrag.entity_resolution import EntityResolution
+from graphrag.general.community_reports_extractor import \
+    CommunityReportsExtractor
 from graphrag.general.extractor import Extractor
 from graphrag.general.graph_extractor import DEFAULT_ENTITY_TYPES
-from graphrag.utils import (
-    graph_merge,
-    set_entity,
-    get_relation,
-    set_relation,
-    get_entity,
-    get_graph,
-    set_graph,
-    chunk_id,
-    update_nodes_pagerank_nhop_neighbour,
-)
+from graphrag.utils import (chunk_id, get_entity, get_graph, get_relation,
+                            graph_merge, set_entity, set_graph, set_relation,
+                            update_nodes_pagerank_nhop_neighbour)
 from rag.nlp import rag_tokenizer, search
 from rag.utils.redis_conn import RedisDistributedLock
 

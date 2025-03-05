@@ -17,10 +17,12 @@
 import logging
 import os
 import time
+
+from azure.identity import AzureAuthorityHosts, ClientSecretCredential
+from azure.storage.filedatalake import FileSystemClient
+
 from rag import settings
 from rag.utils import singleton
-from azure.identity import ClientSecretCredential, AzureAuthorityHosts
-from azure.storage.filedatalake import FileSystemClient
 
 
 @singleton

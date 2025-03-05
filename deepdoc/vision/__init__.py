@@ -17,16 +17,18 @@ import io
 
 import pdfplumber
 
+from .layout_recognizer import LayoutRecognizer4YOLOv10 as LayoutRecognizer
 from .ocr import OCR
 from .recognizer import Recognizer
-from .layout_recognizer import LayoutRecognizer4YOLOv10 as LayoutRecognizer
 from .table_structure_recognizer import TableStructureRecognizer
 
 
 def init_in_out(args):
-    from PIL import Image
     import os
     import traceback
+
+    from PIL import Image
+
     from api.utils.file_utils import traversal_files
 
     images = []

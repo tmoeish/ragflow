@@ -15,15 +15,15 @@
 #
 import os
 from datetime import date
-from enum import IntEnum, Enum
-import rag.utils.es_conn
-import rag.utils.infinity_conn
+from enum import Enum, IntEnum
 
 import rag.utils
-from rag.nlp import search
-from graphrag import search as kg_search
-from api.utils import get_base_config, decrypt_database_config
+import rag.utils.es_conn
+import rag.utils.infinity_conn
 from api.constants import RAG_FLOW_SERVICE_NAME
+from api.utils import decrypt_database_config, get_base_config
+from graphrag import search as kg_search
+from rag.nlp import search
 
 LIGHTEN = int(os.environ.get("LIGHTEN", "0"))
 

@@ -16,9 +16,11 @@
 
 import logging
 import time
+from io import BytesIO
+
 from minio import Minio
 from minio.error import S3Error
-from io import BytesIO
+
 from rag import settings
 from rag.utils import singleton
 

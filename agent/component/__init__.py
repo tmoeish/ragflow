@@ -15,41 +15,42 @@
 #
 
 import importlib
-from .begin import Begin, BeginParam
-from .generate import Generate, GenerateParam
-from .retrieval import Retrieval, RetrievalParam
-from .answer import Answer, AnswerParam
-from .categorize import Categorize, CategorizeParam
-from .switch import Switch, SwitchParam
-from .relevant import Relevant, RelevantParam
-from .message import Message, MessageParam
-from .rewrite import RewriteQuestion, RewriteQuestionParam
-from .keyword import KeywordExtract, KeywordExtractParam
-from .concentrator import Concentrator, ConcentratorParam
-from .baidu import Baidu, BaiduParam
-from .duckduckgo import DuckDuckGo, DuckDuckGoParam
-from .wikipedia import Wikipedia, WikipediaParam
-from .pubmed import PubMed, PubMedParam
-from .arxiv import ArXiv, ArXivParam
-from .google import Google, GoogleParam
-from .bing import Bing, BingParam
-from .googlescholar import GoogleScholar, GoogleScholarParam
-from .deepl import DeepL, DeepLParam
-from .github import GitHub, GitHubParam
-from .baidufanyi import BaiduFanyi, BaiduFanyiParam
-from .qweather import QWeather, QWeatherParam
-from .exesql import ExeSQL, ExeSQLParam
-from .yahoofinance import YahooFinance, YahooFinanceParam
-from .wencai import WenCai, WenCaiParam
-from .jin10 import Jin10, Jin10Param
-from .tushare import TuShare, TuShareParam
+
 from .akshare import AkShare, AkShareParam
+from .answer import Answer, AnswerParam
+from .arxiv import ArXiv, ArXivParam
+from .baidu import Baidu, BaiduParam
+from .baidufanyi import BaiduFanyi, BaiduFanyiParam
+from .begin import Begin, BeginParam
+from .bing import Bing, BingParam
+from .categorize import Categorize, CategorizeParam
+from .concentrator import Concentrator, ConcentratorParam
 from .crawler import Crawler, CrawlerParam
-from .invoke import Invoke, InvokeParam
-from .template import Template, TemplateParam
+from .deepl import DeepL, DeepLParam
+from .duckduckgo import DuckDuckGo, DuckDuckGoParam
 from .email import Email, EmailParam
+from .exesql import ExeSQL, ExeSQLParam
+from .generate import Generate, GenerateParam
+from .github import GitHub, GitHubParam
+from .google import Google, GoogleParam
+from .googlescholar import GoogleScholar, GoogleScholarParam
+from .invoke import Invoke, InvokeParam
 from .iteration import Iteration, IterationParam
 from .iterationitem import IterationItem, IterationItemParam
+from .jin10 import Jin10, Jin10Param
+from .keyword import KeywordExtract, KeywordExtractParam
+from .message import Message, MessageParam
+from .pubmed import PubMed, PubMedParam
+from .qweather import QWeather, QWeatherParam
+from .relevant import Relevant, RelevantParam
+from .retrieval import Retrieval, RetrievalParam
+from .rewrite import RewriteQuestion, RewriteQuestionParam
+from .switch import Switch, SwitchParam
+from .template import Template, TemplateParam
+from .tushare import TuShare, TuShareParam
+from .wencai import WenCai, WenCaiParam
+from .wikipedia import Wikipedia, WikipediaParam
+from .yahoofinance import YahooFinance, YahooFinanceParam
 
 
 def component_class(class_name):

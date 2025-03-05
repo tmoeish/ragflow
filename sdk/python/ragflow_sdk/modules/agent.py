@@ -14,9 +14,10 @@
 #  limitations under the License.
 #
 
+import requests
+
 from .base import Base
 from .session import Session
-import requests
 
 
 class Agent(Base):

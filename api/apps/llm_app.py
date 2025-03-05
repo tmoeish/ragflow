@@ -13,27 +13,22 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 #
-import logging
 import json
+import logging
 import os
+
 from flask import request
-from flask_login import login_required, current_user
-from api.db.services.llm_service import (
-    LLMFactoriesService,
-    TenantLLMService,
-    LLMService,
-)
+from flask_login import current_user, login_required
+
 from api import settings
-from api.utils.api_utils import (
-    server_error_response,
-    get_data_error_result,
-    validate_request,
-)
-from api.db import StatusEnum, LLMType
+from api.db import LLMType, StatusEnum
 from api.db.db_models import TenantLLM
-from api.utils.api_utils import get_json_result
+from api.db.services.llm_service import (LLMFactoriesService, LLMService,
+                                         TenantLLMService)
+from api.utils.api_utils import (get_data_error_result, get_json_result,
+                                 server_error_response, validate_request)
 from api.utils.file_utils import get_project_base_directory
-from rag.llm import EmbeddingModel, ChatModel, RerankModel, CvModel, TTSModel
+from rag.llm import ChatModel, CvModel, EmbeddingModel, RerankModel, TTSModel
 
 
 @manager.route("/factories", methods=["GET"])  # noqa: F821

@@ -16,8 +16,7 @@
 from datetime import datetime
 
 from api.db import FileSource
-from api.db.db_models import DB
-from api.db.db_models import File, File2Document
+from api.db.db_models import DB, File, File2Document
 from api.db.services.common_service import CommonService
 from api.db.services.document_service import DocumentService
 from api.utils import current_timestamp, datetime_format

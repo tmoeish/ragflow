@@ -18,11 +18,11 @@ from abc import ABC
 
 import pandas as pd
 
+from agent.component.base import ComponentBase, ComponentParamBase
+from api import settings
 from api.db import LLMType
 from api.db.services.knowledgebase_service import KnowledgebaseService
 from api.db.services.llm_service import LLMBundle
-from api import settings
-from agent.component.base import ComponentBase, ComponentParamBase
 from rag.app.tag import label_question
 
 

@@ -16,20 +16,16 @@
 import logging
 import os
 import re
-from collections import defaultdict, Counter
+from collections import Counter, defaultdict
 from concurrent.futures import ThreadPoolExecutor
 from copy import deepcopy
 from typing import Callable
 
 from graphrag.general.graph_prompt import SUMMARIZE_DESCRIPTIONS_PROMPT
-from graphrag.utils import (
-    get_llm_cache,
-    set_llm_cache,
-    handle_single_entity_extraction,
-    handle_single_relationship_extraction,
-    split_string_by_multi_markers,
-    flat_uniq_list,
-)
+from graphrag.utils import (flat_uniq_list, get_llm_cache,
+                            handle_single_entity_extraction,
+                            handle_single_relationship_extraction,
+                            set_llm_cache, split_string_by_multi_markers)
 from rag.llm.chat_model import Base as CompletionLLM
 from rag.utils import truncate
 

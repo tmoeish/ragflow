@@ -15,10 +15,10 @@
 
 import requests
 
+from .modules.agent import Agent
 from .modules.chat import Chat
 from .modules.chunk import Chunk
 from .modules.dataset import DataSet
-from .modules.agent import Agent
 
 
 class RAGFlow:

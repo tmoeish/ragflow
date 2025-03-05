@@ -13,35 +13,27 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 #
-import logging
 import json
+import logging
 import re
 from datetime import datetime
 
-from flask import request, session, redirect
-from werkzeug.security import generate_password_hash, check_password_hash
-from flask_login import login_required, current_user, login_user, logout_user
+from flask import redirect, request, session
+from flask_login import current_user, login_required, login_user, logout_user
+from werkzeug.security import check_password_hash, generate_password_hash
 
-from api.db.db_models import TenantLLM
-from api.db.services.llm_service import TenantLLMService, LLMService
-from api.utils.api_utils import (
-    server_error_response,
-    validate_request,
-    get_data_error_result,
-)
-from api.utils import (
-    get_uuid,
-    get_format_time,
-    decrypt,
-    download_img,
-    current_timestamp,
-    datetime_format,
-)
-from api.db import UserTenantRole, FileType
 from api import settings
-from api.db.services.user_service import UserService, TenantService, UserTenantService
+from api.db import FileType, UserTenantRole
+from api.db.db_models import TenantLLM
 from api.db.services.file_service import FileService
-from api.utils.api_utils import get_json_result, construct_response
+from api.db.services.llm_service import LLMService, TenantLLMService
+from api.db.services.user_service import (TenantService, UserService,
+                                          UserTenantService)
+from api.utils import (current_timestamp, datetime_format, decrypt,
+                       download_img, get_format_time, get_uuid)
+from api.utils.api_utils import (construct_response, get_data_error_result,
+                                 get_json_result, server_error_response,
+                                 validate_request)
 
 
 @manager.route("/login", methods=["POST", "GET"])  # noqa: F821

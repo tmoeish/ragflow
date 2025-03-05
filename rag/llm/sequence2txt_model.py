@@ -13,16 +13,18 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 #
-import os
-import requests
-from openai.lib.azure import AzureOpenAI
-import io
-from abc import ABC
-from openai import OpenAI
-import json
-from rag.utils import num_tokens_from_string
 import base64
+import io
+import json
+import os
 import re
+from abc import ABC
+
+import requests
+from openai import OpenAI
+from openai.lib.azure import AzureOpenAI
+
+from rag.utils import num_tokens_from_string
 
 
 class Base(ABC):
@@ -64,6 +66,7 @@ class QWenSeq2txt(Base):
 
     def transcription(self, audio, format):
         from http import HTTPStatus
+
         from dashscope.audio.asr import Recognition
 
         recognition = Recognition(
@@ -137,8 +140,8 @@ class TencentCloudSeq2txt(Base):
     def __init__(
         self, key, model_name="16k_zh", base_url="https://asr.tencentcloudapi.com"
     ):
-        from tencentcloud.common import credential
         from tencentcloud.asr.v20190614 import asr_client
+        from tencentcloud.common import credential
 
         key = json.loads(key)
         sid = key.get("tencent_cloud_sid", "")
@@ -148,11 +151,11 @@ class TencentCloudSeq2txt(Base):
         self.model_name = model_name
 
     def transcription(self, audio, max_retries=60, retry_interval=5):
-        from tencentcloud.common.exception.tencent_cloud_sdk_exception import (
-            TencentCloudSDKException,
-        )
-        from tencentcloud.asr.v20190614 import models
         import time
+
+        from tencentcloud.asr.v20190614 import models
+        from tencentcloud.common.exception.tencent_cloud_sdk_exception import \
+            TencentCloudSDKException
 
         b64 = self.audio2base64(audio)
         try:

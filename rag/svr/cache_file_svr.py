@@ -19,8 +19,8 @@ import traceback
 
 from api.db.db_models import close_connection
 from api.db.services.task_service import TaskService
-from rag.utils.storage_factory import STORAGE_IMPL
 from rag.utils.redis_conn import REDIS_CONN
+from rag.utils.storage_factory import STORAGE_IMPL
 
 
 def collect():

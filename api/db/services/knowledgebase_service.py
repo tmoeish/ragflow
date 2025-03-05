@@ -13,10 +13,12 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 #
-from api.db import StatusEnum, TenantPermission
-from api.db.db_models import Knowledgebase, DB, Tenant, User, UserTenant, Document
-from api.db.services.common_service import CommonService
 from peewee import fn
+
+from api.db import StatusEnum, TenantPermission
+from api.db.db_models import (DB, Document, Knowledgebase, Tenant, User,
+                              UserTenant)
+from api.db.services.common_service import CommonService
 
 
 class KnowledgebaseService(CommonService):

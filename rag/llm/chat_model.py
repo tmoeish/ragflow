@@ -13,21 +13,22 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 #
+import asyncio
+import json
+import os
 import re
+from abc import ABC
 
+import openai
+import requests
+from dashscope import Generation
+from ollama import Client
+from openai import OpenAI
 from openai.lib.azure import AzureOpenAI
 from zhipuai import ZhipuAI
-from dashscope import Generation
-from abc import ABC
-from openai import OpenAI
-import openai
-from ollama import Client
+
 from rag.nlp import is_chinese, is_english
 from rag.utils import num_tokens_from_string
-import os
-import json
-import requests
-import asyncio
 
 LENGTH_NOTIFICATION_CN = "······\n由于长度的原因，回答被截断了，要继续吗？"
 LENGTH_NOTIFICATION_EN = "...\nFor the content length reason, it stopped, continue?"
@@ -848,7 +849,7 @@ class BedrockChat(Base):
 
 class GeminiChat(Base):
     def __init__(self, key, model_name, base_url=None):
-        from google.generativeai import client, GenerativeModel
+        from google.generativeai import GenerativeModel, client
 
         client.configure(api_key=key)
         _client = client.get_default_generative_client()
@@ -1214,10 +1215,9 @@ class HunyuanChat(Base):
         self.client = hunyuan_client.HunyuanClient(cred, "")
 
     def chat(self, system, history, gen_conf):
+        from tencentcloud.common.exception.tencent_cloud_sdk_exception import \
+            TencentCloudSDKException
         from tencentcloud.hunyuan.v20230901 import models
-        from tencentcloud.common.exception.tencent_cloud_sdk_exception import (
-            TencentCloudSDKException,
-        )
 
         _gen_conf = {}
         _history = [{k.capitalize(): v for k, v in item.items()} for item in history]
@@ -1240,10 +1240,9 @@ class HunyuanChat(Base):
             return ans + "\n**ERROR**: " + str(e), 0
 
     def chat_streamly(self, system, history, gen_conf):
+        from tencentcloud.common.exception.tencent_cloud_sdk_exception import \
+            TencentCloudSDKException
         from tencentcloud.hunyuan.v20230901 import models
-        from tencentcloud.common.exception.tencent_cloud_sdk_exception import (
-            TencentCloudSDKException,
-        )
 
         _gen_conf = {}
         _history = [{k.capitalize(): v for k, v in item.items()} for item in history]
@@ -1445,8 +1444,9 @@ class AnthropicChat(Base):
 
 class GoogleChat(Base):
     def __init__(self, key, model_name, base_url=None):
-        from google.oauth2 import service_account
         import base64
+
+        from google.oauth2 import service_account
 
         key = json.loads(key)
         access_token = json.loads(
@@ -1476,8 +1476,8 @@ class GoogleChat(Base):
             else:
                 self.client = AnthropicVertex(region=region, project_id=project_id)
         else:
-            from google.cloud import aiplatform
             import vertexai.generative_models as glm
+            from google.cloud import aiplatform
 
             if access_token:
                 credits = service_account.Credentials.from_service_account_info(

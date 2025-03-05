@@ -13,16 +13,17 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 #
-from abc import ABC
+import logging
 import re
+from abc import ABC
 from copy import deepcopy
 
 import pandas as pd
-import pymysql
 import psycopg2
-from agent.component import GenerateParam, Generate
+import pymysql
 import pyodbc
-import logging
+
+from agent.component import Generate, GenerateParam
 
 
 class ExeSQLParam(GenerateParam):

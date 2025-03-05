@@ -13,13 +13,14 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 #
-from flask import request, jsonify
+from flask import jsonify, request
 
+from api import settings
 from api.db import LLMType
 from api.db.services.knowledgebase_service import KnowledgebaseService
 from api.db.services.llm_service import LLMBundle
-from api import settings
-from api.utils.api_utils import validate_request, build_error_result, apikey_required
+from api.utils.api_utils import (apikey_required, build_error_result,
+                                 validate_request)
 from rag.app.tag import label_question
 
 

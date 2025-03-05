@@ -14,8 +14,10 @@
 #  limitations under the License.
 #
 from abc import ABC
+
 import pandas as pd
 import pywencai
+
 from agent.component.base import ComponentBase, ComponentParamBase
 
 

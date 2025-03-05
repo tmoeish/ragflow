@@ -14,20 +14,21 @@
 #  limitations under the License.
 #
 
+import copy
 import logging
 import random
+import re
 from collections import Counter
 
-from rag.utils import num_tokens_from_string
-from . import rag_tokenizer
-import re
-import copy
+import chardet
 import roman_numbers as r
-from word2number import w2n
 from cn2an import cn2an
 from PIL import Image
+from word2number import w2n
 
-import chardet
+from rag.utils import num_tokens_from_string
+
+from . import rag_tokenizer
 
 all_codecs = [
     "utf-8",

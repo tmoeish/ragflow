@@ -15,20 +15,17 @@
 #
 
 from flask import request
-from flask_login import login_required, current_user
-from api.db.services.dialog_service import DialogService
-from api.db import StatusEnum
-from api.db.services.llm_service import TenantLLMService
-from api.db.services.knowledgebase_service import KnowledgebaseService
-from api.db.services.user_service import TenantService, UserTenantService
+from flask_login import current_user, login_required
+
 from api import settings
-from api.utils.api_utils import (
-    server_error_response,
-    get_data_error_result,
-    validate_request,
-)
+from api.db import StatusEnum
+from api.db.services.dialog_service import DialogService
+from api.db.services.knowledgebase_service import KnowledgebaseService
+from api.db.services.llm_service import TenantLLMService
+from api.db.services.user_service import TenantService, UserTenantService
 from api.utils import get_uuid
-from api.utils.api_utils import get_json_result
+from api.utils.api_utils import (get_data_error_result, get_json_result,
+                                 server_error_response, validate_request)
 
 
 @manager.route("/set", methods=["POST"])  # noqa: F821

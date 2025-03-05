@@ -14,13 +14,15 @@
 #  limitations under the License.
 
 import logging
-import boto3
-from botocore.exceptions import ClientError
-from botocore.config import Config
 import time
 from io import BytesIO
-from rag.utils import singleton
+
+import boto3
+from botocore.config import Config
+from botocore.exceptions import ClientError
+
 from rag import settings
+from rag.utils import singleton
 
 
 @singleton

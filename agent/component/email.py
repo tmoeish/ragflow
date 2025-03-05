@@ -14,14 +14,15 @@
 #  limitations under the License.
 #
 
-from abc import ABC
 import json
-import smtplib
 import logging
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
+import smtplib
+from abc import ABC
 from email.header import Header
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
 from email.utils import formataddr
+
 from agent.component.base import ComponentBase, ComponentParamBase
 
 

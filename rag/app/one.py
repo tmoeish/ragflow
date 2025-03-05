@@ -15,14 +15,15 @@
 #
 
 import logging
-from tika import parser
-from io import BytesIO
 import re
+from io import BytesIO
 
+from tika import parser
+
+from deepdoc.parser import ExcelParser, HtmlParser, PdfParser, PlainParser
 from deepdoc.parser.utils import get_text
 from rag.app import naive
 from rag.nlp import rag_tokenizer, tokenize
-from deepdoc.parser import PdfParser, ExcelParser, PlainParser, HtmlParser
 
 
 class Pdf(PdfParser):

@@ -14,16 +14,15 @@
 #  limitations under the License.
 #
 import logging
-import re
 import os
+import re
 from concurrent.futures import ThreadPoolExecutor
 
 from flask_login import current_user
 from peewee import fn
 
-from api.db import FileType, KNOWLEDGEBASE_FOLDER_NAME, FileSource, ParserType
-from api.db.db_models import DB, File2Document, Knowledgebase
-from api.db.db_models import File, Document
+from api.db import KNOWLEDGEBASE_FOLDER_NAME, FileSource, FileType, ParserType
+from api.db.db_models import DB, Document, File, File2Document, Knowledgebase
 from api.db.services import duplicate_name
 from api.db.services.common_service import CommonService
 from api.db.services.document_service import DocumentService
@@ -423,7 +422,7 @@ class FileService(CommonService):
 
     @staticmethod
     def parse_docs(file_objs, user_id):
-        from rag.app import presentation, picture, naive, audio, email
+        from rag.app import audio, email, naive, picture, presentation
 
         def dummy(prog=None, msg=""):
             pass

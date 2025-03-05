@@ -17,14 +17,12 @@ import hashlib
 from datetime import datetime
 
 import peewee
-from werkzeug.security import generate_password_hash, check_password_hash
+from werkzeug.security import check_password_hash, generate_password_hash
 
-from api.db import UserTenantRole
-from api.db.db_models import DB, UserTenant
-from api.db.db_models import User, Tenant
+from api.db import StatusEnum, UserTenantRole
+from api.db.db_models import DB, Tenant, User, UserTenant
 from api.db.services.common_service import CommonService
-from api.utils import get_uuid, current_timestamp, datetime_format
-from api.db import StatusEnum
+from api.utils import current_timestamp, datetime_format, get_uuid
 from rag.settings import MINIO
 
 

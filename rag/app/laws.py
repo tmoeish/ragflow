@@ -15,23 +15,18 @@
 #
 
 import logging
-from tika import parser
 import re
 from io import BytesIO
+
 from docx import Document
+from tika import parser
 
 from api.db import ParserType
+from deepdoc.parser import DocxParser, HtmlParser, PdfParser, PlainParser
 from deepdoc.parser.utils import get_text
-from rag.nlp import (
-    bullets_category,
-    remove_contents_table,
-    hierarchical_merge,
-    make_colon_as_title,
-    tokenize_chunks,
-    docx_question_level,
-)
-from rag.nlp import rag_tokenizer
-from deepdoc.parser import PdfParser, DocxParser, PlainParser, HtmlParser
+from rag.nlp import (bullets_category, docx_question_level, hierarchical_merge,
+                     make_colon_as_title, rag_tokenizer, remove_contents_table,
+                     tokenize_chunks)
 
 
 class Docx(DocxParser):

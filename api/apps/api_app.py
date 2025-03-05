@@ -17,39 +17,36 @@ import json
 import os
 import re
 from datetime import datetime, timedelta
-from flask import request, Response
-from api.db.services.llm_service import TenantLLMService
-from flask_login import login_required, current_user
+from functools import partial
 
-from api.db import FileType, LLMType, ParserType, FileSource
-from api.db.db_models import APIToken, Task, File
+from flask import Response, request
+from flask_login import current_user, login_required
+
+from agent.canvas import Canvas
+from api import settings
+from api.db import FileSource, FileType, LLMType, ParserType
+from api.db.db_models import APIToken, File, Task
 from api.db.services import duplicate_name
-from api.db.services.api_service import APITokenService, API4ConversationService
+from api.db.services.api_service import (API4ConversationService,
+                                         APITokenService)
+from api.db.services.canvas_service import UserCanvasService
 from api.db.services.dialog_service import DialogService, chat
-from api.db.services.document_service import DocumentService, doc_upload_and_parse
+from api.db.services.document_service import (DocumentService,
+                                              doc_upload_and_parse)
 from api.db.services.file2document_service import File2DocumentService
 from api.db.services.file_service import FileService
 from api.db.services.knowledgebase_service import KnowledgebaseService
-from api.db.services.task_service import queue_tasks, TaskService
+from api.db.services.llm_service import TenantLLMService
+from api.db.services.task_service import TaskService, queue_tasks
 from api.db.services.user_service import UserTenantService
-from api import settings
-from api.utils import get_uuid, current_timestamp, datetime_format
-from api.utils.api_utils import (
-    server_error_response,
-    get_data_error_result,
-    get_json_result,
-    validate_request,
-    generate_confirmation_token,
-)
-
+from api.utils import current_timestamp, datetime_format, get_uuid
+from api.utils.api_utils import (generate_confirmation_token,
+                                 get_data_error_result, get_json_result,
+                                 server_error_response, validate_request)
 from api.utils.file_utils import filename_type, thumbnail
 from rag.app.tag import label_question
 from rag.prompts import keyword_extraction
 from rag.utils.storage_factory import STORAGE_IMPL
-
-from api.db.services.canvas_service import UserCanvasService
-from agent.canvas import Canvas
-from functools import partial
 
 
 @manager.route("/new_token", methods=["POST"])  # noqa: F821

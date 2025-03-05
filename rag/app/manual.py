@@ -14,25 +14,20 @@
 #  limitations under the License.
 #
 
-import logging
 import copy
+import logging
 import re
-
-from api.db import ParserType
 from io import BytesIO
-from rag.nlp import (
-    rag_tokenizer,
-    tokenize,
-    tokenize_table,
-    bullets_category,
-    title_frequency,
-    tokenize_chunks,
-    docx_question_level,
-)
-from rag.utils import num_tokens_from_string
-from deepdoc.parser import PdfParser, PlainParser, DocxParser
+
 from docx import Document
 from PIL import Image
+
+from api.db import ParserType
+from deepdoc.parser import DocxParser, PdfParser, PlainParser
+from rag.nlp import (bullets_category, docx_question_level, rag_tokenizer,
+                     title_frequency, tokenize, tokenize_chunks,
+                     tokenize_table)
+from rag.utils import num_tokens_from_string
 
 
 class Pdf(PdfParser):

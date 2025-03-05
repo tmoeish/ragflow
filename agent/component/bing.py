@@ -15,8 +15,10 @@
 #
 import logging
 from abc import ABC
-import requests
+
 import pandas as pd
+import requests
+
 from agent.component.base import ComponentBase, ComponentParamBase
 
 

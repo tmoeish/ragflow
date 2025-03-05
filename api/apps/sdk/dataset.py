@@ -15,23 +15,19 @@
 #
 
 from flask import request
-from api.db import StatusEnum, FileSource
+
+from api import settings
+from api.db import FileSource, StatusEnum
 from api.db.db_models import File
 from api.db.services.document_service import DocumentService
 from api.db.services.file2document_service import File2DocumentService
 from api.db.services.file_service import FileService
 from api.db.services.knowledgebase_service import KnowledgebaseService
-from api.db.services.llm_service import TenantLLMService, LLMService
+from api.db.services.llm_service import LLMService, TenantLLMService
 from api.db.services.user_service import TenantService
-from api import settings
 from api.utils import get_uuid
-from api.utils.api_utils import (
-    get_result,
-    token_required,
-    get_error_data_result,
-    valid,
-    get_parser_config,
-)
+from api.utils.api_utils import (get_error_data_result, get_parser_config,
+                                 get_result, token_required, valid)
 
 
 @manager.route("/datasets", methods=["POST"])  # noqa: F821

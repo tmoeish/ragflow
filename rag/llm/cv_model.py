@@ -13,22 +13,23 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 #
-from openai.lib.azure import AzureOpenAI
-from zhipuai import ZhipuAI
-import io
-from abc import ABC
-from ollama import Client
-from PIL import Image
-from openai import OpenAI
-import os
 import base64
-from io import BytesIO
+import io
 import json
-import requests
+import os
+from abc import ABC
+from io import BytesIO
 
-from rag.nlp import is_english
+import requests
+from ollama import Client
+from openai import OpenAI
+from openai.lib.azure import AzureOpenAI
+from PIL import Image
+from zhipuai import ZhipuAI
+
 from api.utils import get_uuid
 from api.utils.file_utils import get_project_base_directory
+from rag.nlp import is_english
 
 
 class Base(ABC):
@@ -248,6 +249,7 @@ class QWenCV(Base):
 
     def describe(self, image, max_tokens=300):
         from http import HTTPStatus
+
         from dashscope import MultiModalConversation
 
         response = MultiModalConversation.call(
@@ -262,6 +264,7 @@ class QWenCV(Base):
 
     def chat(self, system, history, gen_conf, image=""):
         from http import HTTPStatus
+
         from dashscope import MultiModalConversation
 
         if system:
@@ -300,6 +303,7 @@ class QWenCV(Base):
 
     def chat_streamly(self, system, history, gen_conf, image=""):
         from http import HTTPStatus
+
         from dashscope import MultiModalConversation
 
         if system:
@@ -569,7 +573,7 @@ class GeminiCV(Base):
     def __init__(
         self, key, model_name="gemini-1.0-pro-vision-latest", lang="Chinese", **kwargs
     ):
-        from google.generativeai import client, GenerativeModel
+        from google.generativeai import GenerativeModel, client
 
         client.configure(api_key=key)
         _client = client.get_default_generative_client()
@@ -833,10 +837,9 @@ class HunyuanCV(Base):
         self.lang = lang
 
     def describe(self, image, max_tokens=4096):
+        from tencentcloud.common.exception.tencent_cloud_sdk_exception import \
+            TencentCloudSDKException
         from tencentcloud.hunyuan.v20230901 import models
-        from tencentcloud.common.exception.tencent_cloud_sdk_exception import (
-            TencentCloudSDKException,
-        )
 
         b64 = self.image2base64(image)
         req = models.ChatCompletionsRequest()

@@ -14,9 +14,9 @@
 #  limitations under the License.
 #
 
-from ragflow_sdk import RAGFlow, Agent
-from common import HOST_ADDRESS
 import pytest
+from common import HOST_ADDRESS
+from ragflow_sdk import Agent, RAGFlow
 
 
 def test_create_session_with_success(get_api_key_fixture):

@@ -15,8 +15,10 @@
 #
 import logging
 from abc import ABC
-from duckduckgo_search import DDGS
+
 import pandas as pd
+from duckduckgo_search import DDGS
+
 from agent.component.base import ComponentBase, ComponentParamBase
 
 

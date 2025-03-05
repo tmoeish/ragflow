@@ -14,10 +14,11 @@
 #  limitations under the License.
 #
 
-from ragflow_sdk import RAGFlow
 import random
+
 import pytest
 from common import HOST_ADDRESS
+from ragflow_sdk import RAGFlow
 
 
 def test_create_dataset_with_name(get_api_key_fixture):

@@ -5,9 +5,9 @@ Reference:
  - [graphrag](https://github.com/microsoft/graphrag)
 """
 
-import logging
 import argparse
 import json
+import logging
 import re
 import traceback
 from dataclasses import dataclass
@@ -15,14 +15,11 @@ from typing import Any
 
 import tiktoken
 
-from graphrag.general.claim_prompt import (
-    CLAIM_EXTRACTION_PROMPT,
-    CONTINUE_PROMPT,
-    LOOP_PROMPT,
-)
+from graphrag.general.claim_prompt import (CLAIM_EXTRACTION_PROMPT,
+                                           CONTINUE_PROMPT, LOOP_PROMPT)
 from graphrag.general.extractor import Extractor
-from rag.llm.chat_model import Base as CompletionLLM
 from graphrag.utils import ErrorHandlerFn, perform_variable_replacements
+from rag.llm.chat_model import Base as CompletionLLM
 
 DEFAULT_TUPLE_DELIMITER = "<|>"
 DEFAULT_RECORD_DELIMITER = "##"
@@ -280,10 +277,10 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
 
-    from api.db import LLMType
-    from api.db.services.llm_service import LLMBundle
     from api import settings
+    from api.db import LLMType
     from api.db.services.knowledgebase_service import KnowledgebaseService
+    from api.db.services.llm_service import LLMBundle
 
     kb_ids = KnowledgebaseService.get_kb_ids(args.tenant_id)
 

@@ -20,12 +20,12 @@ import re
 from io import BytesIO
 
 import pdfplumber
-from PIL import Image
 from cachetools import LRUCache, cached
+from PIL import Image
 from ruamel.yaml import YAML
 
-from api.db import FileType
 from api.constants import IMG_BASE64_PREFIX
+from api.db import FileType
 
 PROJECT_BASE = os.getenv("RAG_PROJECT_BASE") or os.getenv("RAG_DEPLOY_BASE")
 RAG_BASE = os.getenv("RAG_BASE")
@@ -207,8 +207,8 @@ def thumbnail_img(filename, blob):
         return buffered.getvalue()
 
     elif re.match(r".*\.(ppt|pptx)$", filename):
-        import aspose.slides as slides
         import aspose.pydrawing as drawing
+        import aspose.slides as slides
 
         try:
             with slides.Presentation(BytesIO(blob)) as presentation:

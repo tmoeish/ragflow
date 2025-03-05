@@ -18,75 +18,54 @@
 # beartype_all(conf=BeartypeConf(violation_type=UserWarning))    # <-- emit warnings from all code
 import random
 import sys
-from api.utils.log_utils import initRootLogger, get_project_base_directory
-from graphrag.general.index import WithCommunity, WithResolution, Dealer
-from graphrag.light.graph_extractor import GraphExtractor as LightKGExt
+
+from api.utils.log_utils import get_project_base_directory, initRootLogger
 from graphrag.general.graph_extractor import GraphExtractor as GeneralKGExt
-from graphrag.utils import (
-    get_llm_cache,
-    set_llm_cache,
-    get_tags_from_cache,
-    set_tags_to_cache,
-)
-from rag.prompts import keyword_extraction, question_proposal, content_tagging
+from graphrag.general.index import Dealer, WithCommunity, WithResolution
+from graphrag.light.graph_extractor import GraphExtractor as LightKGExt
+from graphrag.utils import (get_llm_cache, get_tags_from_cache, set_llm_cache,
+                            set_tags_to_cache)
+from rag.prompts import content_tagging, keyword_extraction, question_proposal
 
 CONSUMER_NO = "0" if len(sys.argv) < 2 else sys.argv[1]
 CONSUMER_NAME = "task_executor_" + CONSUMER_NO
 initRootLogger(CONSUMER_NAME)
 
 import asyncio
+import copy
+import json
 import logging
 import os
-from datetime import datetime
-import json
-import xxhash
-import copy
 import re
-import time
+import signal
 import threading
+import time
+import tracemalloc
+from datetime import datetime
 from functools import partial
 from io import BytesIO
 from multiprocessing.context import TimeoutError
 from timeit import default_timer as timer
-import tracemalloc
-import signal
 
 import numpy as np
+import xxhash
 from peewee import DoesNotExist
 
+from api import settings
 from api.db import LLMType, ParserType, TaskStatus
+from api.db.db_models import close_connection
 from api.db.services.document_service import DocumentService
+from api.db.services.file2document_service import File2DocumentService
 from api.db.services.llm_service import LLMBundle
 from api.db.services.task_service import TaskService
-from api.db.services.file2document_service import File2DocumentService
-from api import settings
 from api.versions import get_ragflow_version
-from api.db.db_models import close_connection
-from rag.app import (
-    laws,
-    paper,
-    presentation,
-    manual,
-    qa,
-    table,
-    book,
-    resume,
-    picture,
-    naive,
-    one,
-    audio,
-    email,
-    tag,
-)
-from rag.nlp import search, rag_tokenizer
-from rag.raptor import RecursiveAbstractiveProcessing4TreeOrganizedRetrieval as Raptor
-from rag.settings import (
-    DOC_MAXIMUM_SIZE,
-    SVR_QUEUE_NAME,
-    print_rag_settings,
-    TAG_FLD,
-    PAGERANK_FLD,
-)
+from rag.app import (audio, book, email, laws, manual, naive, one, paper,
+                     picture, presentation, qa, resume, table, tag)
+from rag.nlp import rag_tokenizer, search
+from rag.raptor import \
+    RecursiveAbstractiveProcessing4TreeOrganizedRetrieval as Raptor
+from rag.settings import (DOC_MAXIMUM_SIZE, PAGERANK_FLD, SVR_QUEUE_NAME,
+                          TAG_FLD, print_rag_settings)
 from rag.utils import num_tokens_from_string
 from rag.utils.redis_conn import REDIS_CONN, Payload
 from rag.utils.storage_factory import STORAGE_IMPL

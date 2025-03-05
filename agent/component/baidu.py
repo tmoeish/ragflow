@@ -14,10 +14,12 @@
 #  limitations under the License.
 #
 import logging
+import re
 from abc import ABC
+
 import pandas as pd
 import requests
-import re
+
 from agent.component.base import ComponentBase, ComponentParamBase
 
 

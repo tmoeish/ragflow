@@ -15,24 +15,25 @@
 #
 import os
 import random
-import xxhash
 from datetime import datetime
 
-from api.db.db_utils import bulk_insert_into_db
-from deepdoc.parser import PdfParser
+import xxhash
 from peewee import JOIN
-from api.db.db_models import DB, File2Document, File
-from api.db import StatusEnum, FileType, TaskStatus
-from api.db.db_models import Task, Document, Knowledgebase, Tenant
+
+from api import settings
+from api.db import FileType, StatusEnum, TaskStatus
+from api.db.db_models import (DB, Document, File, File2Document, Knowledgebase,
+                              Task, Tenant)
+from api.db.db_utils import bulk_insert_into_db
 from api.db.services.common_service import CommonService
 from api.db.services.document_service import DocumentService
 from api.utils import current_timestamp, get_uuid
+from deepdoc.parser import PdfParser
 from deepdoc.parser.excel_parser import RAGFlowExcelParser
-from rag.settings import SVR_QUEUE_NAME
-from rag.utils.storage_factory import STORAGE_IMPL
-from rag.utils.redis_conn import REDIS_CONN
-from api import settings
 from rag.nlp import search
+from rag.settings import SVR_QUEUE_NAME
+from rag.utils.redis_conn import REDIS_CONN
+from rag.utils.storage_factory import STORAGE_IMPL
 
 
 def trim_header_by_lines(text: str, max_length) -> str:

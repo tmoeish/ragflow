@@ -14,12 +14,13 @@
 #  limitations under the License.
 #
 
-import logging
 import json
+import logging
 import time
 import uuid
 
 import valkey as redis
+
 from rag import settings
 from rag.utils import singleton
 

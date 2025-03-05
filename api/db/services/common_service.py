@@ -18,7 +18,7 @@ from datetime import datetime
 import peewee
 
 from api.db.db_models import DB
-from api.utils import datetime_format, current_timestamp, get_uuid
+from api.utils import current_timestamp, datetime_format, get_uuid
 
 
 class CommonService:

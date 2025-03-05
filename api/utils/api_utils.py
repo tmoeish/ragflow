@@ -13,9 +13,9 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 #
-import logging
 import functools
 import json
+import logging
 import random
 import time
 from base64 import b64encode
@@ -26,22 +26,16 @@ from urllib.parse import quote, urlencode
 from uuid import uuid1
 
 import requests
-from flask import (
-    Response,
-    jsonify,
-    send_file,
-    make_response,
-    request as flask_request,
-)
+from flask import Response, jsonify, make_response
+from flask import request as flask_request
+from flask import send_file
 from itsdangerous import URLSafeTimedSerializer
 from werkzeug.http import HTTP_STATUS_CODES
 
-from api.db.db_models import APIToken
 from api import settings
-
-from api.utils import CustomJSONEncoder, get_uuid
-from api.utils import json_dumps
-from api.constants import REQUEST_WAIT_SEC, REQUEST_MAX_WAIT_SEC
+from api.constants import REQUEST_MAX_WAIT_SEC, REQUEST_WAIT_SEC
+from api.db.db_models import APIToken
+from api.utils import CustomJSONEncoder, get_uuid, json_dumps
 
 requests.models.complexjson.dumps = functools.partial(json.dumps, cls=CustomJSONEncoder)
 

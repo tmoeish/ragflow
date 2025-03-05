@@ -19,13 +19,15 @@ import logging
 import os
 import re
 from collections import defaultdict
+
 import json_repair
+
 from api.db import LLMType
 from api.db.services.document_service import DocumentService
-from api.db.services.llm_service import TenantLLMService, LLMBundle
+from api.db.services.llm_service import LLMBundle, TenantLLMService
 from api.utils.file_utils import get_project_base_directory
 from rag.settings import TAG_FLD
-from rag.utils import num_tokens_from_string, encoder
+from rag.utils import encoder, num_tokens_from_string
 
 
 def chunks_format(reference):

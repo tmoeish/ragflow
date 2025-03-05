@@ -13,29 +13,28 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 #
-import re
 import json
+import re
 import time
 
-from api.db import LLMType
-from api.db.services.conversation_service import ConversationService, iframe_completion
-from api.db.services.conversation_service import completion as rag_completion
-from api.db.services.canvas_service import completion as agent_completion
-from api.db.services.dialog_service import ask, chat
+from flask import Response, jsonify, request
+
 from agent.canvas import Canvas
-from api.db import StatusEnum
+from api.db import LLMType, StatusEnum
 from api.db.db_models import APIToken
 from api.db.services.api_service import API4ConversationService
 from api.db.services.canvas_service import UserCanvasService
-from api.db.services.dialog_service import DialogService
-from api.db.services.knowledgebase_service import KnowledgebaseService
-from api.utils import get_uuid
-from api.utils.api_utils import get_error_data_result, validate_request
-from api.utils.api_utils import get_result, token_required
-from api.db.services.llm_service import LLMBundle
+from api.db.services.canvas_service import completion as agent_completion
+from api.db.services.conversation_service import ConversationService
+from api.db.services.conversation_service import completion as rag_completion
+from api.db.services.conversation_service import iframe_completion
+from api.db.services.dialog_service import DialogService, ask, chat
 from api.db.services.file_service import FileService
-
-from flask import jsonify, request, Response
+from api.db.services.knowledgebase_service import KnowledgebaseService
+from api.db.services.llm_service import LLMBundle
+from api.utils import get_uuid
+from api.utils.api_utils import (get_error_data_result, get_result,
+                                 token_required, validate_request)
 
 
 @manager.route("/chats/<chat_id>/sessions", methods=["POST"])  # noqa: F821

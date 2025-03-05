@@ -22,7 +22,7 @@ import xxhash
 from networkx.readwrite import json_graph
 
 from api import settings
-from rag.nlp import search, rag_tokenizer
+from rag.nlp import rag_tokenizer, search
 from rag.utils.doc_store_conn import OrderByExpr
 from rag.utils.redis_conn import REDIS_CONN
 

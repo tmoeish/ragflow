@@ -15,8 +15,10 @@
 #
 import logging
 from abc import ABC
-import wikipedia
+
 import pandas as pd
+import wikipedia
+
 from agent.component.base import ComponentBase, ComponentParamBase
 
 

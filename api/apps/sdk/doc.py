@@ -13,37 +13,33 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 #
-import pathlib
 import datetime
-
-from rag.app.qa import rmPrefix, beAdoc
-from rag.nlp import rag_tokenizer
-from api.db import LLMType, ParserType
-from api.db.services.llm_service import TenantLLMService, LLMBundle
-from api import settings
-import xxhash
+import pathlib
 import re
-from api.utils.api_utils import token_required
-from api.db.db_models import Task
-from api.db.services.task_service import TaskService, queue_tasks
-from api.utils.api_utils import server_error_response
-from api.utils.api_utils import get_result, get_error_data_result
 from io import BytesIO
+
+import xxhash
 from flask import request, send_file
-from api.db import FileSource, TaskStatus, FileType
-from api.db.db_models import File
+from pydantic import BaseModel, Field, validator
+
+from api import settings
+from api.db import FileSource, FileType, LLMType, ParserType, TaskStatus
+from api.db.db_models import File, Task
 from api.db.services.document_service import DocumentService
 from api.db.services.file2document_service import File2DocumentService
 from api.db.services.file_service import FileService
 from api.db.services.knowledgebase_service import KnowledgebaseService
-from api.utils.api_utils import construct_json_result, get_parser_config
-from rag.nlp import search
-from rag.prompts import keyword_extraction
+from api.db.services.llm_service import LLMBundle, TenantLLMService
+from api.db.services.task_service import TaskService, queue_tasks
+from api.utils.api_utils import (construct_json_result, get_error_data_result,
+                                 get_parser_config, get_result,
+                                 server_error_response, token_required)
+from rag.app.qa import beAdoc, rmPrefix
 from rag.app.tag import label_question
+from rag.nlp import rag_tokenizer, search
+from rag.prompts import keyword_extraction
 from rag.utils import rmSpace
 from rag.utils.storage_factory import STORAGE_IMPL
-
-from pydantic import BaseModel, Field, validator
 
 MAXIMUM_OF_UPLOADING_FILES = 256
 

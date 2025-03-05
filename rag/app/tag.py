@@ -13,9 +13,9 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 #
+import csv
 import json
 import re
-import csv
 from copy import deepcopy
 
 from deepdoc.parser.utils import get_text
@@ -157,9 +157,9 @@ def chunk(filename, binary=None, lang="Chinese", callback=None, **kwargs):
 
 
 def label_question(question, kbs):
+    from api import settings
     from api.db.services.knowledgebase_service import KnowledgebaseService
     from graphrag.utils import get_tags_from_cache, set_tags_to_cache
-    from api import settings
 
     tags = None
     tag_kb_ids = []

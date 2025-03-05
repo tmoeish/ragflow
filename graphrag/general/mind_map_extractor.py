@@ -14,21 +14,22 @@
 #  limitations under the License.
 #
 
-import logging
 import collections
+import logging
 import os
 import re
 import traceback
-from typing import Any
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
+from functools import reduce
+from typing import Any
+
+import markdown_to_json
 
 from graphrag.general.extractor import Extractor
 from graphrag.general.mind_map_prompt import MIND_MAP_EXTRACTION_PROMPT
 from graphrag.utils import ErrorHandlerFn, perform_variable_replacements
 from rag.llm.chat_model import Base as CompletionLLM
-import markdown_to_json
-from functools import reduce
 from rag.utils import num_tokens_from_string
 
 

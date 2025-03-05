@@ -13,9 +13,8 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 #
-import logging
-import xxhash
 import json
+import logging
 import random
 import re
 from concurrent.futures import ThreadPoolExecutor
@@ -23,23 +22,22 @@ from copy import deepcopy
 from datetime import datetime
 from io import BytesIO
 
+import xxhash
 from peewee import fn
 
-from api.db.db_utils import bulk_insert_into_db
 from api import settings
-from api.utils import current_timestamp, get_format_time, get_uuid
-from graphrag.general.mind_map_extractor import MindMapExtractor
-from rag.settings import SVR_QUEUE_NAME
-from rag.utils.storage_factory import STORAGE_IMPL
-from rag.nlp import search, rag_tokenizer
-
-from api.db import FileType, TaskStatus, ParserType, LLMType
-from api.db.db_models import DB, Knowledgebase, Tenant, Task, UserTenant
-from api.db.db_models import Document
+from api.db import FileType, LLMType, ParserType, StatusEnum, TaskStatus
+from api.db.db_models import (DB, Document, Knowledgebase, Task, Tenant,
+                              UserTenant)
+from api.db.db_utils import bulk_insert_into_db
 from api.db.services.common_service import CommonService
 from api.db.services.knowledgebase_service import KnowledgebaseService
-from api.db import StatusEnum
+from api.utils import current_timestamp, get_format_time, get_uuid
+from graphrag.general.mind_map_extractor import MindMapExtractor
+from rag.nlp import rag_tokenizer, search
+from rag.settings import SVR_QUEUE_NAME
 from rag.utils.redis_conn import REDIS_CONN
+from rag.utils.storage_factory import STORAGE_IMPL
 
 
 class DocumentService(CommonService):
@@ -564,13 +562,13 @@ def queue_raptor_o_graphrag_tasks(doc, ty, msg):
 
 
 def doc_upload_and_parse(conversation_id, file_objs, user_id):
-    from rag.app import presentation, picture, naive, audio, email
+    from api.db.services.api_service import API4ConversationService
+    from api.db.services.conversation_service import ConversationService
     from api.db.services.dialog_service import DialogService
     from api.db.services.file_service import FileService
     from api.db.services.llm_service import LLMBundle
     from api.db.services.user_service import TenantService
-    from api.db.services.api_service import API4ConversationService
-    from api.db.services.conversation_service import ConversationService
+    from rag.app import audio, email, naive, picture, presentation
 
     e, conv = ConversationService.get_by_id(conversation_id)
     if not e:

@@ -11,13 +11,13 @@
 #  limitations under the License.
 #
 
-from openpyxl import load_workbook, Workbook
 import sys
 from io import BytesIO
 
-from rag.nlp import find_codec
-
 import pandas as pd
+from openpyxl import Workbook, load_workbook
+
+from rag.nlp import find_codec
 
 
 class RAGFlowExcelParser:

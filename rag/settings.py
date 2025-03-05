@@ -13,9 +13,10 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 #
-import os
 import logging
-from api.utils import get_base_config, decrypt_database_config
+import os
+
+from api.utils import decrypt_database_config, get_base_config
 from api.utils.file_utils import get_project_base_directory
 
 # Server

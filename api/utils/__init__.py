@@ -14,22 +14,24 @@
 #  limitations under the License.
 #
 import base64
+import copy
 import datetime
+import importlib
 import io
 import json
+import logging
 import os
 import pickle
 import socket
 import time
 import uuid
-import requests
-import logging
-import copy
 from enum import Enum, IntEnum
-import importlib
-from Cryptodome.PublicKey import RSA
+
+import requests
 from Cryptodome.Cipher import PKCS1_v1_5 as Cipher_pkcs1_v1_5
+from Cryptodome.PublicKey import RSA
 from filelock import FileLock
+
 from api.constants import SERVICE_CONF
 
 from . import file_utils
@@ -352,7 +354,8 @@ def decrypt(line):
 
 
 def decrypt2(crypt_text):
-    from base64 import b64decode, b16decode
+    from base64 import b16decode, b64decode
+
     from Crypto.Cipher import PKCS1_v1_5 as Cipher_PKCS1_v1_5
     from Crypto.PublicKey import RSA
 

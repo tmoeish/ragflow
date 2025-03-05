@@ -14,12 +14,12 @@
 #  limitations under the License.
 #
 
-import logging
 import json
+import logging
 import re
-from rag.utils.doc_store_conn import MatchTextExpr
 
-from rag.nlp import rag_tokenizer, term_weight, synonym
+from rag.nlp import rag_tokenizer, synonym, term_weight
+from rag.utils.doc_store_conn import MatchTextExpr
 
 
 class FulltextQueryer:
@@ -205,8 +205,9 @@ class FulltextQueryer:
         return None, keywords
 
     def hybrid_similarity(self, avec, bvecs, atks, btkss, tkweight=0.3, vtweight=0.7):
-        from sklearn.metrics.pairwise import cosine_similarity as CosineSimilarity
         import numpy as np
+        from sklearn.metrics.pairwise import \
+            cosine_similarity as CosineSimilarity
 
         sims = CosineSimilarity([avec], bvecs)
         tksim = self.token_similarity(atks, btkss)

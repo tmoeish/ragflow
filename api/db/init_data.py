@@ -13,33 +13,25 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 #
-import logging
 import base64
 import json
+import logging
 import os
 import time
 import uuid
 from copy import deepcopy
 
+from api import settings
 from api.db import LLMType, UserTenantRole
-from api.db.db_models import (
-    init_database_tables as init_web_db,
-    LLMFactories,
-    LLM,
-    TenantLLM,
-)
+from api.db.db_models import LLM, LLMFactories, TenantLLM
+from api.db.db_models import init_database_tables as init_web_db
 from api.db.services import UserService
 from api.db.services.canvas_service import CanvasTemplateService
 from api.db.services.document_service import DocumentService
 from api.db.services.knowledgebase_service import KnowledgebaseService
-from api.db.services.llm_service import (
-    LLMFactoriesService,
-    LLMService,
-    TenantLLMService,
-    LLMBundle,
-)
+from api.db.services.llm_service import (LLMBundle, LLMFactoriesService,
+                                         LLMService, TenantLLMService)
 from api.db.services.user_service import TenantService, UserTenantService
-from api import settings
 from api.utils.file_utils import get_project_base_directory
 
 

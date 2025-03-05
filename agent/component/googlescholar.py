@@ -15,9 +15,11 @@
 #
 import logging
 from abc import ABC
+
 import pandas as pd
-from agent.component.base import ComponentBase, ComponentParamBase
 from scholarly import scholarly
+
+from agent.component.base import ComponentBase, ComponentParamBase
 
 
 class GoogleScholarParam(ComponentParamBase):

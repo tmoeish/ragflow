@@ -15,20 +15,19 @@
 #
 import json
 import traceback
-from flask import request, Response
-from flask_login import login_required, current_user
-from api.db.services.canvas_service import CanvasTemplateService, UserCanvasService
+
+from flask import Response, request
+from flask_login import current_user, login_required
+from peewee import MySQLDatabase, PostgresqlDatabase
+
+from agent.canvas import Canvas
+from api.db.db_models import APIToken
+from api.db.services.canvas_service import (CanvasTemplateService,
+                                            UserCanvasService)
 from api.settings import RetCode
 from api.utils import get_uuid
-from api.utils.api_utils import (
-    get_json_result,
-    server_error_response,
-    validate_request,
-    get_data_error_result,
-)
-from agent.canvas import Canvas
-from peewee import MySQLDatabase, PostgresqlDatabase
-from api.db.db_models import APIToken
+from api.utils.api_utils import (get_data_error_result, get_json_result,
+                                 server_error_response, validate_request)
 
 
 @manager.route("/templates", methods=["GET"])  # noqa: F821

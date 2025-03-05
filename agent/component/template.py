@@ -15,8 +15,10 @@
 #
 import json
 import re
-from agent.component.base import ComponentBase, ComponentParamBase
+
 from jinja2 import Template as Jinja2Template
+
+from agent.component.base import ComponentBase, ComponentParamBase
 
 
 class TemplateParam(ComponentParamBase):

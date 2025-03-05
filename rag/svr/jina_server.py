@@ -14,12 +14,12 @@
 #  limitations under the License.
 #
 
-from jina import Deployment
-from docarray import BaseDoc
-from jina import Executor, requests
-from transformers import AutoModelForCausalLM, AutoTokenizer, GenerationConfig
 import argparse
+
 import torch
+from docarray import BaseDoc
+from jina import Deployment, Executor, requests
+from transformers import AutoModelForCausalLM, AutoTokenizer, GenerationConfig
 
 
 class Prompt(BaseDoc):

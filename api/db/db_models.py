@@ -13,35 +13,25 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 #
-import logging
 import inspect
+import logging
+import operator
 import os
 import sys
 import typing
-import operator
 from enum import Enum
 from functools import wraps
-from itsdangerous.url_safe import URLSafeTimedSerializer as Serializer
+
 from flask_login import UserMixin
+from itsdangerous.url_safe import URLSafeTimedSerializer as Serializer
+from peewee import (BigIntegerField, BooleanField, CharField, CompositeKey,
+                    DateTimeField, Field, FloatField, IntegerField, Metadata,
+                    Model, TextField)
 from playhouse.migrate import MySQLMigrator, PostgresqlMigrator, migrate
-from peewee import (
-    BigIntegerField,
-    BooleanField,
-    CharField,
-    CompositeKey,
-    IntegerField,
-    TextField,
-    FloatField,
-    DateTimeField,
-    Field,
-    Model,
-    Metadata,
-)
 from playhouse.pool import PooledMySQLDatabase, PooledPostgresqlDatabase
 
-from api.db import SerializedType, ParserType
-from api import settings
-from api import utils
+from api import settings, utils
+from api.db import ParserType, SerializedType
 
 
 # 单例模式装饰器，用于确保一个类只有一个实例

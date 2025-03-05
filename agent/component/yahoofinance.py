@@ -15,9 +15,11 @@
 #
 import logging
 from abc import ABC
+
 import pandas as pd
-from agent.component.base import ComponentBase, ComponentParamBase
 import yfinance as yf
+
+from agent.component.base import ComponentBase, ComponentParamBase
 
 
 class YahooFinanceParam(ComponentParamBase):

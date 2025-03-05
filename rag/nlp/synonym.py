@@ -14,12 +14,14 @@
 #  limitations under the License.
 #
 
-import logging
 import json
+import logging
 import os
-import time
 import re
+import time
+
 from nltk.corpus import wordnet
+
 from api.utils.file_utils import get_project_base_directory
 
 

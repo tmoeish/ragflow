@@ -15,9 +15,9 @@
 #
 
 import base64
-import click
 import re
 
+import click
 from flask import Flask
 from werkzeug.security import generate_password_hash
 

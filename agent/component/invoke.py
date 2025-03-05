@@ -16,9 +16,11 @@
 import json
 import re
 from abc import ABC
+
 import requests
-from deepdoc.parser import HtmlParser
+
 from agent.component.base import ComponentBase, ComponentParamBase
+from deepdoc.parser import HtmlParser
 
 
 class InvokeParam(ComponentParamBase):

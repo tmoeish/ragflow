@@ -19,11 +19,10 @@ import re
 from io import BytesIO
 
 from PIL import Image
-
-from rag.nlp import tokenize, is_english
-from rag.nlp import rag_tokenizer
-from deepdoc.parser import PdfParser, PptParser, PlainParser
 from PyPDF2 import PdfReader as pdf2_read
+
+from deepdoc.parser import PdfParser, PlainParser, PptParser
+from rag.nlp import is_english, rag_tokenizer, tokenize
 
 
 class Ppt(PptParser):
@@ -31,8 +30,8 @@ class Ppt(PptParser):
         txts = super().__call__(fnm, from_page, to_page)
 
         callback(0.5, "Text extraction finished.")
-        import aspose.slides as slides
         import aspose.pydrawing as drawing
+        import aspose.slides as slides
 
         imgs = []
         with slides.Presentation(BytesIO(fnm)) as presentation:

@@ -17,22 +17,23 @@
 import logging
 import os
 import random
+import re
+from copy import deepcopy
+from io import BytesIO
 from timeit import default_timer as timer
 
-import xgboost as xgb
-from io import BytesIO
-import re
-import pdfplumber
-from PIL import Image
 import numpy as np
+import pdfplumber
+import xgboost as xgb
+from huggingface_hub import snapshot_download
+from PIL import Image
 from pypdf import PdfReader as pdf2_read
 
 from api import settings
 from api.utils.file_utils import get_project_base_directory
-from deepdoc.vision import OCR, Recognizer, LayoutRecognizer, TableStructureRecognizer
+from deepdoc.vision import (OCR, LayoutRecognizer, Recognizer,
+                            TableStructureRecognizer)
 from rag.nlp import rag_tokenizer
-from copy import deepcopy
-from huggingface_hub import snapshot_download
 
 
 class RAGFlowPdfParser:

@@ -15,30 +15,26 @@
 #
 import datetime
 import json
+import re
 
+import xxhash
 from flask import request
-from flask_login import login_required, current_user
+from flask_login import current_user, login_required
 
-from rag.app.qa import rmPrefix, beAdoc
-from rag.app.tag import label_question
-from rag.nlp import search, rag_tokenizer
-from rag.prompts import keyword_extraction
-from rag.settings import PAGERANK_FLD
-from rag.utils import rmSpace
+from api import settings
 from api.db import LLMType, ParserType
+from api.db.services.document_service import DocumentService
 from api.db.services.knowledgebase_service import KnowledgebaseService
 from api.db.services.llm_service import LLMBundle
 from api.db.services.user_service import UserTenantService
-from api.utils.api_utils import (
-    server_error_response,
-    get_data_error_result,
-    validate_request,
-)
-from api.db.services.document_service import DocumentService
-from api import settings
-from api.utils.api_utils import get_json_result
-import xxhash
-import re
+from api.utils.api_utils import (get_data_error_result, get_json_result,
+                                 server_error_response, validate_request)
+from rag.app.qa import beAdoc, rmPrefix
+from rag.app.tag import label_question
+from rag.nlp import rag_tokenizer, search
+from rag.prompts import keyword_extraction
+from rag.settings import PAGERANK_FLD
+from rag.utils import rmSpace
 
 
 @manager.route("/list", methods=["POST"])  # noqa: F821

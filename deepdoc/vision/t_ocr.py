@@ -22,10 +22,12 @@ sys.path.insert(
     os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "../../")),
 )
 
-from deepdoc.vision.seeit import draw_box
-from deepdoc.vision import OCR, init_in_out
 import argparse
+
 import numpy as np
+
+from deepdoc.vision import OCR, init_in_out
+from deepdoc.vision.seeit import draw_box
 
 
 def main(args):
