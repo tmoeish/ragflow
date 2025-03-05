@@ -21,8 +21,12 @@ from api.db.services.file2document_service import File2DocumentService
 from api.db.services.file_service import FileService
 from api.db.services.knowledgebase_service import KnowledgebaseService
 from api.utils import get_uuid
-from api.utils.api_utils import (get_data_error_result, get_json_result,
-                                 server_error_response, validate_request)
+from api.utils.api_utils import (
+    get_data_error_result,
+    get_json_result,
+    server_error_response,
+    validate_request,
+)
 
 
 @manager.route("/convert", methods=["POST"])  # noqa: F821

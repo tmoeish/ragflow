@@ -22,10 +22,14 @@ from copy import deepcopy
 from typing import Callable
 
 from graphrag.general.graph_prompt import SUMMARIZE_DESCRIPTIONS_PROMPT
-from graphrag.utils import (flat_uniq_list, get_llm_cache,
-                            handle_single_entity_extraction,
-                            handle_single_relationship_extraction,
-                            set_llm_cache, split_string_by_multi_markers)
+from graphrag.utils import (
+    flat_uniq_list,
+    get_llm_cache,
+    handle_single_entity_extraction,
+    handle_single_relationship_extraction,
+    set_llm_cache,
+    split_string_by_multi_markers,
+)
 from rag.llm.chat_model import Base as CompletionLLM
 from rag.utils import truncate
 

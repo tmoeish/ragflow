@@ -28,8 +28,12 @@ from api.db.services.document_service import DocumentService
 from api.db.services.file2document_service import File2DocumentService
 from api.db.services.file_service import FileService
 from api.utils import get_uuid
-from api.utils.api_utils import (get_data_error_result, get_json_result,
-                                 server_error_response, validate_request)
+from api.utils.api_utils import (
+    get_data_error_result,
+    get_json_result,
+    server_error_response,
+    validate_request,
+)
 from api.utils.file_utils import filename_type
 from rag.utils.storage_factory import STORAGE_IMPL
 

@@ -124,10 +124,12 @@ class QwenTTS(Base):
     def tts(self, text):
         from collections import deque
 
-        from dashscope.api_entities.dashscope_response import \
-            SpeechSynthesisResponse
-        from dashscope.audio.tts import (ResultCallback, SpeechSynthesisResult,
-                                         SpeechSynthesizer)
+        from dashscope.api_entities.dashscope_response import SpeechSynthesisResponse
+        from dashscope.audio.tts import (
+            ResultCallback,
+            SpeechSynthesisResult,
+            SpeechSynthesizer,
+        )
 
         class Callback(ResultCallback):
             def __init__(self) -> None:

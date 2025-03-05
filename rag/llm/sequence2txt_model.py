@@ -154,8 +154,9 @@ class TencentCloudSeq2txt(Base):
         import time
 
         from tencentcloud.asr.v20190614 import models
-        from tencentcloud.common.exception.tencent_cloud_sdk_exception import \
-            TencentCloudSDKException
+        from tencentcloud.common.exception.tencent_cloud_sdk_exception import (
+            TencentCloudSDKException,
+        )
 
         b64 = self.audio2base64(audio)
         try:

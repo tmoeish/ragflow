@@ -17,8 +17,7 @@
 from flask import request
 
 from api.db.services.canvas_service import UserCanvasService
-from api.utils.api_utils import (get_error_data_result, get_result,
-                                 token_required)
+from api.utils.api_utils import get_error_data_result, get_result, token_required
 
 
 @manager.route("/agents", methods=["GET"])  # noqa: F821

@@ -16,8 +16,15 @@
 from time import sleep
 from timeit import default_timer as timer
 
-from common import (create_dataset, get_docs_info, list_dataset, list_document,
-                    parse_docs, rm_dataset, upload_file)
+from common import (
+    create_dataset,
+    get_docs_info,
+    list_dataset,
+    list_document,
+    parse_docs,
+    rm_dataset,
+    upload_file,
+)
 
 
 def test_parse_txt_document(get_auth):

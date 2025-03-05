@@ -24,8 +24,7 @@ from api.db.services.knowledgebase_service import KnowledgebaseService
 from api.db.services.llm_service import TenantLLMService
 from api.db.services.user_service import TenantService
 from api.utils import get_uuid
-from api.utils.api_utils import (get_error_data_result, get_result,
-                                 token_required)
+from api.utils.api_utils import get_error_data_result, get_result, token_required
 
 
 @manager.route("/chats", methods=["POST"])  # noqa: F821

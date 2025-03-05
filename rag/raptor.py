@@ -23,8 +23,12 @@ import numpy as np
 import umap
 from sklearn.mixture import GaussianMixture
 
-from graphrag.utils import (get_embed_cache, get_llm_cache, set_embed_cache,
-                            set_llm_cache)
+from graphrag.utils import (
+    get_embed_cache,
+    get_llm_cache,
+    set_embed_cache,
+    set_llm_cache,
+)
 from rag.utils import truncate
 
 

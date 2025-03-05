@@ -28,8 +28,7 @@ import re
 
 import numpy as np
 
-from deepdoc.vision import (OCR, LayoutRecognizer, TableStructureRecognizer,
-                            init_in_out)
+from deepdoc.vision import OCR, LayoutRecognizer, TableStructureRecognizer, init_in_out
 from deepdoc.vision.seeit import draw_box
 
 

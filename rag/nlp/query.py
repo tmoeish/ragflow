@@ -206,8 +206,7 @@ class FulltextQueryer:
 
     def hybrid_similarity(self, avec, bvecs, atks, btkss, tkweight=0.3, vtweight=0.7):
         import numpy as np
-        from sklearn.metrics.pairwise import \
-            cosine_similarity as CosineSimilarity
+        from sklearn.metrics.pairwise import cosine_similarity as CosineSimilarity
 
         sims = CosineSimilarity([avec], bvecs)
         tksim = self.token_similarity(atks, btkss)

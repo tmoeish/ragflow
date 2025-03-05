@@ -19,8 +19,7 @@ from graphrag.general import leiden
 from graphrag.general.community_report_prompt import COMMUNITY_REPORT_PROMPT
 from graphrag.general.extractor import Extractor
 from graphrag.general.leiden import add_community_info2graph
-from graphrag.utils import (dict_has_keys_with_types,
-                            perform_variable_replacements)
+from graphrag.utils import dict_has_keys_with_types, perform_variable_replacements
 from rag.llm.chat_model import Base as CompletionLLM
 from rag.utils import num_tokens_from_string
 

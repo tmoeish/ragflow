@@ -29,8 +29,12 @@ from api.db.services import UserService
 from api.db.services.canvas_service import CanvasTemplateService
 from api.db.services.document_service import DocumentService
 from api.db.services.knowledgebase_service import KnowledgebaseService
-from api.db.services.llm_service import (LLMBundle, LLMFactoriesService,
-                                         LLMService, TenantLLMService)
+from api.db.services.llm_service import (
+    LLMBundle,
+    LLMFactoriesService,
+    LLMService,
+    TenantLLMService,
+)
 from api.db.services.user_service import TenantService, UserTenantService
 from api.utils.file_utils import get_project_base_directory
 

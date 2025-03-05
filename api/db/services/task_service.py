@@ -22,8 +22,15 @@ from peewee import JOIN
 
 from api import settings
 from api.db import FileType, StatusEnum, TaskStatus
-from api.db.db_models import (DB, Document, File, File2Document, Knowledgebase,
-                              Task, Tenant)
+from api.db.db_models import (
+    DB,
+    Document,
+    File,
+    File2Document,
+    Knowledgebase,
+    Task,
+    Tenant,
+)
 from api.db.db_utils import bulk_insert_into_db
 from api.db.services.common_service import CommonService
 from api.db.services.document_service import DocumentService

@@ -27,8 +27,7 @@ from peewee import fn
 
 from api import settings
 from api.db import FileType, LLMType, ParserType, StatusEnum, TaskStatus
-from api.db.db_models import (DB, Document, Knowledgebase, Task, Tenant,
-                              UserTenant)
+from api.db.db_models import DB, Document, Knowledgebase, Task, Tenant, UserTenant
 from api.db.db_utils import bulk_insert_into_db
 from api.db.services.common_service import CommonService
 from api.db.services.knowledgebase_service import KnowledgebaseService

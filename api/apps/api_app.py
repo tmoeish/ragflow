@@ -27,12 +27,10 @@ from api import settings
 from api.db import FileSource, FileType, LLMType, ParserType
 from api.db.db_models import APIToken, File, Task
 from api.db.services import duplicate_name
-from api.db.services.api_service import (API4ConversationService,
-                                         APITokenService)
+from api.db.services.api_service import API4ConversationService, APITokenService
 from api.db.services.canvas_service import UserCanvasService
 from api.db.services.dialog_service import DialogService, chat
-from api.db.services.document_service import (DocumentService,
-                                              doc_upload_and_parse)
+from api.db.services.document_service import DocumentService, doc_upload_and_parse
 from api.db.services.file2document_service import File2DocumentService
 from api.db.services.file_service import FileService
 from api.db.services.knowledgebase_service import KnowledgebaseService
@@ -40,9 +38,13 @@ from api.db.services.llm_service import TenantLLMService
 from api.db.services.task_service import TaskService, queue_tasks
 from api.db.services.user_service import UserTenantService
 from api.utils import current_timestamp, datetime_format, get_uuid
-from api.utils.api_utils import (generate_confirmation_token,
-                                 get_data_error_result, get_json_result,
-                                 server_error_response, validate_request)
+from api.utils.api_utils import (
+    generate_confirmation_token,
+    get_data_error_result,
+    get_json_result,
+    server_error_response,
+    validate_request,
+)
 from api.utils.file_utils import filename_type, thumbnail
 from rag.app.tag import label_question
 from rag.prompts import keyword_extraction

@@ -23,10 +23,17 @@ from flask_login import current_user, login_required
 from api import settings
 from api.db import LLMType, StatusEnum
 from api.db.db_models import TenantLLM
-from api.db.services.llm_service import (LLMFactoriesService, LLMService,
-                                         TenantLLMService)
-from api.utils.api_utils import (get_data_error_result, get_json_result,
-                                 server_error_response, validate_request)
+from api.db.services.llm_service import (
+    LLMFactoriesService,
+    LLMService,
+    TenantLLMService,
+)
+from api.utils.api_utils import (
+    get_data_error_result,
+    get_json_result,
+    server_error_response,
+    validate_request,
+)
 from api.utils.file_utils import get_project_base_directory
 from rag.llm import ChatModel, CvModel, EmbeddingModel, RerankModel, TTSModel
 

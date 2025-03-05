@@ -15,8 +15,11 @@ from typing import Any
 
 import tiktoken
 
-from graphrag.general.claim_prompt import (CLAIM_EXTRACTION_PROMPT,
-                                           CONTINUE_PROMPT, LOOP_PROMPT)
+from graphrag.general.claim_prompt import (
+    CLAIM_EXTRACTION_PROMPT,
+    CONTINUE_PROMPT,
+    LOOP_PROMPT,
+)
 from graphrag.general.extractor import Extractor
 from graphrag.utils import ErrorHandlerFn, perform_variable_replacements
 from rag.llm.chat_model import Base as CompletionLLM

@@ -27,8 +27,12 @@ from api.db.services.document_service import DocumentService
 from api.db.services.knowledgebase_service import KnowledgebaseService
 from api.db.services.llm_service import LLMBundle
 from api.db.services.user_service import UserTenantService
-from api.utils.api_utils import (get_data_error_result, get_json_result,
-                                 server_error_response, validate_request)
+from api.utils.api_utils import (
+    get_data_error_result,
+    get_json_result,
+    server_error_response,
+    validate_request,
+)
 from rag.app.qa import beAdoc, rmPrefix
 from rag.app.tag import label_question
 from rag.nlp import rag_tokenizer, search

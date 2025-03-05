@@ -16,8 +16,7 @@
 from peewee import fn
 
 from api.db import StatusEnum, TenantPermission
-from api.db.db_models import (DB, Document, Knowledgebase, Tenant, User,
-                              UserTenant)
+from api.db.db_models import DB, Document, Knowledgebase, Tenant, User, UserTenant
 from api.db.services.common_service import CommonService
 
 

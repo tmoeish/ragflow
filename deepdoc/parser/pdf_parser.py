@@ -31,8 +31,7 @@ from pypdf import PdfReader as pdf2_read
 
 from api import settings
 from api.utils.file_utils import get_project_base_directory
-from deepdoc.vision import (OCR, LayoutRecognizer, Recognizer,
-                            TableStructureRecognizer)
+from deepdoc.vision import OCR, LayoutRecognizer, Recognizer, TableStructureRecognizer
 from rag.nlp import rag_tokenizer
 
 
